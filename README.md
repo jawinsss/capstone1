@@ -60,6 +60,7 @@ capstone1/
 
 ## 🚀 Cách chạy dự án
 
+
 ### Yêu cầu hệ thống
 - Windows 10/11
 - Docker Desktop
@@ -69,6 +70,9 @@ capstone1/
 1. Double-click vào file `start.bat`
 2. Chờ quá trình khởi động hoàn tất
 3. Frontend sẽ tự động mở trong trình duyệt
+
+### Cách 2: chạy bằng terminal
+1. ./start.bat
 
 ### Cách 2: Chạy thủ công
 1. **Khởi động database:**
