@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatFlow - Hệ Thống Bán Vật Tư</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">
+                    <div class="logo-icon">
+                        <img src="assets/icon matflow.png" alt="MatFlow Logo" class="logo-image">
+                    </div>
+                </div>
+                <h1 class="page-title">Đăng Nhập</h1>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Left Side - Branding -->
+        <div class="branding-section">
+            <div class="branding-content">
+                <div class="large-logo">
+                    <div class="logo-icon large">
+                        <img src="assets/icon matflow.png" alt="MatFlow Logo" class="logo-image large">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Side - Forms -->
+        <div class="forms-section">
+            <!-- Login Form -->
+            <div class="form-card" id="loginForm">
+                <h3 class="form-title">Đăng Nhập</h3>
+                <form id="loginFormElement">
+                    <div class="form-group">
+                        <input type="text" id="loginUsername" placeholder="Nhập tên đăng nhập..." required>
+                    </div>
+                    <div class="form-group checkbox-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="loginAsAdmin">
+                            <span class="checkmark"></span>
+                            Đăng nhập bằng admin
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="loginPassword" placeholder="Nhập mật khẩu..." required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">đăng nhập</button>
+                        <a href="#" class="forgot-password">Quên mật khẩu</a>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span>Hoặc</span>
+                </div>
+                
+                <div class="social-login">
+                    <button class="btn btn-social btn-facebook">
+                        <i class="fab fa-facebook-f"></i>
+                        Facebook
+                    </button>
+                    <button class="btn btn-social btn-google">
+                        <i class="fab fa-google"></i>
+                        Google
+                    </button>
+                </div>
+                
+                <div class="register-prompt">
+                    <span>Bạn mới biết đến MatFlow:</span>
+                    <a href="#" class="register-link" onclick="showRegisterForm()">Đăng Kí</a>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="form-card hidden" id="registerForm">
+                <h3 class="form-title">Đăng Kí</h3>
+                <form id="registerFormElement">
+                    <div class="form-group">
+                        <input type="text" id="registerFullName" placeholder="Họ và tên của bạn..." required>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="registerEmail" placeholder="Nhập email của bạn..." required>
+                    </div>
+                    <div class="form-group">
+                        <input type="tel" id="registerPhone" placeholder="Nhập số điện thoại..." required>
+                    </div>
+                    <div class="form-group">
+                        <input type="text" id="registerUsername" placeholder="Nhập tài khoản đăng nhập..." required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="registerPassword" placeholder="Nhập mật khẩu..." required>
+                    </div>
+                    <div class="form-group">
+                        <input type="password" id="registerConfirmPassword" placeholder="Xác nhận mật khẩu..." required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">đăng kí</button>
+                    </div>
+                </form>
+                
+                <div class="divider">
+                    <span>Hoặc</span>
+                </div>
+                
+                <div class="social-login">
+                    <button class="btn btn-social btn-facebook">
+                        <i class="fab fa-facebook-f"></i>
+                        Facebook
+                    </button>
+                    <button class="btn btn-social btn-google">
+                        <i class="fab fa-google"></i>
+                        Google
+                    </button>
+                </div>
+                
+                <div class="register-prompt">
+                    <span>Bạn đã có tài khoản : </span>
+                    <a href="#" class="register-link" onclick="showLoginForm()">Đăng Nhập</a>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-content">
+            <div class="footer-left">
+                <div class="company-info">
+                    <p class="company-name">Công ty TNHH MatFlow</p>
+                    <p class="company-address">Địa chỉ: 82 Nguyễn Công Triều</p>
+                    <p class="company-manager">Chịu Trách Nhiệm Quản Lý Nội Dung: Ngô Minh Tâm</p>
+                </div>
+                <div class="copyright">
+                    <p>© 2025 - Bản quyền thuộc về Công ty TNHH MatFlow</p>
+                </div>
+            </div>
+            <div class="footer-right">
+                <div class="social-section">
+                    <p class="social-title">Theo dõi MatFlow</p>
+                    <div class="social-links">
+                        <a href="#" class="social-link facebook">
+                            <i class="fab fa-facebook-f"></i>
+                            Facebook
+                        </a>
+                        <a href="#" class="social-link instagram">
+                            <i class="fab fa-instagram"></i>
+                            Instagram
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner hidden" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification hidden" id="notification">
+        <span class="notification-message"></span>
+        <button class="notification-close">&times;</button>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script src="js/api.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html>

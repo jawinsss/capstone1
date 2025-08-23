@@ -1,0 +1,15 @@
+tao file gitignore va chua cac lenh sau 
+#   .gitignore
+node_modules
+.env
+dist
+/.vscode
+.gitignore
+
+tao file .env trong backend va chua cac lenh sau 
+DATABASE_URL="postgresql://capstone1_user:capstone1_password@localhost:5432/capstone1_db?schema=public"
+JWT_SECRET="your-super-secret-jwt-key-change-this-in-production"
+JWT_EXPIRES_IN="24h"
+PORT=3000
+NODE_ENV="development"
+
