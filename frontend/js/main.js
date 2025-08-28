@@ -72,9 +72,9 @@ class App {
                 
                 this.showNotification('Đăng nhập thành công!', 'success');
                 
-                // Redirect to dashboard or home page after successful login
+                // Redirect based on admin flag or role
                 setTimeout(() => {
-                    this.redirectToHome();
+                    this.redirectAfterLogin(isAdmin, response.data.user);
                 }, 1500);
             } else {
                 this.showNotification(response.message || 'Đăng nhập thất bại', 'error');
@@ -154,9 +154,18 @@ class App {
     redirectToHome() {
         // For now, just show a message. You can implement actual redirection later
         this.showNotification('Chuyển hướng đến trang chủ...', 'success');
-        
-        // Example: window.location.href = '/dashboard.html';
-        // or create a new page for logged-in users
+        // Normalize path to correct case and folder
+        window.location.href = './Page/homepage.html';
+    }
+
+    // Redirect after login based on admin flag/role
+    redirectAfterLogin(isAdmin, user) {
+        if (isAdmin || (user && user.role === 'ADMIN')) {
+            this.showNotification('Chuyển hướng đến trang admin...', 'success');
+            window.location.href = './Page/admin.html';
+            return;
+        }
+        this.redirectToHome();
     }
 
     // Show/hide loading spinner

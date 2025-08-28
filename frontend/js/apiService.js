@@ -29,7 +29,7 @@ class ApiService {
         }
 
         try {
-            const response = await fetch(url, config);
+            const response = await fetch(url, { mode: 'cors', ...config });
             const data = await response.json();
 
             if (!response.ok) {
@@ -85,5 +85,8 @@ class ApiService {
     }
 }
 
-// Create global instance
+// Create global instance and expose to window
 const apiService = new ApiService();
+if (typeof window !== 'undefined') {
+    window.apiService = apiService;
+}

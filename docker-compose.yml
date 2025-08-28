@@ -18,8 +18,8 @@ services:
     image: dpage/pgadmin4
     container_name: capstone1_pgadmin
     environment:
-      PGADMIN_DEFAULT_EMAIL: admin@capstone1.com
-      PGADMIN_DEFAULT_PASSWORD: admin123
+      PGADMIN_DEFAULT_EMAIL: ngotam120704@gmail.com
+      PGADMIN_DEFAULT_PASSWORD: Tamdeptrai@2004
     ports:
       - "5050:80"
     depends_on:

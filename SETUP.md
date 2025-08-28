@@ -1,7 +1,3 @@
-# Hướng Dẫn Cài Đặt và Chạy Dự Án
-
-## Yêu cầu hệ thống
-
 - Windows 10/11 hoặc Linux/macOS
 - Docker Desktop
 - Node.js (version 16 trở lên)
@@ -112,48 +108,10 @@ API Documentation: http://localhost:3000/api
   - Email: admin@capstone1.com
   - Password: admin123
 
-### Frontend
-- Mở file `frontend/index.html`
-- Giao diện sẽ hiển thị sản phẩm và danh mục
-
-## Cấu trúc dự án
-
-```
-capstone1/
-├── frontend/              # Giao diện người dùng
-│   ├── index.html        # Trang chủ
-│   ├── styles/           # CSS files
-│   └── js/               # JavaScript files
-├── backend/               # API server
-│   ├── src/              # Source code
-│   ├── prisma/           # Database schema
-│   └── package.json      # Dependencies
-├── database/              # Database scripts
-├── docker-compose.yml     # Docker configuration
-└── README.md             # Documentation
-```
-## Quyền truy cập
-
-### User (Người dùng)
-- Xem sản phẩm
-- Đặt hàng
-- Quản lý profile
-
-### Seller (Người bán)
-- Tất cả quyền của User
-- Quản lý sản phẩm
-- Xem đơn hàng của sản phẩm
-
-### Admin (Quản trị viên)
-- Tất cả quyền
-- Quản lý người dùng
-- Quản lý danh mục
-- Xem báo cáo
-
-## Xử lý lỗi thường gặp
 
 ### Database không kết nối được
 ```bash
+
 # Kiểm tra Docker containers
 docker ps
 
@@ -183,7 +141,6 @@ rm -rf node_modules package-lock.json
 npm install
 ```
 
-## Phát triển thêm
 
 ### Thêm sản phẩm mới
 1. Cập nhật Prisma schema trong `backend/prisma/schema.prisma`

@@ -6,9 +6,26 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
-  // Enable CORS
+  // Enable CORS (broaden for local development)
   app.enableCors({
-    origin: ['http://localhost:3000', 'http://127.0.0.1:5500'],
+    origin: (origin, callback) => {
+      // Allow requests from localhost, 127.0.0.1, file-based origins (null), and common dev ports
+      if (!origin) {
+        // Same-origin or non-browser requests
+        return callback(null, true);
+      }
+      const allowed = [/^http:\/\/localhost(:\d+)?$/i, /^http:\/\/127\.0\.0\.1(:\d+)?$/i];
+      if (allowed.some((re) => re.test(origin))) {
+        return callback(null, true);
+      }
+      // Allow file:// origin (appears as "null")
+      if (origin === 'null') {
+        return callback(null, true);
+      }
+      return callback(null, true); // Relaxed CORS for dev; tighten in production
+    },
+    methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: true,
   });
 
