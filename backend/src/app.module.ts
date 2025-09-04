@@ -4,6 +4,14 @@ import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { HealthController } from './health/health.controller';
+import { ProductsModule } from './products/products.module';
+import { CategoriesModule } from './categories/categories.module';
+import { DashboardModule } from './dashboard/dashboard.module';
+import { OrdersModule } from './orders/orders.module';
+import { PaymentsModule } from './payments/payments.module';
+import { ReturnsModule } from './returns/returns.module';
+import { TicketsModule } from './tickets/tickets.module';
+import { ReviewsModule } from './reviews/reviews.module';
 
 @Module({
   imports: [
@@ -13,6 +21,14 @@ import { HealthController } from './health/health.controller';
     PrismaModule,
     AuthModule,
     UsersModule,
+    ProductsModule,
+    CategoriesModule,
+    DashboardModule,
+    OrdersModule,
+    PaymentsModule,
+    ReturnsModule,
+    TicketsModule,
+    ReviewsModule,
   ],
   controllers: [HealthController],
 })

@@ -1,11 +1,70 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Trang chu MatFlow</title>
-</head>
+    <title>MatFlow - Trang chủ</title>
+    <link rel="stylesheet" href="../../styles/homepage.css">
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/homepage.js" defer></script>
+    <style>[hidden]{display:none!important}</style>
+    </head>
 <body>
-    <h1>chao mung den voi trang chu</h1>
+    <header class="hp-header">
+        <div class="hp-brand">MatFlow</div>
+        <div class="hp-search">
+            <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
+        </div>
+        <nav class="hp-nav">
+            <a href="#" data-link="home" class="active">Trang Chủ</a>
+            <a href="#" data-link="products">Sản Phẩm</a>
+            <a href="#" data-link="contact">Liên Hệ</a>
+        </nav>
+        <div class="hp-user">
+            <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+            <span id="hpUserName" class="hp-user-name"></span>
+            <a id="hpLoginLink" href="../../index.html">Đăng nhập</a>
+            <button id="hpLogoutBtn" class="hp-btn small" hidden>Đăng xuất</button>
+            <a id="hpAdminLink" href="../adminpage/admin.html" hidden>Admin</a>
+        </div>
+    </header>
+
+    <main class="hp-main">
+        <section class="hp-banner" id="hpBanner">Banner</section>
+
+        <div class="hp-layout">
+            <aside class="hp-aside">
+                <h3>Danh Mục Sản Phẩm</h3>
+                <ul class="cat-menu" id="catMenu"></ul>
+            </aside>
+
+            <div id="dynSections"></div>
+        </div>
+    </main>
+
+    <div id="hpProductModal" class="hp-modal" hidden>
+        <div class="hp-modal-body">
+            <button id="closeModal" class="hp-btn small">Đóng</button>
+            <h3 id="modalTitle"></h3>
+            <div id="modalPrice"></div>
+            <p id="modalDesc"></p>
+            <div class="hp-row">
+                <input id="qtyInput" type="number" min="1" value="1" class="hp-input small">
+                <button id="addToCart" class="hp-btn primary">Thêm vào giỏ</button>
+            </div>
+            <div>
+                <h4>Đánh giá</h4>
+                <div id="reviewList" class="hp-reviews"></div>
+                <div id="reviewForm" class="hp-review-form">
+                    <input id="reviewRating" type="number" min="1" max="5" value="5" class="hp-input small">
+                    <input id="reviewContent" placeholder="Viết nhận xét..." class="hp-input">
+                    <button id="submitReview" class="hp-btn">Gửi</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer class="hp-footer">Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow</footer>
 </body>
 </html>

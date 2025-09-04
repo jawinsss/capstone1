@@ -1,6 +1,17 @@
 class ApiService {
     constructor() {
-        this.baseURL = 'http://localhost:3000';
+        // Resolve base URL priority: URL query (?api=), localStorage, window.CONFIG, default
+        try {
+            const params = new URLSearchParams(window.location.search);
+            const apiFromQuery = params.get('api');
+            if (apiFromQuery) {
+                localStorage.setItem('API_BASE_URL', apiFromQuery);
+            }
+        } catch (_) { }
+
+        const baseFromStorage = (typeof localStorage !== 'undefined') ? localStorage.getItem('API_BASE_URL') : null;
+        const baseFromConfig = (typeof window !== 'undefined' && window.CONFIG && window.CONFIG.API_BASE_URL) ? window.CONFIG.API_BASE_URL : null;
+        this.baseURL = baseFromStorage || baseFromConfig || 'http://localhost:3000';
     }
 
     // Generic request method
@@ -23,7 +34,7 @@ class ApiService {
         };
 
         // Add authorization header if token exists
-        const token = localStorage.getItem('token');
+        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

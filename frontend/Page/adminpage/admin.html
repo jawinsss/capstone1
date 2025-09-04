@@ -7,6 +7,7 @@
     <title>MatFlow Admin</title>
     <link rel="stylesheet" href="../../styles/admin.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/admin.js" defer></script>
     <style>
@@ -41,7 +42,7 @@
                 <i class="fa-solid fa-box"></i><span>Sản phẩm</span>
             </a>
             <a class="nav-item" href="#feedbacks" data-link="feedbacks">
-                <i class="fa-solid fa-message"></i><span>Hỗ trợ & Khiếu nại <span class="badge">156</span></span>
+                <i class="fa-solid fa-message"></i><span>Hỗ trợ & Khiếu nại</span>
             </a>
             <a class="nav-item" href="#users" data-link="users">
                 <i class="fa-solid fa-users"></i><span>Quản lý người dùng</span>
@@ -154,19 +155,19 @@
                 <section class="order-stats">
                     <div class="order-stat">
                         <div class="order-stat-title">Tổng đơn hàng</div>
-                        <div class="order-stat-value">4</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-title">Chờ xác nhận</div>
-                        <div class="order-stat-value">1</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-title">Đang giao</div>
-                        <div class="order-stat-value">1</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-title">Hoàn thành</div>
-                        <div class="order-stat-value">1</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                 </section>
 
@@ -218,19 +219,19 @@
                 <section class="order-stats">
                     <div class="order-stat">
                         <div class="order-stat-title">Tổng yêu cầu</div>
-                        <div class="order-stat-value">4</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-title">Chờ xử lý</div>
-                        <div class="order-stat-value">1</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-title">Đang xử lý</div>
-                        <div class="order-stat-value">1</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-title">Đã duyệt</div>
-                        <div class="order-stat-value">1</div>
+                        <div class="order-stat-value">0</div>
                     </div>
                 </section>
 
@@ -319,6 +320,10 @@
                                 <option>Chọn danh mục sản phẩm</option>
                             </select>
                         </div>
+                        <div class="filter-field">
+                            <label>Số lượng</label>
+                            <input class="input" id="inputStock" type="number" min="0" value="0"/>
+                        </div>
                     </div>
                     <div class="filter-field" style="margin-top:12px">
                         <label>Mô tả sản phẩm *</label>
@@ -357,41 +362,13 @@
 
                 <div class="split">
                     <section class="panel">
-                        <div class="list">
-                            <article class="list-item">
-                                <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
-                                <div style="flex:1">
-                                    <div class="list-title">
-                                        Nguyễn Văn A  <span class="chip red">Mới</span>
-                                    </div>
-                                    <div class="list-sub">Sản phẩm bị lỗi • 2 giờ trước </div>
-                                </div>
-                            </article>
-                            <article class="list-item">
-                                <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
-                                <div style="flex:1">
-                                    <div class="list-title">
-                                        Trần thị B  <span class="chip orange">Đang xử lý</span>
-                                    </div>
-                                    <div class="list-sub">Giao hàng chậm • 4 giờ trước </div>
-                                </div>
-                            </article>
-                            <article class="list-item">
-                                <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
-                                <div style="flex:1">
-                                    <div class="list-title">
-                                        Lê văn C  <span class="chip green">Đã giải quyết</span>
-                                    </div>
-                                    <div class="list-sub">Hoàn tiền • 1 ngày trước </div>
-                                </div>
-                            </article>
-                        </div>
+                        <div class="list"></div>
                     </section>
                     <section class="split-right">
-                        <div class="list-title">họ và tên : Nguyễn Văn A</div>
-                        <div class="list-sub">Email: nguyenvana@email.com</div>
-                        <div class="list-sub">số điện thoại: 123456789</div>
-                        <div class="list-sub">Địa chỉ: 43 Quang Trung</div>
+                        <div class="list-title"></div>
+                        <div class="list-sub"></div>
+                        <div class="list-sub"></div>
+                        <div class="list-sub"></div>
                     </section>
                 </div>
             </section>
@@ -407,71 +384,13 @@
 
                 <div class="split">
                     <section class="panel">
-                        <div class="list">
-                            <article class="list-item">
-                                <div
-                                    class="avatar"
-                                    style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background: #e5e7eb;
-                                    border-radius: 8px;
-                                    "
-                                ></div>
-                                <div style="flex: 1">
-                                    <div class="list-title">
-                                        Nguyễn văn A <span class="chip green">Hoạt động</span>
-                                    </div>
-                                    <div class="list-sub">
-                                        nguyenvana@email.com • Đơn hàng: 12 | vi phạm: 0
-                                    </div>
-                                </div>
-                            </article>
-                            <article class="list-item">
-                                <div
-                                    class="avatar"
-                                    style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background: #e5e7eb;
-                                    border-radius: 8px;
-                                    "
-                                ></div>
-                                <div style="flex: 1">
-                                    <div class="list-title">
-                                        Lê Văn C <span class="chip red">Đã khóa</span>
-                                    </div>
-                                    <div class="list-sub">
-                                        levanc@email.com • Đơn hàng: 5 | vi phạm: 3
-                                    </div>
-                                </div>
-                            </article>
-                            <article class="list-item">
-                                <div
-                                    class="avatar"
-                                    style="
-                                    width: 40px;
-                                    height: 40px;
-                                    background: #e5e7eb;
-                                    border-radius: 8px;
-                                    "
-                                ></div>
-                                <div style="flex: 1">
-                                    <div class="list-title">
-                                        Hoàng Văn E <span class="chip orange">Cảnh báo</span>
-                                    </div>
-                                    <div class="list-sub">
-                                        hoangvane@email.com • Đơn hàng: 15 | vi phạm: 2
-                                    </div>
-                                </div>
-                            </article>
-                        </div>
+                        <div class="list"></div>
                     </section>
                     <section class="split-right">
-                        <div class="list-sub">Họ và tên: Nguyễn Văn A</div>
-                        <div class="list-sub">email: nguyenvana@email.com</div>
-                        <div class="list-sub">Số điện thoại: 123456789</div>
-                        <div class="list-sub">Địa chỉ: 43 Quang Trung</div>
+                        <div class="list-sub"></div>
+                        <div class="list-sub"></div>
+                        <div class="list-sub"></div>
+                        <div class="list-sub"></div>
                     </section>
                 </div>
                 <button class="btn-danger">KHÓA TÀI KHOẢN</button>
