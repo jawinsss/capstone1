@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MatFlow Admin</title>
+    <link rel="stylesheet" href="../../styles/admin.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/admin.js" defer></script>
+    <style>
+        [hidden] {
+            display: none !important
+        }
+    </style>
+</head>
+
+<body>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+        <div class="brand">
+            <div class="brand-logo">M</div>
+            <div class="brand-meta">
+                <div class="brand-name">MatFlow Admin</div>
+                <div class="brand-sub">Quản trị hệ thống</div>
+            </div>
+        </div>
+
+        <nav class="nav" id="nav">
+            <a class="nav-item" href="#overview" data-link="overview">
+                <i class="fa-solid fa-gauge"></i><span>Tổng quan</span>
+            </a>
+            <a class="nav-item" href="#orders" data-link="orders">
+                <i class="fa-solid fa-bag-shopping"></i><span>Đơn hàng</span>
+            </a>
+            <a class="nav-item" href="#returns" data-link="returns">
+                <i class="fa-regular fa-rectangle-xmark"></i><span>Trả hàng/Hoàntiền</span>
+            </a>
+            <a class="nav-item" href="#products" data-link="products">
+                <i class="fa-solid fa-box"></i><span>Sản phẩm</span>
+            </a>
+            <a class="nav-item" href="#feedbacks" data-link="feedbacks">
+                <i class="fa-solid fa-message"></i><span>Hỗ trợ & Khiếu nại <span class="badge">156</span></span>
+            </a>
+            <a class="nav-item" href="#users" data-link="users">
+                <i class="fa-solid fa-users"></i><span>Quản lý người dùng</span>
+            </a>
+            <a class="nav-item" href="#payments" data-link="payments">
+                <i class="fa-solid fa-shield"></i><span>Quản lý thanh toán</span>
+            </a>
+            <a class="nav-item" href="#reports" data-link="reports">
+                <i class="fa-solid fa-chart-line"></i><span>Báo cáo & Thống kê</span>
+            </a>
+            <a class="nav-item" href="#banner" data-link="banner">
+                <i class="fa-solid fa-flag"></i><span>Banner quảng cáo</span>
+            </a>
+        </nav>
+    </aside>
+
+    <!-- MAIN -->
+    <div class="main">
+        <header class="topbar">
+            <button class="btn-icon" id="sidebarToggle" aria-label="Toggle sidebar">
+                <i class="fa-solid fa-bars"></i>
+            </button>
+            <div class="search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input id="globalSearch" type="text" placeholder="Tìm kiếm..." />
+            </div>
+            <div class="spacer"></div>
+            <div id="topbarActions"></div>
+            <button id="logoutBtn" class="btn btn-logout" title="Log OUt">
+                <i class="fa-solid fa-arrow-right-from-bracket"></i>
+                <span class="hide-sm">Đăng xuất</span>
+            </button>
+        </header>
+
+        <!-- tong quan -->
+        <main class="content">
+            <section id="view-overview" data-view="overview">
+                <h1>Tổng quan</h1>
+                <p class="muted">Theo dõi các chỉ số quan trọng và hiệu suất hệ thống</p>
+
+                <div class="kpi-tabs">
+                    <button class="tab active">Ngày</button>
+                    <button class="tab">Tuần</button>
+                    <button class="tab">Tháng</button>
+                </div>
+
+                <section class="kpis">
+                    <article class="kpi">
+                        <div class="kpi-icon kpi-blue"><i class="fa-solid fa-box"></i></div>
+                        <div class="kpi-body">
+                            <div class="kpi-title">GMV</div>
+                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
+                            <div class="kpi-sub">Nhận dữ liệu từ back end</div>
+                        </div>
+                    </article>
+                    <article class="kpi">
+                        <div class="kpi-icon kpi-yellow"><i class="fa-solid fa-receipt"></i></div>
+                        <div class="kpi-body">
+                            <div class="kpi-title">Đơn hàng chờ</div>
+                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
+                            <div class="kpi-sub">Nhận dữ liệu từ backend</div>
+                        </div>
+                    </article>
+                    <article class="kpi">
+                        <div class="kpi-icon kpi-green"><i class="fa-solid fa-circle-check"></i></div>
+                        <div class="kpi-body">
+                            <div class="kpi-title">Sản phẩm chờ duyệt</div>
+                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
+                            <div class="kpi-sub">Nhận dữ liệu từ backend</div>
+                        </div>
+                    </article>
+                    <article class="kpi">
+                        <div class="kpi-icon kpi-pink"><i class="fa-regular fa-message"></i></div>
+                        <div class="kpi-body">
+                            <div class="kpi-title">Ticket mở</div>
+                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
+                            <div class="kpi-sub">Nhận dữ liệu từ backend</div>
+                        </div>
+                    </article>
+                </section>
+
+                <section class="grid">
+                    <div class="panel panel-lg">
+                        <div class="panel-title">
+                            Doanh thu theo ngày
+                            <span class="legend"><span class="dot"></span>Doanh thu</span>
+                        </div>
+                        <div class="panel-placeholder"></div>
+                        <div class="panel-foot muted">7 ngày qua</div>
+                    </div>
+                    <div class="panel">
+                        <div class="panel-title">Top danh mục</div>
+                        <div class="panel-placeholder small"></div>
+                    </div>
+                    <div class="panel panel-row">
+                        <div class="panel-title">Tỉ lệ hoàn/hủy đơn</div>
+                        <div class="legend legned-row">
+                            <span class="legend-item"><span class="dot dot-red"></span> Tỉ lệ hoàn hàng</span>
+                            <span class="legend-item"><span class="dot dot-orange"></span> Tỉ lệ hủy đơn</span>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- =====ORDERS ===== -->
+            <section id="view-orders" data-view="orders" hidden>
+                <h1>Quản lý đơn hàng</h1>
+                <p class="muted">Theo dõi và quản lý tất cả đơn hàng trong hệ thống</p>
+
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng đơn hàng</div>
+                        <div class="order-stat-value">4</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Chờ xác nhận</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đang giao</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Hoàn thành</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                </section>
+
+                <section class="order-filter panel">
+                    <div class="panel-title">Bộ lọc <a class="link-reset" href="#">Đặt lại</a></div>
+                    <div class="filter-grid">
+                        <div class="filter-field">
+                            <label>Trạng thái</label>
+                            <select class="select">
+                                <option>Tất cả</option>
+                                <option>Chờ xác nhận</option>
+                                <option>Đang giao</option>
+                                <option>Hoàn thành</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Thanh toán</label>
+                            <select class="select">
+                                <option>Tất cả</option>
+                                <option>Đã thanh toán</option>
+                                <option>Chưa thanh toán</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Từ ngày</label>
+                            <input type="date" class="input" />
+                        </div>
+                        <div class="filter-field">
+                            <label>Đến ngày</label>
+                            <input type="date" class="input" />
+                        </div>
+                    </div>
+                    <div class="filter-sub">
+                        <span class="muted">Mã đơn hàng</span>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-title">Danh sách đơn hàng</div>
+                    <div class="panel-placeholder small"></div>
+                </section>
+            </section>
+
+            <!-- ===== trả hàng/ hủy đơn ===== -->
+            <section id="view-returns" data-view="returns" hidden>
+                <h1>Quản lý trả hàng & hủy đơn</h1>
+                <p class="muted">Xử lý các yêu cầu trả hàng và hoàn tiền từ khách hàng</p>
+
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng yêu cầu</div>
+                        <div class="order-stat-value">4</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Chờ xử lý</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đang xử lý</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đã duyệt</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-title">Danh sách yêu cầu</div>
+                    <div class="panel-placeholder small"></div>
+                </section>
+            </section>
+
+            <!-- ======== products ====== -->
+            <section id="view-products"  data-view="products" hidden>
+                <h1>Quản lý sản phẩm</h1>
+                <div class ="tabs">Danh sách sản ph
+                    <button class="tab-btn active">Danh sách sản phẩm</button>
+                    <button class="tab-btn">Thêm sản phẩm</button>
+                </div>
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng sản phẩm</div>
+                        <div class="order-stat-value">5</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đang bán</div>
+                        <div class="order-stat-value">4</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Hết hàng</div>
+                        <div class="order-stat-value">1</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đã bán</div>
+                        <div class="order-stat-value">2.953</div>
+                    </div>
+                </section>
+                <section class="order-filter panel">
+                    <div class="panel-title">
+                        Bộ lọc <a class="link-reset" href="#products">Đặt lại</a>
+                    </div>
+                    <div class="filter-grid">
+                        <div class="filter-field">
+                            <label>Danh mục</label>
+                            <select class="select">
+                                <option>Tất cả</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Trạng thái</label>
+                            <select class="select">
+                                <option>Tất cả</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Sắp xếp theo</label>
+                            <select class="select">
+                                <option>Mới nhất</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Thứ tự</label>
+                            <select class="select">
+                                <option>giảm dần</option>
+                            </select>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="panel">
+                    <div class="panel-title">Danh sách</div>
+                    <div class="panel-placeholder small"></div>
+                </section>
+
+                <h2 style="margin: top 20px;">Thêm sản phẩm mới</h2>
+                <section class="panel">
+                    <div class="filter-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+                        <div class="filter-field">
+                            <label>Tên sản phẩm *</label>
+                            <input class="input" placeholder="nhập tên sản phẩm..."/>
+                        </div>
+                        <div class="filter-field">
+                            <label>Giá bán (VND)</label>
+                            <input class="input" value="0"/>
+                        </div>
+                        <div class="filter-field">
+                            <label>Danh mục *</label>
+                            <select class="select">
+                                <option>Chọn danh mục sản phẩm</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-field" style="margin-top:12px">
+                        <label>Mô tả sản phẩm *</label>
+                        <textarea class="textarea" row="5" placeholder="Mô tả..."></textarea>
+                    </div>
+                    <div class="upload-zone">
+                        <div class="upload-icon">⬆</div>
+                        <div class="list-sub">Kéo thả hình ảnh vào đây hoặc</div>
+                        <button class="btn">Chọn tệp</button>
+                    </div>
+                    <div class="split-right" style="margin-top:12px">
+                        <div class="list-title">Thông tin hiển thị</div>
+                        <div class="list-sub">Tên sản phẩm: Chưa nhập</div>
+                        <div class="list-sub">Giá bán: Chưa nhập</div>
+                        <div class="list-sub">Số lượng: 0</div>
+                        <div class="list-sub">Danh mục: Chưa chọn</div>
+                        <div class="list-sub">Hình ảnh: 0 ảnh</div>
+                        <div style="margin-top: 12px">
+                            <button class="btn" style="background:#22c55e; color:#fff;border-color:#16a34a">
+                                Thêm sản phẩm
+                            </button>
+                            <button class="btn" style="margin-left:8px">Hủy bỏ</button>
+                        </div>
+                    </div>
+                </section>
+            </section>
+
+            <!-- ========== feedback======== -->
+            <section id="view-feedbacks" data-view="feedbacks" hidden>
+                <h1>Hỗ trợ & Khiếu nại</h1>
+                <div class="tabs">
+                    <button class="tab-btn active">Tin nhắn</button>
+                    <button class="tab-btn">Đánh giá</button>
+                    <button class="tab-btn">Tickets</button>
+                </div>
+
+                <div class="split">
+                    <section class="panel">
+                        <div class="list">
+                            <article class="list-item">
+                                <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
+                                <div style="flex:1">
+                                    <div class="list-title">
+                                        Nguyễn Văn A  <span class="chip red">Mới</span>
+                                    </div>
+                                    <div class="list-sub">Sản phẩm bị lỗi • 2 giờ trước </div>
+                                </div>
+                            </article>
+                            <article class="list-item">
+                                <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
+                                <div style="flex:1">
+                                    <div class="list-title">
+                                        Trần thị B  <span class="chip orange">Đang xử lý</span>
+                                    </div>
+                                    <div class="list-sub">Giao hàng chậm • 4 giờ trước </div>
+                                </div>
+                            </article>
+                            <article class="list-item">
+                                <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
+                                <div style="flex:1">
+                                    <div class="list-title">
+                                        Lê văn C  <span class="chip green">Đã giải quyết</span>
+                                    </div>
+                                    <div class="list-sub">Hoàn tiền • 1 ngày trước </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+                    <section class="split-right">
+                        <div class="list-title">họ và tên : Nguyễn Văn A</div>
+                        <div class="list-sub">Email: nguyenvana@email.com</div>
+                        <div class="list-sub">số điện thoại: 123456789</div>
+                        <div class="list-sub">Địa chỉ: 43 Quang Trung</div>
+                    </section>
+                </div>
+            </section>
+
+            <!-- =========== user ========= -->
+            <section id="view-users" data-view="users" hidden>
+                <h1>Quản lý người dùng</h1>
+                <div calss="tabs">
+                    <button class="tab-btn active">Người dùng</button>
+                    <button class="tab-btn">Đã khóa</button>
+                    <button class="tab-btn">Vi phạm</button>
+                </div>
+
+                <div class="split">
+                    <section class="panel">
+                        <div class="list">
+                            <article class="list-item">
+                                <div
+                                    class="avatar"
+                                    style="
+                                    width: 40px;
+                                    height: 40px;
+                                    background: #e5e7eb;
+                                    border-radius: 8px;
+                                    "
+                                ></div>
+                                <div style="flex: 1">
+                                    <div class="list-title">
+                                        Nguyễn văn A <span class="chip green">Hoạt động</span>
+                                    </div>
+                                    <div class="list-sub">
+                                        nguyenvana@email.com • Đơn hàng: 12 | vi phạm: 0
+                                    </div>
+                                </div>
+                            </article>
+                            <article class="list-item">
+                                <div
+                                    class="avatar"
+                                    style="
+                                    width: 40px;
+                                    height: 40px;
+                                    background: #e5e7eb;
+                                    border-radius: 8px;
+                                    "
+                                ></div>
+                                <div style="flex: 1">
+                                    <div class="list-title">
+                                        Lê Văn C <span class="chip red">Đã khóa</span>
+                                    </div>
+                                    <div class="list-sub">
+                                        levanc@email.com • Đơn hàng: 5 | vi phạm: 3
+                                    </div>
+                                </div>
+                            </article>
+                            <article class="list-item">
+                                <div
+                                    class="avatar"
+                                    style="
+                                    width: 40px;
+                                    height: 40px;
+                                    background: #e5e7eb;
+                                    border-radius: 8px;
+                                    "
+                                ></div>
+                                <div style="flex: 1">
+                                    <div class="list-title">
+                                        Hoàng Văn E <span class="chip orange">Cảnh báo</span>
+                                    </div>
+                                    <div class="list-sub">
+                                        hoangvane@email.com • Đơn hàng: 15 | vi phạm: 2
+                                    </div>
+                                </div>
+                            </article>
+                        </div>
+                    </section>
+                    <section class="split-right">
+                        <div class="list-sub">Họ và tên: Nguyễn Văn A</div>
+                        <div class="list-sub">email: nguyenvana@email.com</div>
+                        <div class="list-sub">Số điện thoại: 123456789</div>
+                        <div class="list-sub">Địa chỉ: 43 Quang Trung</div>
+                    </section>
+                </div>
+                <button class="btn-danger">KHÓA TÀI KHOẢN</button>
+            </section>
+
+            <!-- =========== payments ========= -->
+            <section id="view-payments" data-view="payments" hidden>
+                <h1>Quản lý thanh toán</h1>
+                <div class="tabs">
+                    <button class="tab-btn active">Xác nhận thanh toán</button>
+                    <button class="tab-btn">Quản lý công nợ</button>
+                    <button class="tab-btn">Phiếu thu/chi</button>
+                </div>
+
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Chờ xác nhận</div>
+                        <div class="order-stat-value">3</div>
+                    </div>
+                </section>
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đã xác nhận</div>
+                        <div class="order-stat-value">12</div>
+                    </div>
+                </section>
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Công nợ quá hạn</div>
+                        <div class="order-stat-value">2</div>
+                    </div>
+                </section>
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng doanh thu</div>
+                        <div class="order-stat-value">45.2M</div>
+                    </div>
+                </section>
+
+                <section class="list">
+                    <article class="list-item">
+                        <div
+                            class="avatar"
+                            style="
+                            width: 40px;
+                            height: 40px;
+                            background: #e5e7eb;
+                            border-radius: 8px;
+                            "
+                        ></div>
+                        <div style="flex:1">
+                            <div class="list-title">Họ và tên: Nguyễn Văn A</div>
+                            <div class="list-sub">Đã thanh toán chờ xác nhận</div>
+                        </div>
+                        <button 
+                            class="btn"
+                            style="background: #22c55e; color: #fff; border-color: #16a34a"
+                        > Xác nhận </button>
+                    </article>
+                    <article class="list-item">
+                        <div
+                            class="avatar"
+                            style="
+                            width: 40px;
+                            height: 40px;
+                            background: #e5e7eb;
+                            border-radius: 8px;
+                            "
+                        ></div>
+                        <div style="flex:1">
+                            <div class="list-title">Họ và tên: Ngô Minh Tâm</div>
+                            <div class="list-sub">Đã thanh toán chờ xác nhận</div>
+                        </div>
+                        <button 
+                            class="btn"
+                            style="background: #22c55e; color: #fff; border-color: #16a34a"
+                        > Xác nhận </button>
+                    </article>
+                </section>
+            </section>
+
+            <!-- =========== reports ========= -->
+            <section id="view-reports" data-view="reports" hidden>
+                <h1>báo cáo</h1>
+                <section class="tiles">
+                    <div class="tile">
+                        <div class="icon"><i class="fa-solid fa-chart-column"></i></div>
+                        <div>chart bars</div>
+                    </div>
+                    <div class="tile">
+                        <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
+                        <div>Analytics</div>
+                    </div>
+                    <div class="tile">
+                        <div class="icon"><i class="fa-solid fa-chart-pie"></i></div>
+                        <div>Pie chart</div>
+                    </div>
+                </section>
+                <h2 style="margin-top: 20px;">Thống Kê</h2>
+                <section class="panel" style="max-width: 600px;">
+                    <div class="panel-title">
+                        <i class="fa-regular fa-file-lines"></i>Report
+                    </div>
+                    <div class="list-sub">Tích hợp AI</div>
+                </section>
+                <button class="btn" style="background: #dbeafe; border-color: #bfdbfe">
+                    Tạo báo cáo mới
+                  </button>
+            </section>
+
+            <!-- =========== banner ========= -->
+            <section id="view-banner" data-view="banner" hidden>
+                <h1>Banner</h1>
+                <section class="thumb-grid">
+                    <div class="thumb"></div>
+                    <div class="thumb"></div>
+                    <div class="thumb"></div>
+                    <div class="thumb"></div>
+                </section>
+
+                <h2 style="margin-top:20px">Promotion</h2>
+                <section class="panel" style="max-width: 600px;">
+                    <div class="panel-title"><i class="fa-solid fa-gift"></i> Khuyến mại nhân dịp đại lễ 2/9</div>
+                    <div class="list-sub">Giảm tới 29%</div>
+                </section>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>

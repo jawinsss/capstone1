@@ -155,14 +155,14 @@ class App {
         // For now, just show a message. You can implement actual redirection later
         this.showNotification('Chuyển hướng đến trang chủ...', 'success');
         // Normalize path to correct case and folder
-        window.location.href = './Page/homepage.html';
+        window.location.href = './Page/homepage/homepage.html';
     }
 
     // Redirect after login based on admin flag/role
     redirectAfterLogin(isAdmin, user) {
         if (isAdmin || (user && user.role === 'ADMIN')) {
             this.showNotification('Chuyển hướng đến trang admin...', 'success');
-            window.location.href = './Page/admin.html';
+            window.location.href = './Page/adminpage/admin.html';
             return;
         }
         this.redirectToHome();
