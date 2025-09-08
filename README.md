@@ -5,6 +5,7 @@
 ## ✨ Tính Năng Nổi Bật
 
 ### 🎯 Admin Panel (NEW!)
+
 - **Real-time Data**: Dữ liệu tự động cập nhật theo thời gian thực
 - **Auto-refresh**: Làm mới thông minh với tần suất khác nhau cho từng module
 - **Dynamic Dashboard**: Biểu đồ và thống kê tương tác
@@ -13,6 +14,7 @@
 - **Complete CRUD**: Đầy đủ chức năng quản lý
 
 ### 🛒 E-commerce Core
+
 - Quản lý sản phẩm, đơn hàng, thanh toán
 - Hệ thống người dùng với phân quyền
 - Reviews và ratings
@@ -22,6 +24,7 @@
 ## 🛠️ Công nghệ sử dụng
 
 ### Frontend
+
 - **HTML5, CSS3, JavaScript (ES6+)** - Core technologies
 - **Font Awesome** - Icons
 - **Responsive Design** - Mobile-first approach
@@ -29,6 +32,7 @@
 - **Modern UI/UX** - Clean and intuitive interface
 
 ### Backend
+
 - **NestJS** - Framework Node.js hiện đại
 - **TypeScript** - Type-safe development
 - **Prisma** - Next-generation ORM
@@ -38,6 +42,7 @@
 - **Swagger** - API documentation
 
 ### Database
+
 - **PostgreSQL 15** - Production-ready database
 - **Docker Compose** - Container orchestration
 - **Prisma Migrations** - Database versioning
@@ -45,7 +50,6 @@
 
 ## 📁 Cấu trúc dự án
 
-```
 capstone1/
 ├── frontend/                 # Giao diện người dùng
 │   ├── index.html           # Trang chính
@@ -71,27 +75,31 @@ capstone1/
 ├── docker-compose.yml       # Docker services
 ├── start.bat               # Script khởi động (Windows)
 └── README.md               # Tài liệu dự án
-```
 
-## 🚀 Cách chạy dự án
+
+🚀 Cách chạy dự án
 
 ### Yêu cầu hệ thống
+
 - **Windows 10/11**
 - **Docker Desktop** (đang chạy)
 - **Node.js 16+** và **npm 8+**
 
 ### ⚡ Khởi động nhanh (Khuyến nghị)
+
 ```bash
 # Chỉ cần double-click file này:
 start.bat
 ```
 
 **Hoặc từ terminal:**
+
 ```bash
 ./start.bat
 ```
 
 ### 🔧 Chạy thủ công
+
 ```bash
 # 1. Khởi động database
 docker-compose up -d
@@ -111,11 +119,13 @@ npm run start:dev
 ## 🔐 Tài khoản đăng nhập
 
 ### Admin Panel
+
 - **URL**: `frontend/Page/adminpage/admin.html`
 - **Email**: `admin@matflow.com`
 - **Password**: `admin123`
 
 ### Test Users
+
 - **User 1**: `user1@example.com` / `user123`
 - **User 2**: `user2@example.com` / `user123`
 
@@ -133,42 +143,50 @@ npm run start:dev
 ## 📊 Admin Panel Features
 
 ### 🏠 Dashboard Overview
+
 - **KPI Cards**: GMV, Pending orders, Products, Tickets
 - **Revenue Charts**: Day/Week/Month views
 - **Real-time updates**: Every 30 seconds
 
 ### 🛒 Order Management
+
 - **Order List**: All orders with details
 - **Status Tracking**: PENDING → CONFIRMED → SHIPPING → COMPLETED
 - **Auto-refresh**: Every 15 seconds
 
 ### 💰 Payment Management
+
 - **Pending Payments**: Awaiting confirmation
 - **One-click Confirm**: Instant payment approval
 - **Auto-refresh**: Every 10 seconds (highest priority)
 
 ### 📦 Product Management
+
 - **Product CRUD**: Create, Read, Update, Delete
 - **Image Upload**: Drag & drop multiple images
 - **Category Management**: Organized product categories
 - **Real-time Preview**: Live form preview
 
 ### 👥 User Management
+
 - **User List**: All registered users
 - **Status Control**: Active/Inactive users
 - **Registration Tracking**: Sign-up dates and activity
 
 ### 🔄 Returns & Refunds
+
 - **Return Requests**: Customer return requests
 - **Approval Workflow**: PENDING → PROCESSING → APPROVED/REJECTED
 - **Refund Processing**: Automated refund calculations
 
 ### 💬 Support & Feedback
+
 - **Ticket System**: Customer support tickets
 - **Review Management**: Product reviews moderation
 - **Multi-tab Interface**: Messages/Reviews/Tickets
 
 ### 📈 Reports & Analytics
+
 - **Sales Reports**: Revenue analytics
 - **Performance Metrics**: System statistics
 - **Export Functions**: Data export capabilities
@@ -176,6 +194,7 @@ npm run start:dev
 ## ⚡ Real-time Features
 
 ### Auto-refresh Intervals
+
 - **Payments**: 10s (critical)
 - **Orders**: 15s (high)
 - **Returns**: 20s (medium)
@@ -183,12 +202,14 @@ npm run start:dev
 - **Users/Products**: 60s (low)
 
 ### Smart Refresh System
+
 - ✅ Pauses when tab is hidden
 - ✅ Only refreshes active views
 - ✅ Stops all intervals on page unload
 - ✅ Visual loading indicators
 
 ### Notification System
+
 - 🔔 Success/Error notifications
 - 🎨 Smooth slide animations
 - ⏰ Auto-hide after 3 seconds
@@ -226,11 +247,13 @@ docker-compose logs         # View logs
 ## 🔍 API Documentation
 
 ### Swagger UI
+
 - **URL**: `http://localhost:3000/api`
 - **Features**: Interactive API testing
 - **Authentication**: Bearer token support
 
 ### Key Endpoints
+
 ```
 GET    /dashboard/overview     # Dashboard KPIs
 GET    /dashboard/revenue      # Revenue data
