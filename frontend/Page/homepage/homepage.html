@@ -4,15 +4,33 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MatFlow - Trang chủ</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/homepage.js" defer></script>
     <style>[hidden]{display:none!important}</style>
     </head>
 <body>
+    <div class="hp-topbar">
+        <div class="hp-topbar-inner">
+            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+            <div class="hp-top-actions">
+                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
+                <span id="hpUserName" class="hp-top-hint"></span>
+                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+            </div>
+        </div>
+    </div>
+
     <header class="hp-header">
-        <div class="hp-brand">MatFlow</div>
+        <img  class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow" class="hp-logo">
         <div class="hp-search">
             <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
         </div>
@@ -23,16 +41,14 @@
         </nav>
         <div class="hp-user">
             <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
-            <span id="hpUserName" class="hp-user-name"></span>
-            <a id="hpLoginLink" href="../../index.html">Đăng nhập</a>
-            <button id="hpLogoutBtn" class="hp-btn small" hidden>Đăng xuất</button>
-            <a id="hpAdminLink" href="../adminpage/admin.html" hidden>Admin</a>
         </div>
     </header>
 
     <main class="hp-main">
-        <section class="hp-banner" id="hpBanner">Banner</section>
-
+        <section class="hp-banner" id="hpBanner">
+            <img src="../../assets/Sale.png" alt="Banner">
+        </section>
+        <marquee>Những Sản Phẩm Nổi Bật</marquee>
         <div class="hp-layout">
             <aside class="hp-aside">
                 <h3>Danh Mục Sản Phẩm</h3>
