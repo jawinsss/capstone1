@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thanh toán - MatFlow</title>
+    <link rel="stylesheet" href="../../styles/homepage.css">
+    <style>
+      .ck-wrap{max-width:900px;margin:24px auto;padding:16px}
+      .ck-card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
+      .ck-row{display:flex;justify-content:space-between;margin:8px 0}
+    </style>
+    <script>
+      document.addEventListener('DOMContentLoaded',()=>{
+        const list=document.getElementById('ckItems');
+        const cart=JSON.parse(localStorage.getItem('cart')||'[]');
+        list.innerHTML='';
+        let total=0;
+        cart.forEach(i=>{
+          const row=document.createElement('div');
+          row.className='ck-row';
+          row.textContent=`Sản phẩm #${i.productId} x ${i.quantity}`;
+          list.appendChild(row);
+        });
+        document.getElementById('ckBack').addEventListener('click',()=>{ history.back(); });
+      });
+    </script>
+</head>
+<body>
+  <div class="ck-wrap">
+    <a id="ckBack" class="hp-btn" href="#">← Quay lại</a>
+    <h1>Trang thanh toán (đang xây dựng)</h1>
+    <div class="ck-card">
+      <h3>Giỏ hàng của bạn</h3>
+      <div id="ckItems"></div>
+      <p style="color:#6b7280">Tính năng thanh toán sẽ được bổ sung sau.</p>
+    </div>
+  </div>
+</body>
+</html>
+
+

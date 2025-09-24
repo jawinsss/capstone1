@@ -311,6 +311,12 @@ body {
   box-shadow: var(--shadow);
 }
 
+.hp-card:hover {
+  box-shadow: 0 32px 64px rgba(0,0,0,0.15);
+  transform: translateY(-2px);
+  transition: box-shadow .2s ease, transform .2s ease;
+}
+
 .hp-card .name {
   font-weight: 600;
 }
@@ -399,6 +405,21 @@ body {
 .hp-footer-container {
   max-width: 1200px;
   margin: 0 auto;
+}
+
+/* Product detail layout */
+.hp-detail {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  background: #fff;
+  border: 1px solid var(--gray-200);
+  border-radius: 12px;
+  padding: 16px;
+}
+.hp-detail-left, .hp-detail-right { display: block; }
+@media (max-width: 768px) {
+  .hp-detail { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 1024px) {

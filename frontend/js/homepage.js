@@ -257,14 +257,14 @@ document.addEventListener('DOMContentLoaded', () => {
     items.forEach(p => {
       const card = document.createElement('div');
       card.className = 'hp-card';
+      card.style.cursor = 'pointer';
       const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
       card.innerHTML = `
         <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
         <div class="name">${p.name}</div>
         <div class="price">${formatVND(p.price)}</div>
-        <button class="hp-btn" data-id="${p.id}">Xem</button>
       `;
-      card.querySelector('button').addEventListener('click',()=>openProduct(p));
+      card.addEventListener('click',()=>openProduct(p));
       productGrid.appendChild(card);
     });
   }
@@ -330,17 +330,14 @@ document.addEventListener('DOMContentLoaded', () => {
     items.forEach(p=>{
       const card = document.createElement('div');
       card.className = 'hp-card';
+      card.style.cursor = 'pointer';
       const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
       card.innerHTML = `
         <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
         <div class="name">${p.name}</div>
         <div class="price">${formatVND(p.price)}</div>
-        <a href="#product-detail" class="hp-btn" data-open-detail="${p.id}">Xem</a>
       `;
-      card.querySelector('[data-open-detail]').addEventListener('click', (e)=>{
-        e.preventDefault();
-        openDetail(p.id);
-      });
+      card.addEventListener('click', ()=>{ openDetail(p.id); });
       productGrid.appendChild(card);
     });
     // Pagination numbers
@@ -381,22 +378,84 @@ document.addEventListener('DOMContentLoaded', () => {
     const p = res.data;
     const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/600x400?text=MatFlow';
     wrap.innerHTML = `
-      <div class="hp-card">
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:240px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/600x400?text=MatFlow'">
-        <h2>${p.name}</h2>
-        <div class="price" style="font-size:1.25rem">${formatVND(p.price)}</div>
-        <p>${p.description||''}</p>
-        <button class="hp-btn primary" id="pvAddToCart">Thêm vào giỏ</button>
+      <div class="hp-detail">
+        <div class="hp-detail-left">
+          <img src="${thumb}" alt="${p.name}" style="width:100%;height:260px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/600x400?text=MatFlow'">
+        </div>
+        <div class="hp-detail-right">
+          <h2>${p.name}</h2>
+          <div class="price" style="font-size:1.25rem;margin:8px 0 16px">${formatVND(p.price)}</div>
+          <p style="margin-bottom:16px">${p.description||''}</p>
+          <div class="hp-row" style="gap:8px;align-items:center;margin-bottom:12px">
+            <button class="hp-btn small" id="pvQtyDec">-</button>
+            <input id="pvQty" type="number" min="1" value="1" class="hp-input small" style="width:80px;text-align:center">
+            <button class="hp-btn small" id="pvQtyInc">+</button>
+          </div>
+          <div class="hp-row" style="gap:8px">
+            <button class="hp-btn primary" id="pvAddToCart">Thêm vào giỏ</button>
+            <button class="hp-btn" id="pvBuyNow">Mua ngay</button>
+          </div>
+        </div>
+      </div>
+      <div class="hp-products" style="margin-top:24px">
+        <div class="hp-products-head">
+          <h3>Sản phẩm & vật tư liên quan</h3>
+        </div>
+        <div class="hp-card-grid" id="pvRelated"></div>
       </div>
     `;
-    const btn = document.getElementById('pvAddToCart');
-    btn.addEventListener('click', ()=>{
+    // Quantity controls
+    const qtyInputEl = document.getElementById('pvQty');
+    document.getElementById('pvQtyDec').addEventListener('click', ()=>{
+      const v = Math.max(1, parseInt(qtyInputEl.value||'1',10)-1); qtyInputEl.value = String(v);
+    });
+    document.getElementById('pvQtyInc').addEventListener('click', ()=>{
+      const v = Math.max(1, parseInt(qtyInputEl.value||'1',10)+1); qtyInputEl.value = String(v);
+    });
+    qtyInputEl.addEventListener('input', ()=>{
+      const v = Math.max(1, parseInt(qtyInputEl.value||'1',10)); qtyInputEl.value = String(v);
+    });
+
+    // Add to cart
+    document.getElementById('pvAddToCart').addEventListener('click', ()=>{
+      const qty = Math.max(1, parseInt(qtyInputEl.value||'1',10));
       const idx = cart.findIndex(i=>i.productId===p.id);
-      if(idx>=0) cart[idx].quantity += 1; else cart.push({productId: p.id, quantity: 1});
+      if(idx>=0) cart[idx].quantity += qty; else cart.push({productId: p.id, quantity: qty});
       localStorage.setItem('cart', JSON.stringify(cart));
       updateCartCount();
       alert('Đã thêm vào giỏ');
     });
+
+    // Buy now -> add then redirect to checkout placeholder
+    document.getElementById('pvBuyNow').addEventListener('click', ()=>{
+      const qty = Math.max(1, parseInt(qtyInputEl.value||'1',10));
+      const idx = cart.findIndex(i=>i.productId===p.id);
+      if(idx>=0) cart[idx].quantity += qty; else cart.push({productId: p.id, quantity: qty});
+      localStorage.setItem('cart', JSON.stringify(cart));
+      updateCartCount();
+      window.location.href = '../homepage/checkout.html';
+    });
+
+    // Related products by same category
+    const relatedWrap = document.getElementById('pvRelated');
+    try {
+      const relRes = await window.apiService.get(`/products?categoryId=${encodeURIComponent(p.categoryId||'')}&take=8`);
+      const relItems = relRes?.success ? (Array.isArray(relRes.data)?relRes.data:relRes.data?.items||[]) : [];
+      relatedWrap.innerHTML = '';
+      relItems.filter(x=>x.id!==p.id).forEach(r=>{
+        const card = document.createElement('div');
+        card.className = 'hp-card';
+        card.style.cursor = 'pointer';
+        const rthumb = (r.images && r.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
+        card.innerHTML = `
+          <img src="${rthumb}" alt="${r.name}" style="width:100%;height:120px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+          <div class="name">${r.name}</div>
+          <div class="price">${formatVND(r.price)}</div>
+        `;
+        card.addEventListener('click', ()=>{ openDetail(r.id); });
+        relatedWrap.appendChild(card);
+      });
+    } catch(_) {}
   }
 
   function sectionTemplate(title, categoryId){
@@ -427,14 +486,14 @@ document.addEventListener('DOMContentLoaded', () => {
         items.forEach(p=>{
           const card = document.createElement('div');
           card.className = 'hp-card';
+          card.style.cursor = 'pointer';
           const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
           card.innerHTML = `
             <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
             <div class="name">${p.name}</div>
             <div class="price">${formatVND(p.price)}</div>
-            <button class="hp-btn" data-id="${p.id}">Xem</button>
           `;
-          card.querySelector('button').addEventListener('click',()=>openProduct(p));
+          card.addEventListener('click',()=>openProduct(p));
           grid.appendChild(card);
         });
       }
@@ -446,14 +505,14 @@ document.addEventListener('DOMContentLoaded', () => {
         items.forEach(p=>{
           const card = document.createElement('div');
           card.className = 'hp-card';
+          card.style.cursor = 'pointer';
           const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
           card.innerHTML = `
             <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
             <div class="name">${p.name}</div>
             <div class="price">${formatVND(p.price)}</div>
-            <button class="hp-btn" data-id="${p.id}">Xem</button>
           `;
-          card.querySelector('button').addEventListener('click',()=>openProduct(p));
+          card.addEventListener('click',()=>openProduct(p));
           grid.appendChild(card);
         });
       });
@@ -461,13 +520,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openProduct(p){
-    activeProduct = p;
-    modalTitle.textContent = p.name;
-    modalPrice.textContent = formatVND(p.price);
-    modalDesc.textContent = p.description || '';
-    qtyInput.value = 1;
-    renderReviews(p.id);
-    modal.removeAttribute('hidden');
+    // Redirect to detail page for a richer experience
+    if(p?.id){ openDetail(p.id); }
   }
 
   async function renderReviews(productId){
@@ -482,8 +536,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  closeModalBtn.addEventListener('click',()=>modal.setAttribute('hidden',''));
-  addToCartBtn.addEventListener('click',()=>{
+  closeModalBtn && closeModalBtn.addEventListener('click',()=>modal.setAttribute('hidden',''));
+  addToCartBtn && addToCartBtn.addEventListener('click',()=>{
     const qty = Math.max(1, parseInt(qtyInput.value||'1',10));
     const idx = cart.findIndex(i=>i.productId===activeProduct.id);
     if(idx>=0) cart[idx].quantity += qty; else cart.push({productId: activeProduct.id, quantity: qty});
@@ -492,7 +546,7 @@ document.addEventListener('DOMContentLoaded', () => {
     alert('Đã thêm vào giỏ');
   });
 
-  submitReview.addEventListener('click', async ()=>{
+  submitReview && submitReview.addEventListener('click', async ()=>{
     const rating = Math.max(1, Math.min(5, parseInt(reviewRating.value||'5',10)));
     const content = (reviewContent.value||'').trim();
     if(!content) return alert('Vui lòng nhập nội dung');
