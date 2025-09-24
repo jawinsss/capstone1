@@ -148,9 +148,18 @@ document.addEventListener('DOMContentLoaded', () => {
   // Respond to direct hash access and hash changes
   function handleInitialRoute(){
     const hash = (location.hash || '').replace('#','');
-    if(hash){ showView(hash); } else { showView('home'); }
+    if(hash.startsWith('product-detail&id=')){
+      const id = hash.split('&id=')[1];
+      openDetail(id);
+    } else if(hash){ 
+      showView(hash); 
+    } else { 
+      showView('home'); 
+    }
   }
   window.addEventListener('hashchange', handleInitialRoute);
+  // Handle initial page load
+  window.addEventListener('load', handleInitialRoute);
   // ===== User session UI =====
   async function syncUserUI(){
     let user = null;
@@ -260,7 +269,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.cursor = 'pointer';
       const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
       card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+        <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
         <div class="name">${p.name}</div>
         <div class="price">${formatVND(p.price)}</div>
       `;
@@ -333,7 +342,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.cursor = 'pointer';
       const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
       card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+        <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
         <div class="name">${p.name}</div>
         <div class="price">${formatVND(p.price)}</div>
       `;
@@ -380,7 +389,7 @@ document.addEventListener('DOMContentLoaded', () => {
     wrap.innerHTML = `
       <div class="hp-detail">
         <div class="hp-detail-left">
-          <img src="${thumb}" alt="${p.name}" style="width:100%;height:260px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/600x400?text=MatFlow'">
+          <img src="${thumb}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/600x400?text=MatFlow'">
         </div>
         <div class="hp-detail-right">
           <h2>${p.name}</h2>
@@ -448,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
         card.style.cursor = 'pointer';
         const rthumb = (r.images && r.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
         card.innerHTML = `
-          <img src="${rthumb}" alt="${r.name}" style="width:100%;height:120px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+          <img src="${rthumb}" alt="${r.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
           <div class="name">${r.name}</div>
           <div class="price">${formatVND(r.price)}</div>
         `;
@@ -489,7 +498,7 @@ document.addEventListener('DOMContentLoaded', () => {
           card.style.cursor = 'pointer';
           const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
           card.innerHTML = `
-            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
             <div class="name">${p.name}</div>
             <div class="price">${formatVND(p.price)}</div>
           `;
@@ -508,7 +517,7 @@ document.addEventListener('DOMContentLoaded', () => {
           card.style.cursor = 'pointer';
           const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
           card.innerHTML = `
-            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
             <div class="name">${p.name}</div>
             <div class="price">${formatVND(p.price)}</div>
           `;

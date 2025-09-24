@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết quả tìm kiếm - MatFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="stylesheet" href="../../styles/search.css">
+    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/search.js" defer></script>
+    <script src="../../js/homepage.js" defer></script>
+</head>
+<body>
+    <div class="search-page-container">
+        <a href="../homepage/homepage.html" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i>
+            Quay lại trang chủ
+        </a>
+        
+        <div class="search-header">
+            <h1 class="search-title">Kết quả tìm kiếm</h1>
+            <p class="search-query">Kết quả cho từ khóa: <strong id="searchQueryText"></strong></p>
+        </div>
+        
+        <div class="search-stats">
+            <div class="search-count">
+                Tìm thấy <span id="searchCount">0</span> sản phẩm
+            </div>
+            <div class="search-filters">
+                <button class="filter-btn active" data-filter="all">Tất cả</button>
+                <button class="filter-btn" data-filter="price-low">Giá thấp</button>
+                <button class="filter-btn" data-filter="price-high">Giá cao</button>
+                <button class="filter-btn" data-filter="name-asc">Tên A-Z</button>
+                <button class="filter-btn" data-filter="name-desc">Tên Z-A</button>
+            </div>
+        </div>
+        
+        <div id="searchResultsContainer">
+            <div class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin"></i>
+                <p>Đang tìm kiếm sản phẩm...</p>
+            </div>
+        </div>
+        
+        <div id="noResultsContainer" style="display: none;">
+            <div class="no-results">
+                <i class="fa-solid fa-search"></i>
+                <h3>Không tìm thấy sản phẩm nào</h3>
+                <p>Không có sản phẩm nào phù hợp với từ khóa tìm kiếm của bạn.</p>
+                <div class="search-suggestions">
+                    <h4>Gợi ý tìm kiếm:</h4>
+                    <div class="suggestion-tags">
+                        <span class="suggestion-tag" data-suggestion="sắt thép">Sắt thép</span>
+                        <span class="suggestion-tag" data-suggestion="hóa chất">Hóa chất</span>
+                        <span class="suggestion-tag" data-suggestion="máy móc">Máy móc</span>
+                        <span class="suggestion-tag" data-suggestion="bảo hộ">Bảo hộ</span>
+                        <span class="suggestion-tag" data-suggestion="vật tư">Vật tư</span>
+                        <span class="suggestion-tag" data-suggestion="xây dựng">Xây dựng</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class SearchResultPage {
+            constructor() {
+                this.products = [];
+                this.filteredProducts = [];
+                this.currentFilter = 'all';
+                this.searchQuery = '';
+                this.init();
+            }
+
+            init() {
+                this.getSearchQuery();
+                this.setupEventListeners();
+                this.performSearch();
+            }
+
+            getSearchQuery() {
+                const urlParams = new URLSearchParams(window.location.search);
+                this.searchQuery = urlParams.get('q') || '';
+                document.getElementById('searchQueryText').textContent = this.searchQuery;
+            }
+
+            setupEventListeners() {
+                // Filter buttons
+                document.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        this.currentFilter = e.target.dataset.filter;
+                        this.applyFilter();
+                    });
+                });
+
+                // Suggestion tags
+                document.querySelectorAll('.suggestion-tag').forEach(tag => {
+                    tag.addEventListener('click', (e) => {
+                        const suggestion = e.target.dataset.suggestion;
+                        window.location.href = `search-result.html?q=${encodeURIComponent(suggestion)}`;
+                    });
+                });
+            }
+
+            async performSearch() {
+                if (!this.searchQuery) {
+                    this.showNoResults();
+                    return;
+                }
+
+                try {
+                    // Load all products
+                    const response = await window.apiService.get('/products?take=1000');
+                    if (response?.success) {
+                        this.products = Array.isArray(response.data) ? response.data : response.data?.items || [];
+                        this.filterProducts();
+                    } else {
+                        this.showNoResults();
+                    }
+                } catch (error) {
+                    console.error('Error searching products:', error);
+                    this.showNoResults();
+                }
+            }
+
+            filterProducts() {
+                if (!this.searchQuery) {
+                    this.filteredProducts = [];
+                    this.displayResults();
+                    return;
+                }
+
+                // Use the smart search functionality
+                const smartSearch = new SmartSearch();
+                this.filteredProducts = [];
+
+                for (const product of this.products) {
+                    const match = smartSearch.matchesProduct(product, this.searchQuery);
+                    if (match.score > 0.5) {
+                        this.filteredProducts.push({
+                            ...product,
+                            matchScore: match.score,
+                            matchType: match.type
+                        });
+                    }
+                }
+
+                // Sort by relevance
+                this.filteredProducts.sort((a, b) => {
+                    if (a.matchType === 'exact' && b.matchType !== 'exact') return -1;
+                    if (b.matchType === 'exact' && a.matchType !== 'exact') return 1;
+                    return b.matchScore - a.matchScore;
+                });
+
+                this.applyFilter();
+            }
+
+            applyFilter() {
+                let sortedProducts = [...this.filteredProducts];
+
+                switch (this.currentFilter) {
+                    case 'price-low':
+                        sortedProducts.sort((a, b) => a.price - b.price);
+                        break;
+                    case 'price-high':
+                        sortedProducts.sort((a, b) => b.price - a.price);
+                        break;
+                    case 'name-asc':
+                        sortedProducts.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
+                        break;
+                    case 'name-desc':
+                        sortedProducts.sort((a, b) => b.name.localeCompare(a.name, 'vi'));
+                        break;
+                    default:
+                        // Keep relevance sorting
+                        break;
+                }
+
+                this.displayResults(sortedProducts);
+            }
+
+            displayResults(products = this.filteredProducts) {
+                const container = document.getElementById('searchResultsContainer');
+                const noResultsContainer = document.getElementById('noResultsContainer');
+                const searchCount = document.getElementById('searchCount');
+
+                searchCount.textContent = products.length;
+
+                if (products.length === 0) {
+                    container.style.display = 'none';
+                    noResultsContainer.style.display = 'block';
+                    return;
+                }
+
+                container.style.display = 'block';
+                noResultsContainer.style.display = 'none';
+
+                container.innerHTML = `
+                    <div class="search-results-grid">
+                        ${products.map(product => this.createProductCard(product)).join('')}
+                    </div>
+                `;
+
+                // Add click handlers
+                container.querySelectorAll('.search-product-card').forEach(card => {
+                    card.addEventListener('click', () => {
+                        const productId = card.dataset.productId;
+                        this.openProductDetail(productId);
+                    });
+                });
+            }
+
+            createProductCard(product) {
+                const image = product.images?.[0]?.url || 'https://via.placeholder.com/280x200?text=MatFlow';
+                const price = this.formatVND(product.price);
+                const highlightedName = this.highlightSearchTerm(product.name, this.searchQuery);
+
+                return `
+                    <div class="search-product-card" data-product-id="${product.id}">
+                        <img src="${image}" alt="${product.name}" class="search-product-image" 
+                             onerror="this.src='https://via.placeholder.com/280x200?text=MatFlow'">
+                        <div class="search-product-name">${highlightedName}</div>
+                        <div class="search-product-price">${price}</div>
+                        <div class="search-product-category">${product.category?.name || ''}</div>
+                        <div class="search-product-actions">
+                            <button class="search-btn primary" onclick="event.stopPropagation(); this.addToCart('${product.id}')">
+                                <i class="fa-solid fa-cart-plus"></i> Thêm giỏ
+                            </button>
+                            <button class="search-btn" onclick="event.stopPropagation(); this.viewDetail('${product.id}')">
+                                <i class="fa-solid fa-eye"></i> Xem
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            highlightSearchTerm(text, query) {
+                if (!query) return text;
+                
+                const smartSearch = new SmartSearch();
+                return smartSearch.highlightMatch(text, query);
+            }
+
+            openProductDetail(productId) {
+                // Navigate to homepage with product detail hash
+                window.location.href = `../homepage/homepage.html#product-detail&id=${productId}`;
+            }
+
+            showNoResults() {
+                const container = document.getElementById('searchResultsContainer');
+                const noResultsContainer = document.getElementById('noResultsContainer');
+                const searchCount = document.getElementById('searchCount');
+
+                searchCount.textContent = '0';
+                container.style.display = 'none';
+                noResultsContainer.style.display = 'block';
+            }
+
+            formatVND(amount) {
+                return new Intl.NumberFormat('vi-VN', {
+                    style: 'currency',
+                    currency: 'VND',
+                    maximumFractionDigits: 0
+                }).format(amount);
+            }
+        }
+
+        // Global functions for button actions
+        window.addToCart = function(productId) {
+            // Add to cart functionality
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            const existingItem = cart.find(item => item.productId === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ productId: productId, quantity: 1 });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            
+            // Show success message
+            const btn = event.target.closest('.search-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
+            btn.style.background = '#10b981';
+            
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.background = '';
+            }, 2000);
+        };
+
+        window.viewDetail = function(productId) {
+            window.location.href = `../homepage/homepage.html#product-detail&id=${productId}`;
+        };
+
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', () => {
+            new SearchResultPage();
+        });
+    </script>
+</body>
+</html>
