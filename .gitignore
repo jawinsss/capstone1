@@ -4,6 +4,5 @@ node_modules
 PGADMIN.md
 seed.ts
 fixbug.md
-# Build output
 dist/
 backend/dist/
