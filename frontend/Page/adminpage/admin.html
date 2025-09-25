@@ -6,10 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>MatFlow Admin</title>
     <link rel="stylesheet" href="../../styles/admin.css" />
+    <link rel="stylesheet" href="../../styles/upload.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/upload.js" defer></script>
     <script src="../../js/admin.js" defer></script>
     <style>
         [hidden] {
@@ -317,23 +319,38 @@
                         </div>
                         <div class="filter-field">
                             <label>Danh mục *</label>
-                            <select class="select">
-                                <option>Chọn danh mục sản phẩm</option>
+                            <select class="select" id="mainCategorySelect">
+                                <option value="">Chọn danh mục sản phẩm</option>
                             </select>
                         </div>
                         <div class="filter-field">
+                            <label>Danh mục con</label>
+                            <select class="select" id="subCategorySelect" disabled>
+                                <option value="">Chọn danh mục con</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="filter-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-top: 12px;">
+                        <div class="filter-field">
                             <label>Số lượng</label>
                             <input class="input" id="inputStock" type="number" min="0" value="0"/>
+                        </div>
+                        <div class="filter-field">
+                            <!-- Empty field for spacing -->
+                        </div>
+                        <div class="filter-field">
+                            <!-- Empty field for spacing -->
+                        </div>
+                        <div class="filter-field">
+                            <!-- Empty field for spacing -->
                         </div>
                     </div>
                     <div class="filter-field" style="margin-top:12px">
                         <label>Mô tả sản phẩm *</label>
                         <textarea class="textarea" row="5" placeholder="Mô tả..."></textarea>
                     </div>
-                    <div class="upload-zone">
-                        <div class="upload-icon">⬆</div>
-                        <div class="list-sub">Kéo thả hình ảnh vào đây hoặc</div>
-                        <button class="btn">Chọn tệp</button>
+                    <div class="upload-zone" id="productImageUpload">
+                        <!-- Upload zone will be populated by JavaScript -->
                     </div>
                     <div class="split-right" style="margin-top:12px">
                         <div class="list-title">Thông tin hiển thị</div>
@@ -520,6 +537,195 @@
             </section>
         </main>
     </div>
+
+    <!-- Edit Product Modal -->
+    <div id="editProductModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chỉnh sửa sản phẩm</h3>
+                <button class="modal-close" id="closeEditModal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="editProductForm">
+                    <div class="form-grid">
+                        <div class="form-field">
+                            <label>Tên sản phẩm *</label>
+                            <input type="text" id="editProductName" class="input" placeholder="Nhập tên sản phẩm..." required>
+                        </div>
+                        <div class="form-field">
+                            <label>Giá bán (VND) *</label>
+                            <input type="number" id="editProductPrice" class="input" placeholder="Nhập giá bán..." min="0" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Danh mục *</label>
+                            <select id="editMainCategory" class="select" required>
+                                <option value="">Chọn danh mục sản phẩm</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Danh mục con</label>
+                            <select id="editSubCategory" class="select" disabled>
+                                <option value="">Chọn danh mục con</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label>Số lượng *</label>
+                            <input type="number" id="editProductStock" class="input" placeholder="Nhập số lượng..." min="0" required>
+                        </div>
+                        <div class="form-field">
+                            <label>Trạng thái</label>
+                            <select id="editProductStatus" class="select">
+                                <option value="true">Đang bán</option>
+                                <option value="false">Ẩn</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-field">
+                        <label>Mô tả sản phẩm *</label>
+                        <textarea id="editProductDescription" class="textarea" rows="4" placeholder="Nhập mô tả sản phẩm..." required></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" id="cancelEdit">Hủy</button>
+                <button type="button" class="btn" id="saveEdit" style="background:#22c55e;color:#fff;border-color:#16a34a">Lưu thay đổi</button>
+            </div>
+        </div>
+    </div>
+
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            font-size: 1.25rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 6px;
+        }
+
+        .modal-close:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
+
+        .modal-body {
+            padding: 24px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-field {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-field label {
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 6px;
+            font-size: 0.875rem;
+        }
+
+        .form-field input,
+        .form-field select,
+        .form-field textarea {
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            transition: border-color 0.2s;
+        }
+
+        .form-field input:focus,
+        .form-field select:focus,
+        .form-field textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-field textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .modal-footer {
+            display: flex;
+            justify-content: flex-end;
+            gap: 12px;
+            padding: 20px 24px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .modal-footer .btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal-footer .btn:not([style*="background"]) {
+            background: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .modal-footer .btn:not([style*="background"]):hover {
+            background: #e5e7eb;
+        }
+
+    </style>
 </body>
 
 </html>

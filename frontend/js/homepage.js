@@ -43,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     min: 0,
     max: 5000000,
     totalPages: 1,
+    filteredItems: null, // For subcategory filtering
   };
 
   function setActiveLink(name){
@@ -107,6 +108,7 @@ document.addEventListener('DOMContentLoaded', () => {
             pvState.categoryId = null;
             pvState.min = 0;
             pvState.max = 5000000;
+            pvState.filteredItems = null; // Clear filtered items
             if(pv.minPrice) pv.minPrice.value = '0';
             if(pv.maxPrice) pv.maxPrice.value = '5000000';
             if(pv.priceLabel) pv.priceLabel.textContent = `${formatVND(0)} - ${formatVND(5000000)}`;
@@ -122,6 +124,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if(pv.catMenu && pv.catMenu.children.length===0){
           loadProductCategories();
         }
+        // Always render product list when switching to product view
         renderProductList();
       }
       if(name === 'product-detail'){
@@ -229,13 +232,25 @@ document.addEventListener('DOMContentLoaded', () => {
       li.innerHTML = `<span>${c.name}</span><span>›</span>`;
       const sub = document.createElement('div');
       sub.className = 'cat-children';
-      sub.innerHTML = c.children.map(ch=>`<div class="hp-cat">${ch}</div>`).join('');
+      sub.innerHTML = c.children.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
       li.appendChild(sub);
+      
+      // Click on main category
       li.addEventListener('click', (e)=>{
         // Avoid closing when clicking submenu; just load products for parent category
         e.stopPropagation();
         filterByCategoryName(c.name);
       });
+      
+      // Click on sub-categories
+      sub.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const subCategory = e.target.getAttribute('data-subcategory');
+        if(subCategory) {
+          filterBySubCategory(c.name, subCategory);
+        }
+      });
+      
       catMenu.appendChild(li);
     });
 
@@ -251,7 +266,32 @@ document.addEventListener('DOMContentLoaded', () => {
   let categoryNameToId = new Map();
   function filterByCategoryName(name){
     const id = categoryNameToId.get(String(name).trim().toLowerCase());
-    if(id){ loadProducts(id); }
+    if(id){ 
+      // Navigate to product page with category filter
+      location.hash = '#product';
+      showView('product');
+      // Set category filter in product view
+      setTimeout(() => {
+        if(pvState) {
+          pvState.categoryId = id;
+          pvState.filteredItems = null; // Clear any subcategory filter
+          renderProductList();
+        }
+      }, 100);
+    }
+  }
+
+  function filterBySubCategory(mainCategoryName, subCategoryName){
+    const mainCategoryId = categoryNameToId.get(String(mainCategoryName).trim().toLowerCase());
+    if(mainCategoryId){ 
+      // Navigate to product page with subcategory filter
+      location.hash = '#product';
+      showView('product');
+      // Set subcategory filter in product view
+      setTimeout(() => {
+        filterProductViewBySubCategory(mainCategoryId, subCategoryName);
+      }, 100);
+    }
   }
 
   async function loadProducts(categoryId){
@@ -278,22 +318,125 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  async function loadProductsWithSubCategory(categoryId, subCategoryName){
+    // Load all products from the main category first
+    const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
+    const res = await window.apiService.get(`/products${qs}`);
+    if(!res?.success) return;
+    const payload = res.data;
+    const allItems = Array.isArray(payload) ? payload : payload?.items || [];
+    
+    // Filter by subcategory using localStorage data
+    const filteredItems = allItems.filter(p => {
+      const savedSubCategory = getProductSubCategory(p.id);
+      return savedSubCategory === subCategoryName;
+    });
+    
+    if(!productGrid){ productGrid = document.getElementById('productsGrid'); }
+    if(!productGrid) return;
+    productGrid.innerHTML = '';
+    
+    // Show filtered results or all if no subcategory match
+    const itemsToShow = filteredItems.length > 0 ? filteredItems : allItems;
+    
+    itemsToShow.forEach(p => {
+      const card = document.createElement('div');
+      card.className = 'hp-card';
+      card.style.cursor = 'pointer';
+      const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
+      card.innerHTML = `
+        <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+        <div class="name">${p.name}</div>
+        <div class="price">${formatVND(p.price)}</div>
+      `;
+      card.addEventListener('click',()=>openProduct(p));
+      productGrid.appendChild(card);
+    });
+  }
+
+  // Helper function to get subcategory from localStorage (same as in admin.js)
+  function getProductSubCategory(productId) {
+    try {
+      const subCategories = JSON.parse(localStorage.getItem('productSubCategories') || '{}');
+      return subCategories[productId] || null;
+    } catch (e) {
+      console.error('Error getting subCategory:', e);
+      return null;
+    }
+  }
+
   // ===== Product view functions =====
   async function loadProductCategories(){
-    const res = await window.apiService.get('/categories');
-    const cats = res?.success ? (Array.isArray(res.data) ? res.data : res.data?.items || []) : [];
+    // Ensure categoryNameToId is loaded first
+    if(categoryNameToId.size === 0) {
+      const res = await window.apiService.get('/categories');
+      if(res?.success){
+        const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
+      }
+    }
+    
     if(!pv.catMenu) return;
     pv.catMenu.innerHTML = '';
-    cats.forEach(c=>{
+    
+    // Create categories with subcategories using STANDARD_CATEGORIES
+    STANDARD_CATEGORIES.forEach(c => {
       const li = document.createElement('li');
-      li.innerHTML = `<a href="#" data-cat="${c.id}">${c.name}<i>›</i></a>`;
+      li.className = 'cat-item';
+      const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
+      li.innerHTML = `<a href="#" data-cat="${c.name}" data-cat-id="${categoryId}">${c.name}<i>›</i></a>`;
+      
+      // Add subcategories
+      const sub = document.createElement('div');
+      sub.className = 'cat-children';
+      sub.innerHTML = c.children.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
+      li.appendChild(sub);
+      
+      // Click on main category
       li.querySelector('a').addEventListener('click', (e)=>{
         e.preventDefault();
-        pvState.categoryId = c.id;
-        pvState.page = 1;
-        renderProductList();
+        const categoryId = e.target.getAttribute('data-cat-id');
+        if(categoryId) {
+          pvState.categoryId = categoryId;
+          pvState.filteredItems = null; // Clear subcategory filter
+          pvState.page = 1;
+          renderProductList();
+        }
       });
+      
+      // Click on sub-categories
+      sub.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        const subCategory = e.target.getAttribute('data-subcategory');
+        const categoryId = li.querySelector('a').getAttribute('data-cat-id');
+        if(subCategory && categoryId) {
+          filterProductViewBySubCategory(categoryId, subCategory);
+        }
+      });
+      
       pv.catMenu.appendChild(li);
+    });
+  }
+
+  function filterProductViewBySubCategory(categoryId, subCategoryName){
+    // Load all products from the main category first
+    const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
+    window.apiService.get(`/products${qs}`).then(res => {
+      if(!res?.success) return;
+      const payload = res.data;
+      const allItems = Array.isArray(payload) ? payload : payload?.items || [];
+      
+      // Filter by subcategory using localStorage data
+      const filteredItems = allItems.filter(p => {
+        const savedSubCategory = getProductSubCategory(p.id);
+        return savedSubCategory === subCategoryName;
+      });
+      
+      // Update pvState to reflect the filtered results
+      pvState.filteredItems = filteredItems; // Always use filtered items, even if empty
+      pvState.categoryId = categoryId; // Set the main category
+      pvState.page = 1;
+      renderProductList();
     });
   }
 
@@ -323,18 +466,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if(pv.loading) pv.loading.removeAttribute('hidden');
     if(pv.empty) pv.empty.setAttribute('hidden','');
     productGrid.innerHTML = '';
-    const qs = buildProductQuery();
-    const res = await window.apiService.get(`/products?${qs}`);
-    const payload = res?.success ? res.data : null;
-    const { items, meta } = Array.isArray(payload) ? { items: payload, meta: { total: payload.length } } : { items: payload?.items || [], meta: payload?.meta || {} };
+    
+    let items, meta, total;
+    
+    // Check if we have filtered items (from subcategory filter)
+    if(pvState.filteredItems !== null) {
+      // We have filtered items (could be empty array)
+      items = pvState.filteredItems;
+      meta = { total: items.length };
+      total = items.length;
+    } else {
+      // Normal API call
+      const qs = buildProductQuery();
+      const res = await window.apiService.get(`/products?${qs}`);
+      const payload = res?.success ? res.data : null;
+      const result = Array.isArray(payload) ? { items: payload, meta: { total: payload.length } } : { items: payload?.items || [], meta: payload?.meta || {} };
+      items = result.items;
+      meta = result.meta;
+      total = Number(meta?.total || items.length || 0);
+    }
+    
     // Real-time count update
     const countEl = document.getElementById('productCount');
     if(countEl){
-      const total = Number(meta?.total || items.length || 0);
       countEl.textContent = String(total);
     }
-    const total = Number(meta?.total || items.length || 0);
+    
     pvState.totalPages = Math.max(1, Math.ceil(total / pvState.pageSize));
+    
     // Build cards
     items.forEach(p=>{
       const card = document.createElement('div');
@@ -349,6 +508,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.addEventListener('click', ()=>{ openDetail(p.id); });
       productGrid.appendChild(card);
     });
+    
     // Pagination numbers
     if(pv.numbers){
       pv.numbers.innerHTML = '';
