@@ -1,0 +1,315 @@
+/* ===== IMAGE UPLOAD SYSTEM STYLES ===== */
+
+/* Upload Zone Container */
+.upload-zone {
+    border: 2px dashed #d1d5db;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    background: #f9fafb;
+    position: relative;
+    overflow: hidden;
+}
+
+.upload-zone:hover {
+    border-color: #3b82f6;
+    background: #f0f9ff;
+}
+
+.upload-zone.dragover {
+    border-color: #3b82f6;
+    background: #dbeafe;
+    transform: scale(1.02);
+}
+
+/* Upload Content */
+.upload-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+}
+
+.upload-icon {
+    font-size: 48px;
+    color: #6b7280;
+    transition: color 0.3s ease;
+}
+
+.upload-zone:hover .upload-icon {
+    color: #3b82f6;
+}
+
+.upload-text {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.upload-text p {
+    margin: 0;
+    color: #374151;
+    font-size: 16px;
+    font-weight: 500;
+}
+
+.upload-btn {
+    background: #3b82f6;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.upload-btn:hover {
+    background: #2563eb;
+    transform: translateY(-1px);
+}
+
+.upload-info {
+    font-size: 12px;
+    color: #6b7280;
+    margin-top: 8px;
+}
+
+/* File Input */
+.upload-zone input[type="file"] {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    cursor: pointer;
+}
+
+/* Upload Preview */
+.upload-preview {
+    margin-top: 20px;
+    display: none;
+}
+
+.upload-preview.show {
+    display: block;
+}
+
+/* Preview Grid - HORIZONTAL LAYOUT */
+.preview-grid {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 10px;
+    align-items: flex-start;
+    justify-content: flex-start;
+    flex-direction: row !important;
+}
+
+/* Preview Item */
+.preview-item {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    overflow: hidden;
+    background: white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    flex-shrink: 0;
+    transition: all 0.3s ease;
+}
+
+.preview-item:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Preview Image */
+.preview-image {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+}
+
+.preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+}
+
+.preview-item:hover .preview-image img {
+    transform: scale(1.05);
+}
+
+/* Preview Overlay */
+.preview-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.preview-item:hover .preview-overlay {
+    opacity: 1;
+}
+
+/* Remove Button */
+.preview-remove {
+    background: #ef4444;
+    color: white;
+    border: none;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.preview-remove:hover {
+    background: #dc2626;
+    transform: scale(1.1);
+}
+
+/* Preview Info */
+.preview-info {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.8);
+    color: white;
+    padding: 4px 6px;
+    font-size: 10px;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.2;
+}
+
+/* Hidden elements */
+.preview-name,
+.preview-size {
+    display: none;
+}
+
+/* ===== ADMIN SPECIFIC STYLES ===== */
+#productImageUpload .preview-item {
+    width: 70px;
+    height: 70px;
+}
+
+#productImageUpload .preview-grid {
+    gap: 8px;
+}
+
+#productImageUpload .preview-info {
+    font-size: 9px;
+    padding: 2px 4px;
+}
+
+#productImageUpload .preview-remove {
+    width: 20px;
+    height: 20px;
+    font-size: 14px;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 768px) {
+    .preview-grid {
+        gap: 8px;
+    }
+    
+    .preview-item {
+        width: 70px;
+        height: 70px;
+    }
+    
+    .upload-zone {
+        padding: 15px;
+    }
+    
+    .upload-icon {
+        font-size: 36px;
+    }
+    
+    .upload-text p {
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .preview-item {
+        width: 60px;
+        height: 60px;
+    }
+    
+    .preview-grid {
+        gap: 6px;
+    }
+    
+    .upload-zone {
+        padding: 12px;
+    }
+}
+
+/* ===== ANIMATION EFFECTS ===== */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.preview-item {
+    animation: fadeIn 0.3s ease-out;
+}
+
+/* ===== LOADING STATE ===== */
+.upload-zone.loading {
+    pointer-events: none;
+    opacity: 0.7;
+}
+
+.upload-zone.loading::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 20px;
+    height: 20px;
+    margin: -10px 0 0 -10px;
+    border: 2px solid #3b82f6;
+    border-top: 2px solid transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
