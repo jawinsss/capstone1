@@ -696,12 +696,8 @@ body {
   background: #1877f2;
 }
 
-.social-link.youtube {
-  background: #ff0000;
-}
-
-.social-link.pinterest {
-  background: #bd081c;
+.social-link.instagram {
+  background: linear-gradient(45deg, #833ab4, #fd1d1d, #fcb045);
 }
 
 .footer-bottom {
@@ -718,6 +714,7 @@ body {
   margin-bottom: 1rem;
   font-size: 1rem;
   font-weight: 700;
+  text-align: left;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
