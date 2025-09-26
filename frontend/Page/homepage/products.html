@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatFlow - Sản phẩm</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/search.js" defer></script>
+    <script src="../../js/products.js" defer></script>
+    <style>[hidden]{display:none!important}</style>
+</head>
+<body>
+    <div class="hp-topbar">
+        <div class="hp-topbar-inner">
+            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+            <div class="hp-top-actions">
+                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
+                <span id="hpUserName" class="hp-top-hint"></span>
+                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="hp-header">
+        <div class="hp-header-container">
+            <a href="homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
+            <div class="hp-search">
+                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
+                <div id="searchSuggestions" class="suggestions-dropdown"></div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <nav class="hp-nav">
+                <a href="homepage.html">
+                    <i class="fa-solid fa-house"></i> Trang chủ</a>
+                <a href="products.html" class="active">
+                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
+                <a href="#">
+                    <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
+            </nav>
+            <div class="hp-user">
+                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="hp-main">
+        <div class="hp-main-container">
+            <!-- Page Title -->
+            <section class="page-title-section">
+                <h1 class="page-title">Tất cả sản phẩm</h1>
+            </section>
+
+            <!-- Banner -->
+            <section class="product-banner">
+                <div class="hp-main-container">
+                    <section class="hp-banner" id="hpBanner">
+                        <img src="../../assets/banner.jpg" alt="Banner">
+                    </section>
+                </div>
+            </section>
+
+            <div class="hp-layout">
+                <!-- Sidebar -->
+                <aside class="hp-aside">
+                    <h3>Danh Mục Sản Phẩm</h3>
+                    <ul class="cat-menu" id="productCatMenu"></ul>
+
+                    <div class="price-filter">
+                        <h4>GIÁ</h4>
+                        <div class="price-range">
+                            <input type="range" id="pvMinPrice" min="0" max="5000000" value="0" class="price-slider">
+                            <input type="range" id="pvMaxPrice" min="0" max="5000000" value="5000000" class="price-slider">
+                        </div>
+                        <div class="price-display">
+                            Giá: <span id="pvPriceRange">0đ - 5.000.000đ</span>
+                        </div>
+                        <div style="margin-top: 12px;">
+                            <button class="hp-btn reset" id="pvResetBtn">Đặt lại</button>
+                        </div>
+                    </div>
+                </aside>
+
+                <!-- Main Product Area -->
+                <div class="product-main">
+                    <!-- Filter Tabs -->
+                    <div class="filter-tabs">
+                        <button class="filter-tab active" data-filter="all">Sắp xếp</button>
+                        <button class="filter-tab" data-filter="oldest">Cũ nhất</button>
+                        <button class="filter-tab" data-filter="price-high">Giá cao</button>
+                        <button class="filter-tab" data-filter="name-asc">Tên A-Z</button>
+                        <button class="filter-tab" data-filter="name-desc">Tên Z-A</button>
+                        <button class="filter-tab" data-filter="newest">Mới nhất</button>
+                        <button class="filter-tab" data-filter="bestseller">Bán chạy</button>
+                        <span class="product-count">Có <span id="productCount">0</span> sản phẩm</span>
+                    </div>
+
+                    <!-- Products Grid -->
+                    <div class="products-grid" id="productsGrid">
+                        <!-- Products will be loaded here -->
+                    </div>
+
+                    <!-- Loading -->
+                    <div id="pvLoading" class="loading-state" hidden>
+                        <i class="fa-solid fa-spinner fa-spin"></i>
+                        <span>Đang tải sản phẩm...</span>
+                    </div>
+
+                    <!-- No Products -->
+                    <div id="pvNoProducts" class="no-products" hidden>
+                        <i class="fa-solid fa-box-open"></i>
+                        <p>Không tìm thấy sản phẩm nào</p>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="pagination" id="pvPagination">
+                        <button class="pagination-btn" id="pvPrev" disabled>
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <div class="pagination-numbers" id="pvNumbers">
+                        </div>
+                        <button class="pagination-btn" id="pvNext">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="hp-footer">
+        <div class="hp-footer-container">
+            Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+        </div>
+    </footer>
+</body>
+</html>

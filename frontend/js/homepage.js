@@ -23,28 +23,6 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== Simple view router (data-link/data-view + hash) =====
   const views = Array.from(document.querySelectorAll('[data-view]'));
   const navLinks = Array.from(document.querySelectorAll('[data-link]'));
-  // Product view elements (lazy)
-  let pv = {
-    catMenu: null,
-    minPrice: null,
-    maxPrice: null,
-    priceLabel: null,
-    loading: null,
-    empty: null,
-    numbers: null,
-    prev: null,
-    next: null,
-  };
-  let pvState = {
-    page: 1,
-    pageSize: 8,
-    sort: 'all',
-    categoryId: null,
-    min: 0,
-    max: 5000000,
-    totalPages: 1,
-    filteredItems: null, // For subcategory filtering
-  };
 
   function setActiveLink(name){
     navLinks.forEach(a => {
@@ -59,77 +37,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const target = document.querySelector(`[data-view="${name}"]`);
     if(target){
       target.removeAttribute('hidden');
-      if(name === 'product'){
-        // Ensure product grid reference is resolved when view becomes active
-        if(!productGrid){ productGrid = document.getElementById('productsGrid'); }
-        // Bind product view controls once
-        if(!pv.catMenu){
-          pv.catMenu = document.getElementById('productCatMenu');
-          pv.minPrice = document.getElementById('pvMinPrice');
-          pv.maxPrice = document.getElementById('pvMaxPrice');
-          pv.priceLabel = document.getElementById('pvPriceRange');
-          pv.loading = document.getElementById('pvLoading');
-          pv.empty = document.getElementById('pvNoProducts');
-          pv.numbers = document.getElementById('pvNumbers');
-          pv.prev = document.getElementById('pvPrev');
-          pv.next = document.getElementById('pvNext');
-          pv.reset = document.getElementById('pvResetBtn');
-
-          // Sort buttons
-          document.querySelectorAll('.filter-tabs .filter-tab').forEach(btn=>{
-            btn.addEventListener('click', ()=>{
-              document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-              btn.classList.add('active');
-              pvState.sort = btn.getAttribute('data-filter') || 'all';
-              pvState.page = 1;
-              renderProductList();
-            });
-          });
-
-          // Price sliders
-          const updatePrice = ()=>{
-            const a = Math.min(parseInt(pv.minPrice.value,10), parseInt(pv.maxPrice.value,10));
-            const b = Math.max(parseInt(pv.minPrice.value,10), parseInt(pv.maxPrice.value,10));
-            pvState.min = a; pvState.max = b;
-            pv.priceLabel.textContent = `${formatVND(a)} - ${formatVND(b)}`;
-          };
-          pv.minPrice.addEventListener('input', ()=>{ updatePrice(); throttleRender(); });
-          pv.maxPrice.addEventListener('input', ()=>{ updatePrice(); throttleRender(); });
-
-          // Pagination
-          pv.prev.addEventListener('click', ()=>{ if(pvState.page>1){ pvState.page--; renderProductList(); } });
-          pv.next.addEventListener('click', ()=>{ if(pvState.page<pvState.totalPages){ pvState.page++; renderProductList(); } });
-
-          // Reset all filters
-          pv.reset && pv.reset.addEventListener('click', ()=>{
-            pvState.page = 1;
-            pvState.pageSize = 8;
-            pvState.sort = 'all';
-            pvState.categoryId = null;
-            pvState.min = 0;
-            pvState.max = 5000000;
-            pvState.filteredItems = null; // Clear filtered items
-            if(pv.minPrice) pv.minPrice.value = '0';
-            if(pv.maxPrice) pv.maxPrice.value = '5000000';
-            if(pv.priceLabel) pv.priceLabel.textContent = `${formatVND(0)} - ${formatVND(5000000)}`;
-            // Clear category active state (if any implemented)
-            document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-            const def = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]') || document.querySelector('.filter-tabs .filter-tab');
-            if(def) def.classList.add('active');
-            renderProductList();
-          });
-        }
-
-        // Load categories for product page (from backend)
-        if(pv.catMenu && pv.catMenu.children.length===0){
-          loadProductCategories();
-        }
-        // Always render product list when switching to product view
-        renderProductList();
-      }
-      if(name === 'product-detail'){
-        // nothing here; detail is filled on navigation
-      }
     }
     setActiveLink(name);
     // Scroll to top for better UX
@@ -151,10 +58,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Respond to direct hash access and hash changes
   function handleInitialRoute(){
     const hash = (location.hash || '').replace('#','');
-    if(hash.startsWith('product-detail&id=')){
-      const id = hash.split('&id=')[1];
-      openDetail(id);
-    } else if(hash){ 
+    if(hash){ 
       showView(hash); 
     } else { 
       showView('home'); 
@@ -268,16 +172,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const id = categoryNameToId.get(String(name).trim().toLowerCase());
     if(id){ 
       // Navigate to product page with category filter
-      location.hash = '#product';
-      showView('product');
-      // Set category filter in product view
-      setTimeout(() => {
-        if(pvState) {
-          pvState.categoryId = id;
-          pvState.filteredItems = null; // Clear any subcategory filter
-          renderProductList();
-        }
-      }, 100);
+      window.location.href = `products.html?category=${id}`;
     }
   }
 
@@ -285,12 +180,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const mainCategoryId = categoryNameToId.get(String(mainCategoryName).trim().toLowerCase());
     if(mainCategoryId){ 
       // Navigate to product page with subcategory filter
-      location.hash = '#product';
-      showView('product');
-      // Set subcategory filter in product view
-      setTimeout(() => {
-        filterProductViewBySubCategory(mainCategoryId, subCategoryName);
-      }, 100);
+      window.location.href = `products.html?category=${mainCategoryId}&subcategory=${encodeURIComponent(subCategoryName)}`;
     }
   }
 
@@ -365,267 +255,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // ===== Product view functions =====
-  async function loadProductCategories(){
-    // Ensure categoryNameToId is loaded first
-    if(categoryNameToId.size === 0) {
-      const res = await window.apiService.get('/categories');
-      if(res?.success){
-        const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
-        categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
-      }
-    }
-    
-    if(!pv.catMenu) return;
-    pv.catMenu.innerHTML = '';
-    
-    // Create categories with subcategories using STANDARD_CATEGORIES
-    STANDARD_CATEGORIES.forEach(c => {
-      const li = document.createElement('li');
-      li.className = 'cat-item';
-      const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
-      li.innerHTML = `<a href="#" data-cat="${c.name}" data-cat-id="${categoryId}">${c.name}<i>›</i></a>`;
-      
-      // Add subcategories
-      const sub = document.createElement('div');
-      sub.className = 'cat-children';
-      sub.innerHTML = c.children.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
-      li.appendChild(sub);
-      
-      // Click on main category
-      li.querySelector('a').addEventListener('click', (e)=>{
-        e.preventDefault();
-        const categoryId = e.target.getAttribute('data-cat-id');
-        if(categoryId) {
-          pvState.categoryId = categoryId;
-          pvState.filteredItems = null; // Clear subcategory filter
-          pvState.page = 1;
-          renderProductList();
-        }
-      });
-      
-      // Click on sub-categories
-      sub.addEventListener('click', (e)=>{
-        e.stopPropagation();
-        const subCategory = e.target.getAttribute('data-subcategory');
-        const categoryId = li.querySelector('a').getAttribute('data-cat-id');
-        if(subCategory && categoryId) {
-          filterProductViewBySubCategory(categoryId, subCategory);
-        }
-      });
-      
-      pv.catMenu.appendChild(li);
-    });
-  }
-
-  function filterProductViewBySubCategory(categoryId, subCategoryName){
-    // Load all products from the main category first
-    const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
-    window.apiService.get(`/products${qs}`).then(res => {
-      if(!res?.success) return;
-      const payload = res.data;
-      const allItems = Array.isArray(payload) ? payload : payload?.items || [];
-      
-      // Filter by subcategory using localStorage data
-      const filteredItems = allItems.filter(p => {
-        const savedSubCategory = getProductSubCategory(p.id);
-        return savedSubCategory === subCategoryName;
-      });
-      
-      // Update pvState to reflect the filtered results
-      pvState.filteredItems = filteredItems; // Always use filtered items, even if empty
-      pvState.categoryId = categoryId; // Set the main category
-      pvState.page = 1;
-      renderProductList();
-    });
-  }
-
-  function buildProductQuery(){
-    const params = new URLSearchParams();
-    params.set('take', String(pvState.pageSize));
-    params.set('skip', String((pvState.page-1)*pvState.pageSize));
-    if(pvState.categoryId) params.set('categoryId', pvState.categoryId);
-    // Sort mapping
-    switch(pvState.sort){
-      case 'oldest': params.set('orderBy', 'createdAt:asc'); break;
-      case 'newest': params.set('orderBy', 'createdAt:desc'); break;
-      case 'price-high': params.set('orderBy', 'price:desc'); break;
-      case 'name-asc': params.set('orderBy', 'name:asc'); break;
-      case 'name-desc': params.set('orderBy', 'name:desc'); break;
-      case 'bestseller': params.set('orderBy', 'sold:desc'); break;
-    }
-    // Price range
-    params.set('minPrice', String(pvState.min));
-    params.set('maxPrice', String(pvState.max));
-    return params.toString();
-  }
-
-  async function renderProductList(){
-    if(!productGrid){ productGrid = document.getElementById('productsGrid'); }
-    if(!productGrid) return;
-    if(pv.loading) pv.loading.removeAttribute('hidden');
-    if(pv.empty) pv.empty.setAttribute('hidden','');
-    productGrid.innerHTML = '';
-    
-    let items, meta, total;
-    
-    // Check if we have filtered items (from subcategory filter)
-    if(pvState.filteredItems !== null) {
-      // We have filtered items (could be empty array)
-      items = pvState.filteredItems;
-      meta = { total: items.length };
-      total = items.length;
-    } else {
-      // Normal API call
-      const qs = buildProductQuery();
-      const res = await window.apiService.get(`/products?${qs}`);
-      const payload = res?.success ? res.data : null;
-      const result = Array.isArray(payload) ? { items: payload, meta: { total: payload.length } } : { items: payload?.items || [], meta: payload?.meta || {} };
-      items = result.items;
-      meta = result.meta;
-      total = Number(meta?.total || items.length || 0);
-    }
-    
-    // Real-time count update
-    const countEl = document.getElementById('productCount');
-    if(countEl){
-      countEl.textContent = String(total);
-    }
-    
-    pvState.totalPages = Math.max(1, Math.ceil(total / pvState.pageSize));
-    
-    // Build cards
-    items.forEach(p=>{
-      const card = document.createElement('div');
-      card.className = 'hp-card';
-      card.style.cursor = 'pointer';
-      const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
-      card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
-        <div class="name">${p.name}</div>
-        <div class="price">${formatVND(p.price)}</div>
-      `;
-      card.addEventListener('click', ()=>{ openDetail(p.id); });
-      productGrid.appendChild(card);
-    });
-    
-    // Pagination numbers
-    if(pv.numbers){
-      pv.numbers.innerHTML = '';
-      for(let i=1;i<=pvState.totalPages;i++){
-        const b = document.createElement('button');
-        b.className = `pagination-number${i===pvState.page?' active':''}`;
-        b.textContent = String(i);
-        b.addEventListener('click', ()=>{ pvState.page = i; renderProductList(); });
-        pv.numbers.appendChild(b);
-      }
-    }
-    if(pv.prev) pv.prev.disabled = pvState.page<=1;
-    if(pv.next) pv.next.disabled = pvState.page>=pvState.totalPages;
-    if(pv.loading) pv.loading.setAttribute('hidden','');
-    if(pv.empty && items.length===0) pv.empty.removeAttribute('hidden');
-    setActiveLink('product');
-  }
-
-  // Throttle rendering while dragging sliders
-  let renderTimer = null;
-  function throttleRender(){
-    if(renderTimer) clearTimeout(renderTimer);
-    renderTimer = setTimeout(()=>{ pvState.page = 1; renderProductList(); }, 250);
-  }
-
-  // ===== Product detail =====
-  async function openDetail(productId){
-    location.hash = '#product-detail';
-    showView('product-detail');
-    const wrap = document.getElementById('pvDetailWrap');
-    const backBtn = document.getElementById('pvBackBtn');
-    backBtn.onclick = ()=>{ location.hash = '#product'; showView('product'); };
-    wrap.innerHTML = 'Đang tải...';
-    const res = await window.apiService.get(`/products/${productId}`);
-    if(!res?.success){ wrap.textContent = 'Không tải được sản phẩm.'; return; }
-    const p = res.data;
-    const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/600x400?text=MatFlow';
-    wrap.innerHTML = `
-      <div class="hp-detail">
-        <div class="hp-detail-left">
-          <img src="${thumb}" alt="${p.name}" onerror="this.src='https://via.placeholder.com/600x400?text=MatFlow'">
-        </div>
-        <div class="hp-detail-right">
-          <h2>${p.name}</h2>
-          <div class="price" style="font-size:1.25rem;margin:8px 0 16px">${formatVND(p.price)}</div>
-          <p style="margin-bottom:16px">${p.description||''}</p>
-          <div class="hp-row" style="gap:8px;align-items:center;margin-bottom:12px">
-            <button class="hp-btn small" id="pvQtyDec">-</button>
-            <input id="pvQty" type="number" min="1" value="1" class="hp-input small" style="width:80px;text-align:center">
-            <button class="hp-btn small" id="pvQtyInc">+</button>
-          </div>
-          <div class="hp-row" style="gap:8px">
-            <button class="hp-btn primary" id="pvAddToCart">Thêm vào giỏ</button>
-            <button class="hp-btn" id="pvBuyNow">Mua ngay</button>
-          </div>
-        </div>
-      </div>
-      <div class="hp-products" style="margin-top:24px">
-        <div class="hp-products-head">
-          <h3>Sản phẩm & vật tư liên quan</h3>
-        </div>
-        <div class="hp-card-grid" id="pvRelated"></div>
-      </div>
-    `;
-    // Quantity controls
-    const qtyInputEl = document.getElementById('pvQty');
-    document.getElementById('pvQtyDec').addEventListener('click', ()=>{
-      const v = Math.max(1, parseInt(qtyInputEl.value||'1',10)-1); qtyInputEl.value = String(v);
-    });
-    document.getElementById('pvQtyInc').addEventListener('click', ()=>{
-      const v = Math.max(1, parseInt(qtyInputEl.value||'1',10)+1); qtyInputEl.value = String(v);
-    });
-    qtyInputEl.addEventListener('input', ()=>{
-      const v = Math.max(1, parseInt(qtyInputEl.value||'1',10)); qtyInputEl.value = String(v);
-    });
-
-    // Add to cart
-    document.getElementById('pvAddToCart').addEventListener('click', ()=>{
-      const qty = Math.max(1, parseInt(qtyInputEl.value||'1',10));
-      const idx = cart.findIndex(i=>i.productId===p.id);
-      if(idx>=0) cart[idx].quantity += qty; else cart.push({productId: p.id, quantity: qty});
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      alert('Đã thêm vào giỏ');
-    });
-
-    // Buy now -> add then redirect to checkout placeholder
-    document.getElementById('pvBuyNow').addEventListener('click', ()=>{
-      const qty = Math.max(1, parseInt(qtyInputEl.value||'1',10));
-      const idx = cart.findIndex(i=>i.productId===p.id);
-      if(idx>=0) cart[idx].quantity += qty; else cart.push({productId: p.id, quantity: qty});
-      localStorage.setItem('cart', JSON.stringify(cart));
-      updateCartCount();
-      window.location.href = '../homepage/checkout.html';
-    });
-
-    // Related products by same category
-    const relatedWrap = document.getElementById('pvRelated');
-    try {
-      const relRes = await window.apiService.get(`/products?categoryId=${encodeURIComponent(p.categoryId||'')}&take=8`);
-      const relItems = relRes?.success ? (Array.isArray(relRes.data)?relRes.data:relRes.data?.items||[]) : [];
-      relatedWrap.innerHTML = '';
-      relItems.filter(x=>x.id!==p.id).forEach(r=>{
-        const card = document.createElement('div');
-        card.className = 'hp-card';
-        card.style.cursor = 'pointer';
-        const rthumb = (r.images && r.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
-        card.innerHTML = `
-          <img src="${rthumb}" alt="${r.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
-          <div class="name">${r.name}</div>
-          <div class="price">${formatVND(r.price)}</div>
-        `;
-        card.addEventListener('click', ()=>{ openDetail(r.id); });
-        relatedWrap.appendChild(card);
-      });
-    } catch(_) {}
-  }
 
   function sectionTemplate(title, categoryId){
     const wrapper = document.createElement('section');
@@ -689,8 +318,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openProduct(p){
-    // Redirect to detail page for a richer experience
-    if(p?.id){ openDetail(p.id); }
+    // Redirect to products page for a richer experience
+    if(p?.id){ 
+      window.location.href = `products.html#product-detail&id=${p.id}`;
+    }
   }
 
   async function renderReviews(productId){

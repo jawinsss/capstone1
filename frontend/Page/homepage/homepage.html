@@ -32,18 +32,18 @@
 
     <header class="hp-header">
         <div class="hp-header-container">
-            <a href="../homepage/homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
+            <a href="homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
             <div class="hp-search">
                 <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
                 <div id="searchSuggestions" class="suggestions-dropdown"></div>
                 <div id="searchResults" class="search-results"></div>
             </div>
             <nav class="hp-nav">
-                <a href="../homepage/homepage.html" data-link="home" class="active">
+                <a href="homepage.html" class="active">
                     <i class="fa-solid fa-house"></i> Trang chủ</a>
-                <a href="#product" data-link="product">
+                <a href="products.html">
                     <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
-                <a href="#" data-link="contact">
+                <a href="#">
                     <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
             </nav>
             <div class="hp-user">
@@ -62,13 +62,13 @@
                         </a>
                     </div>
                     <div class="hp-hero-right">
-                        <a href="#product" class="hp-hero-small">
+                        <a href="products.html" class="hp-hero-small">
                             <img src="../../assets/Sắt thép hp.png" alt="Sắt thép">
                         </a>
-                        <a href="#product" class="hp-hero-small">
+                        <a href="products.html" class="hp-hero-small">
                             <img src="../../assets/hóa chất hp.png" alt="Hóa chất">
                         </a>
-                        <a href="#product" class="hp-hero-small">
+                        <a href="products.html" class="hp-hero-small">
                             <img src="../../assets/máy móc hp.png" alt="Máy móc thiết bị">
                         </a>
                     </div>
@@ -91,103 +91,6 @@
     </section>
 
     
-    
-    <section id="product" data-view="product" hidden>
-        <main class="hp-main">
-            <div class="hp-main-container">
-                <!-- Page Title -->
-                <section class="page-title-section">
-                    <h1 class="page-title">Tất cả sản phẩm</h1>
-                </section>
-    
-                <!-- Banner -->
-                <section class="product-banner">
-                    <div class="hp-main-container">
-                        <section class="hp-banner" id="hpBanner">
-                            <img src="../../assets/banner.jpg" alt="Banner">
-                        </section>
-                    </div>
-                </section>
-    
-                <div class="hp-layout">
-                    <!-- Sidebar -->
-                    <aside class="hp-aside">
-                        <h3>Danh Mục Sản Phẩm</h3>
-                        <ul class="cat-menu" id="productCatMenu"></ul>
-    
-                        <div class="price-filter">
-                            <h4>GIÁ</h4>
-                            <div class="price-range">
-                                <input type="range" id="pvMinPrice" min="0" max="5000000" value="0" class="price-slider">
-                                <input type="range" id="pvMaxPrice" min="0" max="5000000" value="5000000" class="price-slider">
-                            </div>
-                            <div class="price-display">
-                                Giá: <span id="pvPriceRange">0đ - 5.000.000đ</span>
-                            </div>
-                            <div style="margin-top: 12px;">
-                                <button class="hp-btn reset" id="pvResetBtn">Đặt lại</button>
-                            </div>
-                        </div>
-                    </aside>
-    
-                    <!-- Main Product Area -->
-                    <div class="product-main">
-                        <!-- Filter Tabs -->
-                        <div class="filter-tabs">
-                            <button class="filter-tab active" data-filter="all">Sắp xếp</button>
-                            <button class="filter-tab" data-filter="oldest">Cũ nhất</button>
-                            <button class="filter-tab" data-filter="price-high">Giá cao</button>
-                            <button class="filter-tab" data-filter="name-asc">Tên A-Z</button>
-                            <button class="filter-tab" data-filter="name-desc">Tên Z-A</button>
-                            <button class="filter-tab" data-filter="newest">Mới nhất</button>
-                            <button class="filter-tab" data-filter="bestseller">Bán chạy</button>
-                            <span class="product-count">Có <span id="productCount">0</span> sản phẩm</span>
-                        </div>
-    
-                        <!-- Products Grid -->
-                        <div class="products-grid" id="productsGrid">
-                            <!-- Products will be loaded here -->
-                        </div>
-    
-                        <!-- Loading -->
-                        <div id="pvLoading" class="loading-state" hidden>
-                            <i class="fa-solid fa-spinner fa-spin"></i>
-                            <span>Đang tải sản phẩm...</span>
-                        </div>
-    
-                        <!-- No Products -->
-                        <div id="pvNoProducts" class="no-products" hidden>
-                            <i class="fa-solid fa-box-open"></i>
-                            <p>Không tìm thấy sản phẩm nào</p>
-                        </div>
-    
-                        <!-- Pagination -->
-                        <div class="pagination" id="pvPagination">
-                            <button class="pagination-btn" id="pvPrev" disabled>
-                                <i class="fa-solid fa-chevron-left"></i>
-                            </button>
-                            <div class="pagination-numbers" id="pvNumbers">
-                            </div>
-                            <button class="pagination-btn" id="pvNext">
-                                <i class="fa-solid fa-chevron-right"></i>
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </main>
-    </section>
-
-    <section id="product-detail" data-view="product-detail" hidden>
-        <main class="hp-main">
-            <div class="hp-main-container">
-                <button class="hp-btn" id="pvBackBtn">← Quay lại</button>
-                <div class="hp-products" id="pvDetailWrap">
-                    <!-- Filled by JS: name, price, description, image -->
-                </div>
-            </div>
-        </main>
-    </section>
 
     <footer class="hp-footer">
         <div class="hp-footer-container">
