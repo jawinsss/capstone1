@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cartCount = document.getElementById('hpCartCount');
   const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   let activeProduct = null;
+  let isRenderingSections = false;
   // ===== Simple view router (data-link/data-view + hash) =====
   const views = Array.from(document.querySelectorAll('[data-view]'));
   const navLinks = Array.from(document.querySelectorAll('[data-link]'));
@@ -272,9 +273,22 @@ document.addEventListener('DOMContentLoaded', () => {
   async function renderCategorySections(categories){
     const container = document.getElementById('dynSections');
     if(!container) return;
-    // Clear previously rendered sections to avoid duplicates
-    container.innerHTML = '';
-    for(const c of categories){
+    
+    // Prevent multiple simultaneous renders
+    if(isRenderingSections) return;
+    isRenderingSections = true;
+    
+    try {
+      // Clear previously rendered sections to avoid duplicates
+      container.innerHTML = '';
+      
+      // Track rendered categories to avoid duplicates
+      const renderedCategories = new Set();
+      
+      for(const c of categories){
+        // Skip if already rendered
+        if(renderedCategories.has(c.id)) continue;
+        renderedCategories.add(c.id);
       const sec = sectionTemplate(c.name, c.id);
       container.appendChild(sec);
       const grid = sec.querySelector(`[data-grid-for="${c.id}"]`);
@@ -314,6 +328,9 @@ document.addEventListener('DOMContentLoaded', () => {
           grid.appendChild(card);
         });
       });
+    }
+    } finally {
+      isRenderingSections = false;
     }
   }
 
@@ -368,15 +385,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Auto refresh newest products so items created from admin appear on home
   setInterval(async ()=>{
-    await loadCategories();
-    // Also refresh product sections if on homepage
+    // Only refresh product sections if on homepage
     const homeView = document.querySelector('[data-view="home"]');
     if (homeView && !homeView.hasAttribute('hidden')) {
-      // Get fresh categories from backend
+      // Get fresh categories from backend and render sections
       try {
         const res = await window.apiService.get('/categories');
         if(res?.success){
           const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+          // Update category mapping
+          categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
+          // Render sections (this will clear and re-render)
           renderCategorySections(backendCats);
         }
       } catch (error) {
