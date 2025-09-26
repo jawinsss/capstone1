@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chi tiết sản phẩm - MatFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="stylesheet" href="../../styles/product-detail.css">
+    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/product-detail.js" defer></script>
+    <style>
+        [hidden]{display:none!important}
+    </style>
+</head>
+<body>
+    <div class="hp-topbar">
+        <div class="hp-topbar-inner">
+            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+            <div class="hp-top-actions">
+                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
+                <span id="hpUserName" class="hp-top-hint"></span>
+                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="hp-header">
+        <div class="hp-header-container">
+            <a href="homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
+            <div class="hp-search">
+                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
+                <div id="searchSuggestions" class="suggestions-dropdown"></div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <nav class="hp-nav">
+                <a href="homepage.html">
+                    <i class="fa-solid fa-house"></i> Trang chủ</a>
+                <a href="products.html">
+                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
+                <a href="#">
+                    <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
+            </nav>
+            <div class="hp-user">
+                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="hp-main">
+        <div class="product-detail-container">
+            <!-- Breadcrumb -->
+            <div class="breadcrumb">
+                <a href="homepage.html">Trang chủ</a> > 
+                <a href="products.html">Sản phẩm</a> > 
+                <span id="breadcrumbProduct">Chi tiết sản phẩm</span>
+            </div>
+
+            <!-- Loading State -->
+            <div id="loadingState" class="loading-state">
+                <i class="fa-solid fa-spinner fa-spin" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <p>Đang tải thông tin sản phẩm...</p>
+            </div>
+
+            <!-- Error State -->
+            <div id="errorState" class="error-state" hidden>
+                <i class="fa-solid fa-exclamation-triangle" style="font-size: 24px; margin-bottom: 10px;"></i>
+                <p>Không thể tải thông tin sản phẩm. Vui lòng thử lại sau.</p>
+                <button onclick="window.location.href='products.html'" class="hp-btn" style="margin-top: 15px;">
+                    Quay lại danh sách sản phẩm
+                </button>
+            </div>
+
+            <!-- Product Detail Content -->
+            <div id="productDetailContent" class="product-detail-content" hidden>
+                <div class="product-detail-main">
+                    <!-- Product Images -->
+                    <div class="product-images">
+                        <img id="mainImage" class="main-image" src="" alt="Product Image">
+                        <div class="thumbnail-images" id="thumbnailImages">
+                            <!-- Thumbnails will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Product Info -->
+                    <div class="product-info">
+                        <h1 id="productTitle" class="product-title"></h1>
+                        <div id="productPrice" class="product-price"></div>
+                        <div id="productDescription" class="product-description"></div>
+
+                        <div class="product-actions">
+                            <div class="quantity-controls">
+                                <span class="quantity-label">Số lượng:</span>
+                                <div class="quantity-input-group">
+                                    <button class="quantity-btn" id="decreaseQty">-</button>
+                                    <input type="number" id="quantityInput" class="quantity-input" min="1" value="1">
+                                    <button class="quantity-btn" id="increaseQty">+</button>
+                                </div>
+                            </div>
+
+                            <div class="action-buttons">
+                                <button id="addToCartBtn" class="btn-add-cart">
+                                    <i class="fa-solid fa-cart-plus"></i>
+                                    Thêm vào giỏ hàng
+                                </button>
+                                <button id="buyNowBtn" class="btn-buy-now">
+                                    <i class="fa-solid fa-bolt"></i>
+                                    Mua ngay
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Product Specifications -->
+                        <div class="product-specs">
+                            <h3 class="specs-title">Thông số kỹ thuật</h3>
+                            <ul class="specs-list" id="productSpecs">
+                                <!-- Specs will be loaded here -->
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Related Products -->
+                <div class="related-products">
+                    <h2 class="related-title">Sản phẩm liên quan</h2>
+                    <div class="related-grid" id="relatedProducts">
+                        <!-- Related products will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="hp-footer">
+        <div class="hp-footer-container">
+            Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+        </div>
+    </footer>
+</body>
+</html>

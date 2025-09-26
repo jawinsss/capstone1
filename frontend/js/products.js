@@ -23,13 +23,14 @@ document.addEventListener('DOMContentLoaded', () => {
   
   let pvState = {
     page: 1,
-    pageSize: 8,
+    pageSize: 16,
     sort: 'all',
     categoryId: null,
     min: 0,
     max: 5000000,
     totalPages: 1,
     filteredItems: null, // For subcategory filtering
+    isRendering: false, // Prevent duplicate renders
   };
 
   // Standard categories and child types to display
@@ -129,6 +130,11 @@ document.addEventListener('DOMContentLoaded', () => {
           pvState.categoryId = categoryId;
           pvState.filteredItems = null; // Clear subcategory filter
           pvState.page = 1;
+          pvState.sort = 'all'; // Reset sort when changing category
+          // Update active sort button
+          document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+          const defaultSort = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]');
+          if(defaultSort) defaultSort.classList.add('active');
           renderProductList();
         }
       });
@@ -202,67 +208,112 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function renderProductList(){
     if(!productGrid) return;
+    
+    // Prevent multiple simultaneous renders
+    if(pvState.isRendering) return;
+    pvState.isRendering = true;
+    
     if(pv.loading) pv.loading.removeAttribute('hidden');
     if(pv.empty) pv.empty.setAttribute('hidden','');
     productGrid.innerHTML = '';
     
     let items, meta, total;
     
-    // Check if we have filtered items (from subcategory filter)
-    if(pvState.filteredItems !== null) {
-      // We have filtered items (could be empty array)
-      items = pvState.filteredItems;
-      meta = { total: items.length };
-      total = items.length;
-    } else {
-      // Normal API call
-      const qs = buildProductQuery();
-      const res = await window.apiService.get(`/products?${qs}`);
-      const payload = res?.success ? res.data : null;
-      const result = Array.isArray(payload) ? { items: payload, meta: { total: payload.length } } : { items: payload?.items || [], meta: payload?.meta || {} };
-      items = result.items;
-      meta = result.meta;
-      total = Number(meta?.total || items.length || 0);
-    }
-    
-    // Real-time count update
-    const countEl = document.getElementById('productCount');
-    if(countEl){
-      countEl.textContent = String(total);
-    }
-    
-    pvState.totalPages = Math.max(1, Math.ceil(total / pvState.pageSize));
-    
-    // Build cards
-    items.forEach(p=>{
-      const card = document.createElement('div');
-      card.className = 'hp-card';
-      card.style.cursor = 'pointer';
-      const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
-      card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
-        <div class="name">${p.name}</div>
-        <div class="price">${formatVND(p.price)}</div>
-      `;
-      card.addEventListener('click', ()=>{ openDetail(p.id); });
-      productGrid.appendChild(card);
-    });
-    
-    // Pagination numbers
-    if(pv.numbers){
-      pv.numbers.innerHTML = '';
-      for(let i=1;i<=pvState.totalPages;i++){
-        const b = document.createElement('button');
-        b.className = `pagination-number${i===pvState.page?' active':''}`;
-        b.textContent = String(i);
-        b.addEventListener('click', ()=>{ pvState.page = i; renderProductList(); });
-        pv.numbers.appendChild(b);
+    try {
+      // Check if we have filtered items (from subcategory filter)
+      if(pvState.filteredItems !== null) {
+        // We have filtered items (could be empty array)
+        const allFilteredItems = pvState.filteredItems;
+        const startIndex = (pvState.page - 1) * pvState.pageSize;
+        const endIndex = startIndex + pvState.pageSize;
+        items = allFilteredItems.slice(startIndex, endIndex);
+        meta = { total: allFilteredItems.length };
+        total = allFilteredItems.length;
+      } else {
+        // Normal API call
+        const qs = buildProductQuery();
+        const res = await window.apiService.get(`/products?${qs}`);
+        if (!res?.success) {
+          console.error('Failed to load products:', res?.message);
+          items = [];
+          meta = { total: 0 };
+          total = 0;
+        } else {
+          const payload = res.data;
+          const result = Array.isArray(payload) ? { items: payload, meta: { total: payload.length } } : { items: payload?.items || [], meta: payload?.meta || {} };
+          items = result.items;
+          meta = result.meta;
+          total = Number(meta?.total || items.length || 0);
+        }
       }
+      
+      // Real-time count update
+      const countEl = document.getElementById('productCount');
+      if(countEl){
+        countEl.textContent = String(total);
+      }
+      
+      // Update page info
+      const pageInfo = document.getElementById('pageInfo');
+      if(pageInfo && pvState.totalPages > 1) {
+        const startItem = (pvState.page - 1) * pvState.pageSize + 1;
+        const endItem = Math.min(pvState.page * pvState.pageSize, total);
+        pageInfo.textContent = `Trang ${pvState.page}/${pvState.totalPages} (${startItem}-${endItem} của ${total} sản phẩm)`;
+      }
+      
+      // Calculate total pages based on actual items count
+      pvState.totalPages = Math.max(1, Math.ceil(total / pvState.pageSize));
+      
+      // Build cards
+      items.forEach(p=>{
+        const card = document.createElement('div');
+        card.className = 'hp-card';
+        card.style.cursor = 'pointer';
+        const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
+        card.innerHTML = `
+          <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+          <div class="name">${p.name}</div>
+          <div class="price">${formatVND(p.price)}</div>
+        `;
+        card.addEventListener('click', ()=>{ window.location.href = `product-detail.html?id=${p.id}`; });
+        productGrid.appendChild(card);
+      });
+      
+      // Pagination numbers
+      if(pv.numbers){
+        pv.numbers.innerHTML = '';
+        // Show pagination only if there are multiple pages
+        if(pvState.totalPages > 1) {
+          for(let i=1;i<=pvState.totalPages;i++){
+            const b = document.createElement('button');
+            b.className = `pagination-number${i===pvState.page?' active':''}`;
+            b.textContent = String(i);
+            b.addEventListener('click', ()=>{ pvState.page = i; renderProductList(); });
+            pv.numbers.appendChild(b);
+          }
+        }
+      }
+      // Show/hide pagination controls based on total pages
+      const paginationContainer = document.getElementById('pvPagination');
+      if(paginationContainer) {
+        if(pvState.totalPages > 1) {
+          paginationContainer.style.display = 'flex';
+        } else {
+          paginationContainer.style.display = 'none';
+        }
+      }
+      
+      if(pv.prev) pv.prev.disabled = pvState.page<=1;
+      if(pv.next) pv.next.disabled = pvState.page>=pvState.totalPages;
+      if(pv.loading) pv.loading.setAttribute('hidden','');
+      if(pv.empty && items.length===0) pv.empty.removeAttribute('hidden');
+      
+    } catch (error) {
+      console.error('Error rendering product list:', error);
+      if(pv.empty) pv.empty.removeAttribute('hidden');
+    } finally {
+      pvState.isRendering = false;
     }
-    if(pv.prev) pv.prev.disabled = pvState.page<=1;
-    if(pv.next) pv.next.disabled = pvState.page>=pvState.totalPages;
-    if(pv.loading) pv.loading.setAttribute('hidden','');
-    if(pv.empty && items.length===0) pv.empty.removeAttribute('hidden');
   }
 
   // Throttle rendering while dragging sliders
@@ -272,144 +323,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderTimer = setTimeout(()=>{ pvState.page = 1; renderProductList(); }, 250);
   }
 
-  // ===== Product detail =====
-  async function openDetail(productId){
-    // Create a new window for product detail
-    const detailWindow = window.open('', '_blank', 'width=1200,height=800,scrollbars=yes,resizable=yes');
-    
-    detailWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="vi">
-      <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Chi tiết sản phẩm - MatFlow</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-        <link rel="stylesheet" href="../../styles/homepage.css">
-        <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
-        <script src="../../js/config.js"></script>
-        <script src="../../js/apiService.js"></script>
-        <style>
-          body { margin: 0; padding: 20px; font-family: 'Inter', sans-serif; }
-          .detail-container { max-width: 1000px; margin: 0 auto; }
-          .back-btn { margin-bottom: 20px; }
-          .product-detail { display: flex; gap: 30px; margin-bottom: 30px; }
-          .product-image { flex: 1; }
-          .product-image img { width: 100%; max-width: 500px; height: auto; border-radius: 8px; }
-          .product-info { flex: 1; }
-          .product-title { font-size: 2rem; font-weight: 600; margin-bottom: 10px; }
-          .product-price { font-size: 1.5rem; color: #e74c3c; font-weight: 600; margin-bottom: 20px; }
-          .product-description { margin-bottom: 30px; line-height: 1.6; }
-          .quantity-controls { display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
-          .quantity-controls button { width: 40px; height: 40px; border: 1px solid #ddd; background: #f8f9fa; cursor: pointer; border-radius: 4px; }
-          .quantity-controls input { width: 80px; height: 40px; text-align: center; border: 1px solid #ddd; border-radius: 4px; }
-          .action-buttons { display: flex; gap: 15px; }
-          .action-buttons button { padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; font-weight: 500; }
-          .btn-primary { background: #3498db; color: white; }
-          .btn-secondary { background: #95a5a6; color: white; }
-          .btn-primary:hover { background: #2980b9; }
-          .btn-secondary:hover { background: #7f8c8d; }
-        </style>
-      </head>
-      <body>
-        <div class="detail-container">
-          <button class="back-btn" onclick="window.close()">← Quay lại</button>
-          <div id="productDetailContent">Đang tải...</div>
-        </div>
-        <script>
-          async function loadProductDetail() {
-            try {
-              const res = await window.apiService.get('/products/${productId}');
-              if (!res?.success) {
-                document.getElementById('productDetailContent').innerHTML = '<p>Không tải được sản phẩm.</p>';
-                return;
-              }
-              
-              const p = res.data;
-              const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/600x400?text=MatFlow';
-              
-              document.getElementById('productDetailContent').innerHTML = \`
-                <div class="product-detail">
-                  <div class="product-image">
-                    <img src="\${thumb}" alt="\${p.name}" onerror="this.src='https://via.placeholder.com/600x400?text=MatFlow'">
-                  </div>
-                  <div class="product-info">
-                    <h1 class="product-title">\${p.name}</h1>
-                    <div class="product-price">\${formatVND(p.price)}</div>
-                    <div class="product-description">\${p.description || 'Không có mô tả'}</div>
-                    <div class="quantity-controls">
-                      <button onclick="decreaseQty()">-</button>
-                      <input type="number" id="qtyInput" min="1" value="1">
-                      <button onclick="increaseQty()">+</button>
-                    </div>
-                    <div class="action-buttons">
-                      <button class="btn-primary" onclick="addToCart()">Thêm vào giỏ</button>
-                      <button class="btn-secondary" onclick="buyNow()">Mua ngay</button>
-                    </div>
-                  </div>
-                </div>
-              \`;
-              
-              // Add event listeners
-              window.decreaseQty = function() {
-                const input = document.getElementById('qtyInput');
-                const val = Math.max(1, parseInt(input.value) - 1);
-                input.value = val;
-              };
-              
-              window.increaseQty = function() {
-                const input = document.getElementById('qtyInput');
-                const val = Math.max(1, parseInt(input.value) + 1);
-                input.value = val;
-              };
-              
-              window.addToCart = function() {
-                const qty = parseInt(document.getElementById('qtyInput').value);
-                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const idx = cart.findIndex(i => i.productId === p.id);
-                if (idx >= 0) {
-                  cart[idx].quantity += qty;
-                } else {
-                  cart.push({ productId: p.id, quantity: qty });
-                }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                alert('Đã thêm vào giỏ');
-              };
-              
-              window.buyNow = function() {
-                const qty = parseInt(document.getElementById('qtyInput').value);
-                const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-                const idx = cart.findIndex(i => i.productId === p.id);
-                if (idx >= 0) {
-                  cart[idx].quantity += qty;
-                } else {
-                  cart.push({ productId: p.id, quantity: qty });
-                }
-                localStorage.setItem('cart', JSON.stringify(cart));
-                alert('Chuyển đến trang thanh toán...');
-                // You can redirect to checkout page here
-              };
-              
-              function formatVND(n) {
-                return Number(n || 0).toLocaleString('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
-              }
-              
-            } catch (error) {
-              console.error('Error loading product detail:', error);
-              document.getElementById('productDetailContent').innerHTML = '<p>Có lỗi xảy ra khi tải sản phẩm.</p>';
-            }
-          }
-          
-          // Load product detail when window opens
-          loadProductDetail();
-        </script>
-      </body>
-      </html>
-    `);
-  }
 
   // Initialize product view controls
   function initProductView() {
@@ -431,6 +344,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btn.classList.add('active');
         pvState.sort = btn.getAttribute('data-filter') || 'all';
         pvState.page = 1;
+        pvState.filteredItems = null; // Clear any subcategory filter when changing sort
         renderProductList();
       });
     });
@@ -452,7 +366,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset all filters
     pv.reset && pv.reset.addEventListener('click', ()=>{
       pvState.page = 1;
-      pvState.pageSize = 8;
+      pvState.pageSize = 16;
       pvState.sort = 'all';
       pvState.categoryId = null;
       pvState.min = 0;
@@ -491,16 +405,23 @@ document.addEventListener('DOMContentLoaded', () => {
         filterProductViewBySubCategory(categoryId, subcategory);
       }
     } else if (hash.startsWith('product-detail&id=')) {
-      // Handle product detail from hash
+      // Handle product detail from hash - redirect to new page
       const productId = hash.split('&id=')[1];
       if (productId) {
-        openDetail(productId);
+        window.location.href = `product-detail.html?id=${productId}`;
       }
     } else {
       // Normal product list
       renderProductList();
     }
   }
+
+  // Auto refresh products so new items from admin appear
+  setInterval(()=>{
+    if (!pvState.isRendering) {
+      renderProductList();
+    }
+  }, 15000);
 
   // Initialize everything
   initProductView();

@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadProducts(categoryId){
-    const qs = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}&take=12` : `?take=12`;
+    const qs = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}&take=16` : `?take=16`;
     const res = await window.apiService.get(`/products${qs}`);
     if(!res?.success) return;
     const payload = res.data;
@@ -278,7 +278,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const sec = sectionTemplate(c.name, c.id);
       container.appendChild(sec);
       const grid = sec.querySelector(`[data-grid-for="${c.id}"]`);
-      const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=6`);
+      const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=8`);
       if(res?.success){
         const items = Array.isArray(res.data) ? res.data : res.data?.items || [];
         items.forEach(p=>{
@@ -298,7 +298,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const viewAllBtn = sec.querySelector('[data-view-all]');
       viewAllBtn.addEventListener('click',async ()=>{
         grid.innerHTML = '';
-        const more = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=24`);
+        const more = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=16`);
         const items = more?.success ? (Array.isArray(more.data) ? more.data : more.data?.items || []) : [];
         items.forEach(p=>{
           const card = document.createElement('div');
@@ -318,9 +318,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function openProduct(p){
-    // Redirect to products page for a richer experience
+    // Redirect to product detail page
     if(p?.id){ 
-      window.location.href = `products.html#product-detail&id=${p.id}`;
+      window.location.href = `product-detail.html?id=${p.id}`;
     }
   }
 
@@ -367,8 +367,22 @@ document.addEventListener('DOMContentLoaded', () => {
   handleInitialRoute();
 
   // Auto refresh newest products so items created from admin appear on home
-  setInterval(()=>{
-    loadCategories();
+  setInterval(async ()=>{
+    await loadCategories();
+    // Also refresh product sections if on homepage
+    const homeView = document.querySelector('[data-view="home"]');
+    if (homeView && !homeView.hasAttribute('hidden')) {
+      // Get fresh categories from backend
+      try {
+        const res = await window.apiService.get('/categories');
+        if(res?.success){
+          const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+          renderCategorySections(backendCats);
+        }
+      } catch (error) {
+        console.error('Error refreshing categories:', error);
+      }
+    }
   }, 15000);
   
 });
