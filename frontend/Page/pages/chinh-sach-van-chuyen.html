@@ -10,6 +10,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../../styles/homepage.css">
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
     <style>
         .page-container {
             max-width: 1200px;
@@ -81,7 +83,43 @@
     </style>
 </head>
 <body>
-    <div class="page-container">
+    <div class="hp-topbar">
+        <div class="hp-topbar-inner">
+            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+            <div class="hp-top-actions">
+                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
+                <span id="hpUserName" class="hp-top-hint"></span>
+                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="hp-header">
+        <div class="hp-header-container">
+            <a href="../homepage/homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
+            <div class="hp-search">
+                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
+                <div id="searchSuggestions" class="suggestions-dropdown"></div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <nav class="hp-nav">
+                <a href="../homepage/homepage.html">
+                    <i class="fa-solid fa-house"></i> Trang chủ</a>
+                <a href="../homepage/products.html">
+                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
+                <a href="#">
+                    <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
+            </nav>
+            <div class="hp-user">
+                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="hp-main">
+        <div class="page-container">
         <a href="../homepage/homepage.html" class="back-btn">
             <i class="fa-solid fa-arrow-left"></i>
             Quay lại trang chủ
@@ -121,5 +159,140 @@
             </div>
         </div>
     </div>
+    </main>
+
+    <footer class="hp-footer">
+        <div class="hp-footer-container">
+            <div class="footer-main">
+                <div class="footer-section">
+                    <h4>VỀ CHÚNG TÔI</h4>
+                    <ul>
+                        <li><a href="#">Giới thiệu</a></li>
+                        <li><a href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>TƯ VẤN MUA HÀNG</h4>
+                    <ul>
+                        <li><a href="../homepage/homepage.html">Trang chủ</a></li>
+                        <li><a href="../homepage/products.html">Sản phẩm</a></li>
+                        <li><a href="#">Giới thiệu</a></li>
+                        <li><a href="#">Tin tức</a></li>
+                        <li><a href="#">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+                    <ul>
+                        <li><a href="../pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
+                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+                        <li><a href="../pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>CHÍNH SÁCH</h4>
+                    <ul>
+                        <li><a href="../pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
+                        <li><a href="../pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
+                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+                        <li><a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+                    <div class="social-links">
+                        <a href="#" class="social-link facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="#" class="social-link youtube"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="#" class="social-link pinterest"><i class="fa-brands fa-pinterest-p"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-bottom-section">
+                    <h4>HÌNH THỨC THANH TOÁN</h4>
+                    <div class="payment-methods">
+                        <div class="payment-method">ATM</div>
+                        <div class="payment-method">VISA</div>
+                    </div>
+                </div>
+                <div class="footer-bottom-section">
+                    <h4>ĐƯỢC CHỨNG NHẬN</h4>
+                    <div class="certifications">
+                        <div class="certification">ONLINE.GOV.VN</div>
+                        <div class="certification">ĐÃ ĐĂNG KÝ BỘ CÔNG THƯƠNG</div>
+                    </div>
+                </div>
+                <div class="footer-bottom-section">
+                    <h4>ĐĂNG KÝ EMAIL</h4>
+                    <div class="email-subscription">
+                        <input type="email" placeholder="Nhập email của bạn" class="email-input">
+                        <button class="email-submit">Gửi</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-copyright">
+                Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // User session management
+        document.addEventListener('DOMContentLoaded', () => {
+            const userNameEl = document.getElementById('hpUserName');
+            const loginLink = document.getElementById('hpLoginLink');
+            const logoutBtn = document.getElementById('hpLogoutBtn');
+            const adminLink = document.getElementById('hpAdminLink');
+            const cartBtn = document.getElementById('hpCartBtn');
+            const cartCount = document.getElementById('hpCartCount');
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+
+            // User session UI
+            async function syncUserUI(){
+                let user = null;
+                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(_) {}
+                const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+                if(!user && token){
+                    try {
+                        const res = await window.apiService.get('/users/profile');
+                        if(res?.success){ user = res.data; localStorage.setItem('user', JSON.stringify(user)); }
+                    } catch(e) {}
+                }
+                if(user){
+                    userNameEl.textContent = user.fullName || user.username || '';
+                    loginLink.setAttribute('hidden','');
+                    logoutBtn.removeAttribute('hidden');
+                    if((user.role||'').toUpperCase() === 'ADMIN') adminLink.removeAttribute('hidden');
+                } else {
+                    userNameEl.textContent = '';
+                    logoutBtn.setAttribute('hidden','');
+                    adminLink.setAttribute('hidden','');
+                    loginLink.removeAttribute('hidden');
+                }
+            }
+
+            if(logoutBtn){
+                logoutBtn.addEventListener('click', ()=>{
+                    try {
+                        ['accessToken','refreshToken','token','user'].forEach(k=>{localStorage.removeItem(k); sessionStorage.removeItem(k);});
+                    } catch(_){}
+                    syncUserUI();
+                });
+            }
+
+            function updateCartCount(){
+                cartCount.textContent = String(cart.reduce((s,i)=>s + Number(i.quantity||0),0));
+            }
+            updateCartCount();
+            
+            cartBtn && cartBtn.addEventListener('click', ()=>{
+                alert('Tính năng giỏ hàng đang được hoàn thiện.');
+            });
+
+            syncUserUI();
+        });
+    </script>
 </body>
 </html>

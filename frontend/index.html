@@ -6,8 +6,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MatFlow - Hệ Thống Bán Vật Tư</title>
     <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/homepage.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="shortcut icon" href="../frontend/assets/Favicon MatFlow.png" type="image/x-icon">
+    <style>
+        /* Override footer styles for index.html to match other pages */
+        .hp-footer {
+            background: #B2EBF2 !important;
+            color: #00695C !important;
+        }
+        
+        .footer-section h4 {
+            color: #00695C !important;
+        }
+        
+        .footer-section ul li a {
+            color: #00897B !important;
+        }
+        
+        .footer-section ul li a:hover {
+            color: #00695C !important;
+        }
+        
+        .footer-bottom-section h4 {
+            color: #00695C !important;
+        }
+        
+        .payment-method, .certification {
+            background: #00695C !important;
+            color: white !important;
+        }
+        
+        .email-submit {
+            background: #00695C !important;
+            color: white !important;
+        }
+        
+        .email-submit:hover {
+            background: #004D40 !important;
+        }
+        
+        .footer-copyright {
+            color: #00695C !important;
+        }
+        
+        .footer-bottom {
+            border-top: 1px solid #80CBC4 !important;
+        }
+        
+        .footer-copyright {
+            border-top: 1px solid #80CBC4 !important;
+        }
+    </style>
 </head>
 
 <body>
@@ -135,32 +185,79 @@
     </main>
 
     <!-- Footer -->
-    <footer class="footer">
-        <div class="footer-content">
-            <div class="footer-left">
-                <div class="company-info">
-                    <p class="company-name">Công ty TNHH MatFlow</p>
-                    <p class="company-address">Địa chỉ: 82 Nguyễn Công Triều</p>
-                    <p class="company-manager">Chịu Trách Nhiệm Quản Lý Nội Dung: Ngô Minh Tâm</p>
+    <footer class="hp-footer">
+        <div class="hp-footer-container">
+            <div class="footer-main">
+                <div class="footer-section">
+                    <h4>VỀ CHÚNG TÔI</h4>
+                    <ul>
+                        <li><a href="Page/pages/giới-thiệu.html">Giới thiệu</a></li>
+                        <li><a href="Page/pages/liên-hệ.html">Liên hệ</a></li>
+                    </ul>
                 </div>
-                <div class="copyright">
-                    <p> Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow</p>
+                <div class="footer-section">
+                    <h4>TƯ VẤN MUA HÀNG</h4>
+                    <ul>
+                        <li><a href="Page/homepage/homepage.html">Trang chủ</a></li>
+                        <li><a href="Page/homepage/products.html">Sản phẩm</a></li>
+                        <li><a href="Page/pages/giới-thiệu.html">Giới thiệu</a></li>
+                        <li><a href="Page/pages/tin-tức.html">Tin tức</a></li>
+                        <li><a href="Page/pages/liên-hệ.html">Liên hệ</a></li>
+                    </ul>
                 </div>
-            </div>
-            <div class="footer-right">
-                <div class="social-section">
-                    <p class="social-title">Theo dõi MatFlow</p>
+                <div class="footer-section">
+                    <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+                    <ul>
+                        <li><a href="Page/pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
+                        <li><a href="Page/pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+                        <li><a href="Page/pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>CHÍNH SÁCH</h4>
+                    <ul>
+                        <li><a href="Page/pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
+                        <li><a href="Page/pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
+                        <li><a href="Page/pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+                        <li><a href="Page/pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
                     <div class="social-links">
-                        <a href="https://www.facebook.com/ngo.tam.729267" class="social-link facebook" target="_blank">
-                            <i class="fab fa-facebook-f"></i>
-                            Facebook
-                        </a>
-                        <a href="https://www.instagram.com/jawinsss/" class="social-link instagram" target="_blank">
-                            <i class="fab fa-instagram"></i>
-                            Instagram
-                        </a>
+                        <a href="https://www.facebook.com/ngo.tam.729267" class="social-link facebook" target="_blank"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://www.youtube.com" class="social-link youtube" target="_blank"><i class="fa-brands fa-youtube"></i></a>
+                        <a href="https://www.pinterest.com" class="social-link pinterest" target="_blank"><i class="fa-brands fa-pinterest-p"></i></a>
                     </div>
                 </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-bottom-section">
+                    <h4>HÌNH THỨC THANH TOÁN</h4>
+                    <div class="payment-methods">
+                        <div class="payment-method">ATM</div>
+                        <div class="payment-method">VISA</div>
+                    </div>
+                </div>
+                <div class="footer-bottom-section">
+                    <h4>ĐƯỢC CHỨNG NHẬN</h4>
+                    <div class="certifications">
+                        <div class="certification">ONLINE.GOV.VN</div>
+                        <div class="certification">ĐÃ ĐĂNG KÝ BỘ CÔNG THƯƠNG</div>
+                    </div>
+                </div>
+                <div class="footer-bottom-section">
+                    <h4>ĐĂNG KÝ EMAIL</h4>
+                    <div class="email-subscription">
+                        <input type="email" placeholder="Nhập email của bạn" class="email-input">
+                        <button class="email-submit">Gửi</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-copyright">
+                Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
             </div>
         </div>
     </footer>
@@ -179,6 +276,40 @@
     <script src="js/config.js"></script>
     <script src="js/apiService.js"></script>
     <script src="js/main.js"></script>
+    
+    <script>
+        // Email subscription functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            const emailInput = document.querySelector('.email-input');
+            const emailSubmit = document.querySelector('.email-submit');
+            
+            if (emailSubmit) {
+                emailSubmit.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    const email = emailInput.value.trim();
+                    
+                    if (!email) {
+                        alert('Vui lòng nhập email của bạn!');
+                        return;
+                    }
+                    
+                    if (!isValidEmail(email)) {
+                        alert('Vui lòng nhập email hợp lệ!');
+                        return;
+                    }
+                    
+                    // Simulate email subscription
+                    alert('Cảm ơn bạn đã đăng ký nhận thông tin từ MatFlow!');
+                    emailInput.value = '';
+                });
+            }
+            
+            function isValidEmail(email) {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(email);
+            }
+        });
+    </script>
 </body>
 
 </html>

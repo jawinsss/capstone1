@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chính sách bảo mật thông tin - MatFlow</title>
+    <title>Chính sách kiểm hàng - MatFlow</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -76,6 +76,22 @@
             border-radius: 0 8px 8px 0;
         }
         
+        .warning-box {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
+        .success-box {
+            background: #d4edda;
+            border-left: 4px solid #28a745;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+        
         .contact-info {
             background: #f8f9fa;
             padding: 25px;
@@ -130,6 +146,58 @@
             padding: 15px;
             background: #f8f9fa;
             border-radius: 8px;
+        }
+        
+        .inspection-step {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .inspection-step h4 {
+            color: #2c3e50;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .step-number {
+            background: #3498db;
+            color: white;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+        
+        .checklist {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 15px 0;
+        }
+        
+        .checklist h4 {
+            color: #2e7d32;
+            margin-bottom: 15px;
+        }
+        
+        .checklist ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        
+        .checklist li {
+            margin-bottom: 8px;
+            color: #2e7d32;
         }
         
         @media (max-width: 768px) {
@@ -195,119 +263,132 @@
             </a>
 
             <div class="policy-header">
-                <h1 class="policy-title">Chính sách bảo mật thông tin</h1>
-                <p class="policy-subtitle">Cam kết bảo vệ thông tin cá nhân của khách hàng</p>
+                <h1 class="policy-title">Chính sách kiểm hàng</h1>
+                <p class="policy-subtitle">Đảm bảo chất lượng sản phẩm trước khi giao đến tay khách hàng</p>
             </div>
 
             <div class="policy-content">
                 <div class="policy-section">
-                    <h2 class="section-title">1. MỤC ĐÍCH VÀ PHẠM VI THU THẬP</h2>
                     <div class="section-content">
-                        <p>Chúng tôi thu thập thông tin cá nhân của bạn nhằm mục đích:</p>
-                        <ul class="policy-list">
-                            <li>Cung cấp dịch vụ và sản phẩm theo yêu cầu của bạn</li>
-                            <li>Xử lý đơn hàng và giao dịch</li>
-                            <li>Cải thiện chất lượng dịch vụ và trải nghiệm người dùng</li>
-                            <li>Gửi thông tin khuyến mãi và cập nhật sản phẩm mới</li>
-                            <li>Tuân thủ các quy định pháp luật hiện hành</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">2. THÔNG TIN THU THẬP</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi có thể thu thập các loại thông tin sau:</p>
-                        <ul class="policy-list">
-                            <li><strong>Thông tin cá nhân:</strong> Họ tên, địa chỉ, số điện thoại, email</li>
-                            <li><strong>Thông tin tài khoản:</strong> Tên đăng nhập, mật khẩu (được mã hóa)</li>
-                            <li><strong>Thông tin giao dịch:</strong> Lịch sử mua hàng, phương thức thanh toán</li>
-                            <li><strong>Thông tin kỹ thuật:</strong> Địa chỉ IP, trình duyệt, thiết bị truy cập</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">3. PHƯƠNG THỨC THU THẬP THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Thông tin cá nhân được thu thập thông qua:</p>
-                        <ul class="policy-list">
-                            <li>Đăng ký tài khoản trên website</li>
-                            <li>Đặt hàng và thanh toán</li>
-                            <li>Liên hệ và tư vấn</li>
-                            <li>Đăng ký nhận bản tin</li>
-                            <li>Sử dụng các tính năng của website</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">4. SỬ DỤNG THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Thông tin cá nhân của bạn được sử dụng để:</p>
-                        <ul class="policy-list">
-                            <li>Xử lý và hoàn thành đơn hàng</li>
-                            <li>Cung cấp dịch vụ khách hàng</li>
-                            <li>Gửi thông báo về tình trạng đơn hàng</li>
-                            <li>Cải thiện sản phẩm và dịch vụ</li>
-                            <li>Gửi thông tin khuyến mãi (nếu bạn đồng ý)</li>
-                            <li>Tuân thủ nghĩa vụ pháp lý</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">5. CHIA SẺ THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi có thể chia sẻ thông tin của bạn trong các trường hợp sau:</p>
-                        <ul class="policy-list">
-                            <li><strong>Đối tác vận chuyển:</strong> Để giao hàng đến địa chỉ của bạn</li>
-                            <li><strong>Nhà cung cấp dịch vụ:</strong> Để xử lý thanh toán và hỗ trợ kỹ thuật</li>
-                            <li><strong>Cơ quan pháp luật:</strong> Khi có yêu cầu chính thức từ cơ quan có thẩm quyền</li>
-                            <li><strong>Bảo vệ quyền lợi:</strong> Để bảo vệ quyền lợi hợp pháp của chúng tôi và khách hàng</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">6. BẢO MẬT THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn bằng:</p>
-                        <ul class="policy-list">
-                            <li>Mã hóa dữ liệu nhạy cảm</li>
-                            <li>Sử dụng giao thức HTTPS an toàn</li>
-                            <li>Hạn chế quyền truy cập thông tin</li>
-                            <li>Thường xuyên cập nhật hệ thống bảo mật</li>
-                            <li>Đào tạo nhân viên về bảo mật thông tin</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">7. QUYỀN CỦA KHÁCH HÀNG</h2>
-                    <div class="section-content">
-                        <p>Bạn có quyền:</p>
-                        <ul class="policy-list">
-                            <li>Truy cập và xem thông tin cá nhân của mình</li>
-                            <li>Yêu cầu chỉnh sửa thông tin không chính xác</li>
-                            <li>Yêu cầu xóa thông tin cá nhân</li>
-                            <li>Rút lại sự đồng ý về việc sử dụng thông tin</li>
-                            <li>Khiếu nại về việc xử lý thông tin cá nhân</li>
-                        </ul>
+                        <p>Chào mừng bạn đến với <strong>MatFlow</strong>. Chúng tôi cam kết mang đến cho khách hàng những sản phẩm chất lượng cao nhất thông qua quy trình kiểm hàng nghiêm ngặt.</p>
+                        <p>Chính sách kiểm hàng này được thiết kế để đảm bảo mọi sản phẩm trước khi giao đến tay khách hàng đều đạt tiêu chuẩn chất lượng cao nhất.</p>
                     </div>
                 </div>
 
                 <div class="highlight-box">
                     <h3 style="color: #2c3e50; margin-bottom: 15px;">
-                        <i class="fa-solid fa-shield-alt"></i> Cam kết bảo mật
+                        <i class="fa-solid fa-check-circle"></i> Cam kết chất lượng
                     </h3>
-                    <p>Chúng tôi cam kết không bán, cho thuê hoặc chia sẻ thông tin cá nhân của bạn với bên thứ ba vì mục đích thương mại mà không có sự đồng ý rõ ràng của bạn.</p>
+                    <p><strong>MatFlow</strong> cam kết thực hiện kiểm tra kỹ lưỡng mọi sản phẩm trước khi đóng gói và giao hàng, đảm bảo khách hàng nhận được sản phẩm đúng chất lượng và thông số kỹ thuật.</p>
                 </div>
 
                 <div class="policy-section">
-                    <h2 class="section-title">8. THÔNG TIN LIÊN HỆ</h2>
+                    <h2 class="section-title">1. Quy trình kiểm hàng</h2>
+                    <div class="section-content">
+                        <div class="inspection-step">
+                            <h4>
+                                <div class="step-number">1</div>
+                                Kiểm tra nguồn gốc sản phẩm
+                            </h4>
+                            <p>Xác minh nguồn gốc, xuất xứ và chứng nhận chất lượng của từng sản phẩm từ nhà sản xuất uy tín.</p>
+                        </div>
+                        
+                        <div class="inspection-step">
+                            <h4>
+                                <div class="step-number">2</div>
+                                Kiểm tra bao bì và nhãn mác
+                            </h4>
+                            <p>Đảm bảo bao bì nguyên vẹn, nhãn mác rõ ràng, thông tin sản phẩm chính xác và đầy đủ.</p>
+                        </div>
+                        
+                        <div class="inspection-step">
+                            <h4>
+                                <div class="step-number">3</div>
+                                Kiểm tra chất lượng sản phẩm
+                            </h4>
+                            <p>Thực hiện kiểm tra kỹ thuật, đo đạc thông số và đánh giá chất lượng theo tiêu chuẩn ngành.</p>
+                        </div>
+                        
+                        <div class="inspection-step">
+                            <h4>
+                                <div class="step-number">4</div>
+                                Kiểm tra số lượng và đóng gói
+                            </h4>
+                            <p>Đếm và xác nhận số lượng chính xác, đóng gói cẩn thận để bảo vệ sản phẩm trong quá trình vận chuyển.</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-section">
+                    <h2 class="section-title">2. Tiêu chuẩn kiểm tra</h2>
+                    <div class="section-content">
+                        <div class="checklist">
+                            <h4><i class="fa-solid fa-clipboard-check"></i> Danh mục kiểm tra bắt buộc</h4>
+                            <ul>
+                                <li>Kiểm tra ngoại quan: Không có vết nứt, vỡ, biến dạng</li>
+                                <li>Kiểm tra kích thước: Đúng quy cách, dung sai cho phép</li>
+                                <li>Kiểm tra chất liệu: Đúng loại vật liệu theo thông số</li>
+                                <li>Kiểm tra chức năng: Hoạt động bình thường (nếu có)</li>
+                                <li>Kiểm tra nhãn mác: Thông tin rõ ràng, chính xác</li>
+                                <li>Kiểm tra bao bì: Nguyên vẹn, phù hợp với sản phẩm</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-section">
+                    <h2 class="section-title">3. Xử lý sản phẩm không đạt tiêu chuẩn</h2>
+                    <div class="section-content">
+                        <p>Khi phát hiện sản phẩm không đạt tiêu chuẩn chất lượng, chúng tôi sẽ:</p>
+                        <ul class="policy-list">
+                            <li><strong>Loại bỏ ngay lập tức:</strong> Không đưa vào kho hàng</li>
+                            <li><strong>Thông báo nhà cung cấp:</strong> Yêu cầu thay thế hoặc hoàn trả</li>
+                            <li><strong>Ghi nhận sự cố:</strong> Lưu trữ thông tin để cải thiện quy trình</li>
+                            <li><strong>Kiểm tra lại:</strong> Tăng cường kiểm tra lô hàng tương tự</li>
+                        </ul>
+                    </div>
+                </div>
+
+                <div class="policy-section">
+                    <h2 class="section-title">4. Chứng nhận chất lượng</h2>
+                    <div class="section-content">
+                        <div class="success-box">
+                            <h4 style="color: #155724; margin-bottom: 15px;">
+                                <i class="fa-solid fa-certificate"></i> Chứng nhận đạt tiêu chuẩn
+                            </h4>
+                            <p>Mọi sản phẩm đạt tiêu chuẩn sẽ được:</p>
+                            <ul class="policy-list">
+                                <li>Dán tem chứng nhận chất lượng MatFlow</li>
+                                <li>Ghi nhận thông tin kiểm tra vào hệ thống</li>
+                                <li>Lưu trữ hồ sơ kiểm tra để truy xuất nguồn gốc</li>
+                                <li>Đóng gói an toàn trước khi giao hàng</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-section">
+                    <h2 class="section-title">5. Trách nhiệm và cam kết</h2>
+                    <div class="section-content">
+                        <div class="highlight-box">
+                            <h4 style="color: #2c3e50; margin-bottom: 15px;">
+                                <i class="fa-solid fa-handshake"></i> Cam kết của MatFlow
+                            </h4>
+                            <ul class="policy-list">
+                                <li>Thực hiện kiểm tra 100% sản phẩm trước khi giao hàng</li>
+                                <li>Đảm bảo sản phẩm đạt tiêu chuẩn chất lượng cao nhất</li>
+                                <li>Chịu trách nhiệm hoàn toàn về chất lượng sản phẩm đã kiểm tra</li>
+                                <li>Hỗ trợ khách hàng khi có vấn đề về chất lượng sản phẩm</li>
+                                <li>Liên tục cải thiện quy trình kiểm tra để nâng cao chất lượng</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="policy-section">
+                    <h2 class="section-title">6. Thông tin liên hệ</h2>
                     <div class="contact-info">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;">Công ty TNHH MatFlow</h3>
+                        <h3 style="color: #2c3e50; margin-bottom: 20px;">Bộ phận kiểm soát chất lượng</h3>
                         <div class="contact-item">
                             <i class="fa-solid fa-map-marker-alt"></i>
                             <span><strong>Địa chỉ:</strong> 123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</span>
@@ -318,20 +399,12 @@
                         </div>
                         <div class="contact-item">
                             <i class="fa-solid fa-envelope"></i>
-                            <span><strong>Email:</strong> info@matflow.com</span>
+                            <span><strong>Email:</strong> quality@matflow.com</span>
                         </div>
                         <div class="contact-item">
-                            <i class="fa-solid fa-globe"></i>
-                            <span><strong>Website:</strong> www.matflow.com</span>
+                            <i class="fa-solid fa-clock"></i>
+                            <span><strong>Giờ làm việc:</strong> 8:00 - 17:00 (Thứ 2 - Thứ 6)</span>
                         </div>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">9. CẬP NHẬT CHÍNH SÁCH</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian. Mọi thay đổi sẽ được thông báo trên website và có hiệu lực ngay sau khi được đăng tải.</p>
-                        <p>Bạn nên thường xuyên kiểm tra trang này để cập nhật những thay đổi mới nhất.</p>
                     </div>
                 </div>
 
