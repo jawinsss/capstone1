@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminLink = document.getElementById('hpAdminLink');
   const cartBtn = document.getElementById('hpCartBtn');
   const cartCount = document.getElementById('hpCartCount');
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  // Cart is now managed by CartUtils
 
   // Product view elements
   let pv = {
@@ -82,13 +82,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function updateCartCount(){
-    cartCount.textContent = String(cart.reduce((s,i)=>s + Number(i.quantity||0),0));
-  }
-  updateCartCount();
-  
+  // Cart count is now handled by CartUtils
   cartBtn && cartBtn.addEventListener('click', ()=>{
-    alert('Tính năng giỏ hàng đang được hoàn thiện.');
+    window.location.href = 'cart.html';
   });
 
   function formatVND(n){

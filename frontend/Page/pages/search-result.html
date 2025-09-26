@@ -13,6 +13,7 @@
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/cartUtils.js" defer></script>
     <script src="../../js/search.js" defer></script>
     <script src="../../js/homepage.js" defer></script>
 </head>
@@ -311,17 +312,8 @@
 
         // Global functions for button actions
         window.addToCart = function(productId) {
-            // Add to cart functionality
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-            const existingItem = cart.find(item => item.productId === productId);
-            
-            if (existingItem) {
-                existingItem.quantity += 1;
-            } else {
-                cart.push({ productId: productId, quantity: 1 });
-            }
-            
-            localStorage.setItem('cart', JSON.stringify(cart));
+            // Add to cart functionality using CartUtils
+            CartUtils.addToCart(productId, 1);
             
             // Show success message
             const btn = event.target.closest('.search-btn');
@@ -424,7 +416,7 @@
             const adminLink = document.getElementById('hpAdminLink');
             const cartBtn = document.getElementById('hpCartBtn');
             const cartCount = document.getElementById('hpCartCount');
-            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            // Cart is now managed by CartUtils
 
             // User session UI
             async function syncUserUI(){
@@ -459,13 +451,10 @@
                 });
             }
 
-            function updateCartCount(){
-                cartCount.textContent = String(cart.reduce((s,i)=>s + Number(i.quantity||0),0));
-            }
-            updateCartCount();
+            // Cart count is now handled by CartUtils
             
             cartBtn && cartBtn.addEventListener('click', ()=>{
-                alert('Tính năng giỏ hàng đang được hoàn thiện.');
+                window.location.href = '../homepage/cart.html';
             });
 
             syncUserUI();

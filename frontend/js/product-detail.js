@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminLink = document.getElementById('hpAdminLink');
   const cartBtn = document.getElementById('hpCartBtn');
   const cartCount = document.getElementById('hpCartCount');
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+  // Cart is now managed by CartUtils
 
   // Product detail elements
   const loadingState = document.getElementById('loadingState');
@@ -59,13 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function updateCartCount(){
-    cartCount.textContent = String(cart.reduce((s,i)=>s + Number(i.quantity||0),0));
-  }
-  updateCartCount();
-  
+  // Cart count is now handled by CartUtils
   cartBtn && cartBtn.addEventListener('click', ()=>{
-    alert('Tính năng giỏ hàng đang được hoàn thiện.');
+    window.location.href = 'cart.html';
   });
 
   function formatVND(n){
@@ -99,6 +95,7 @@ document.addEventListener('DOMContentLoaded', () => {
       currentProduct = res.data;
       displayProductDetail(currentProduct);
       loadRelatedProducts(currentProduct.categoryId, productId);
+      hideLoading();
       
     } catch (error) {
       console.error('Error loading product detail:', error);
@@ -110,6 +107,12 @@ document.addEventListener('DOMContentLoaded', () => {
     loadingState.removeAttribute('hidden');
     errorState.setAttribute('hidden', '');
     productDetailContent.setAttribute('hidden', '');
+  }
+
+  function hideLoading() {
+    loadingState.setAttribute('hidden', '');
+    errorState.setAttribute('hidden', '');
+    productDetailContent.removeAttribute('hidden');
   }
 
   function showError() {
@@ -280,58 +283,35 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!currentProduct) return;
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const existingItemIndex = cart.findIndex(item => item.productId === currentProduct.id);
+    const success = CartUtils.addToCart(currentProduct.id, quantity);
     
-    if (existingItemIndex >= 0) {
-      cart[existingItemIndex].quantity += quantity;
+    if (success) {
+      // Show success message
+      const originalText = addToCartBtn.innerHTML;
+      addToCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm vào giỏ';
+      addToCartBtn.style.background = '#27ae60';
+      
+      setTimeout(() => {
+        addToCartBtn.innerHTML = originalText;
+        addToCartBtn.style.background = '#3498db';
+      }, 2000);
     } else {
-      cart.push({
-        productId: currentProduct.id,
-        quantity: quantity,
-        name: currentProduct.name,
-        price: currentProduct.price,
-        image: currentProduct.images?.[0]?.url
-      });
+      alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
     }
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-    
-    // Show success message
-    const originalText = addToCartBtn.innerHTML;
-    addToCartBtn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm vào giỏ';
-    addToCartBtn.style.background = '#27ae60';
-    
-    setTimeout(() => {
-      addToCartBtn.innerHTML = originalText;
-      addToCartBtn.style.background = '#3498db';
-    }, 2000);
   });
 
   buyNowBtn.addEventListener('click', () => {
     if (!currentProduct) return;
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const existingItemIndex = cart.findIndex(item => item.productId === currentProduct.id);
+    const success = CartUtils.addToCart(currentProduct.id, quantity);
     
-    if (existingItemIndex >= 0) {
-      cart[existingItemIndex].quantity += quantity;
+    if (success) {
+      // Redirect to cart page
+      window.location.href = 'cart.html';
     } else {
-      cart.push({
-        productId: currentProduct.id,
-        quantity: quantity,
-        name: currentProduct.name,
-        price: currentProduct.price,
-        image: currentProduct.images?.[0]?.url
-      });
+      alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
     }
-    
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
-    
-    // Redirect to checkout (you can implement this later)
-    alert('Chuyển đến trang thanh toán...');
-    // window.location.href = 'checkout.html';
   });
 
   // ===== Initialize =====

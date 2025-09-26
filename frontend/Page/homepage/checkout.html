@@ -12,6 +12,7 @@
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/cartUtils.js" defer></script>
     <style>
       .ck-wrap{max-width:900px;margin:24px auto;padding:16px}
       .ck-card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
@@ -194,13 +195,10 @@
                 });
             }
 
-            function updateCartCount(){
-                cartCount.textContent = String(cart.reduce((s,i)=>s + Number(i.quantity||0),0));
-            }
-            updateCartCount();
+            // Cart count is now handled by CartUtils
             
             cartBtn && cartBtn.addEventListener('click', ()=>{
-                alert('Tính năng giỏ hàng đang được hoàn thiện.');
+                window.location.href = 'cart.html';
             });
 
             syncUserUI();

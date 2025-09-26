@@ -18,7 +18,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const adminLink = document.getElementById('hpAdminLink');
   const cartBtn = document.getElementById('hpCartBtn');
   const cartCount = document.getElementById('hpCartCount');
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]');
   let activeProduct = null;
   let isRenderingSections = false;
   // ===== Simple view router (data-link/data-view + hash) =====
@@ -100,12 +99,9 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  function updateCartCount(){
-    cartCount.textContent = String(cart.reduce((s,i)=>s + Number(i.quantity||0),0));
-  }
-  updateCartCount();
+  // Cart count is now handled by CartUtils
   cartBtn && cartBtn.addEventListener('click', ()=>{
-    alert('Tính năng giỏ hàng đang được hoàn thiện.');
+    window.location.href = 'cart.html';
   });
 
 
@@ -356,10 +352,9 @@ document.addEventListener('DOMContentLoaded', () => {
   closeModalBtn && closeModalBtn.addEventListener('click',()=>modal.setAttribute('hidden',''));
   addToCartBtn && addToCartBtn.addEventListener('click',()=>{
     const qty = Math.max(1, parseInt(qtyInput.value||'1',10));
-    const idx = cart.findIndex(i=>i.productId===activeProduct.id);
-    if(idx>=0) cart[idx].quantity += qty; else cart.push({productId: activeProduct.id, quantity: qty});
-    localStorage.setItem('cart', JSON.stringify(cart));
-    updateCartCount();
+    if (activeProduct && activeProduct.id) {
+      CartUtils.addToCart(activeProduct.id, qty);
+    }
     alert('Đã thêm vào giỏ');
   });
 
