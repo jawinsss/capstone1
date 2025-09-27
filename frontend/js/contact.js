@@ -1,5 +1,8 @@
 // Contact Form Handler - MatFlow
 document.addEventListener('DOMContentLoaded', () => {
+    // Initialize user authentication state
+    initUserAuth();
+    
     const form = document.getElementById('contact-form');
     const status = document.getElementById('status');
     const submitBtn = document.getElementById('submitBtn');
@@ -163,4 +166,82 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
   });
+
+  // Initialize user authentication state
+  async function initUserAuth() {
+    const userNameEl = document.getElementById('hpUserName');
+    const loginLink = document.getElementById('hpLoginLink');
+    const logoutBtn = document.getElementById('hpLogoutBtn');
+    const adminLink = document.getElementById('hpAdminLink');
+    const cartBtn = document.getElementById('hpCartBtn');
+    const cartCount = document.getElementById('hpCartCount');
+
+    // Sync user UI
+    async function syncUserUI() {
+      let user = null;
+      try { 
+        user = JSON.parse(localStorage.getItem('user') || 'null'); 
+      } catch(_) {}
+      
+      const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+      if(!user && token){
+        // attempt to get profile
+        try {
+          const res = await window.apiService.get('/users/profile');
+          if(res?.success){ 
+            user = res.data; 
+            localStorage.setItem('user', JSON.stringify(user)); 
+          }
+        } catch(_) {}
+      }
+
+      if(user){
+        if(userNameEl) userNameEl.textContent = user.fullName || user.username || '';
+        if(loginLink) loginLink.setAttribute('hidden','');
+        if(logoutBtn) logoutBtn.removeAttribute('hidden');
+        if((user.role||'').toUpperCase() === 'ADMIN' && adminLink) adminLink.removeAttribute('hidden');
+      } else {
+        if(userNameEl) userNameEl.textContent = '';
+        if(logoutBtn) logoutBtn.setAttribute('hidden','');
+        if(adminLink) adminLink.setAttribute('hidden','');
+        if(loginLink) loginLink.removeAttribute('hidden');
+      }
+    }
+
+    // Setup logout functionality
+    if(logoutBtn){
+      logoutBtn.addEventListener('click', ()=>{
+        try {
+          ['accessToken','refreshToken','token','user'].forEach(k=>{
+            localStorage.removeItem(k); 
+            sessionStorage.removeItem(k);
+          });
+        } catch(_){}
+        location.reload();
+      });
+    }
+
+    // Load cart count
+    function updateCartCount() {
+      if(cartCount) {
+        try {
+          const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+          cartCount.textContent = cart.length;
+        } catch(_) {
+          cartCount.textContent = '0';
+        }
+      }
+    }
+
+    // Initialize
+    await syncUserUI();
+    updateCartCount();
+    
+    // Update cart count when cart changes
+    window.addEventListener('storage', (e) => {
+      if(e.key === 'cart') {
+        updateCartCount();
+      }
+    });
+  }
   
