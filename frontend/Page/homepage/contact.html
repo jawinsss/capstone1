@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liên hệ - MatFlow</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="stylesheet" href="../../styles/contact.css">
+    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/cartUtils.js" defer></script>
+    <script src="../../js/search.js" defer></script>
+    <script src="../../js/contact.js" defer></script>
+    <style>[hidden]{display:none!important}</style>
+</head>
+<body>
+    <div class="hp-topbar">
+        <div class="hp-topbar-inner">
+            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+            <div class="hp-top-actions">
+                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
+                <span id="hpUserName" class="hp-top-hint"></span>
+                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+            </div>
+        </div>
+    </div>
+
+    <header class="hp-header">
+        <div class="hp-header-container">
+            <a href="homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
+            <div class="hp-search">
+                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
+                <div id="searchSuggestions" class="suggestions-dropdown"></div>
+                <div id="searchResults" class="search-results"></div>
+            </div>
+            <nav class="hp-nav">
+                <a href="homepage.html">
+                    <i class="fa-solid fa-house"></i> Trang chủ</a>
+                <a href="products.html">
+                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
+                <a href="contact.html" class="active">
+                    <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
+            </nav>
+            <div class="hp-user">
+                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+            </div>
+        </div>
+    </header>
+
+    <main class="contact-main">
+        <div class="contact-container">
+            <!-- Page Header -->
+            <div class="contact-header">
+                <h1>Liên hệ với chúng tôi</h1>
+                <p>Chúng tôi luôn sẵn sàng hỗ trợ và tư vấn cho bạn</p>
+            </div>
+
+            <!-- Map Section -->
+            <div class="contact-map">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3834.399192938719!2d108.17601667475718!3d16.04476168463118!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x31421972a93e69f3%3A0x82954c6b25903e86!2zODIgTmd1eeG7hW4gQ8O0bmcgVHJp4buBdSwgSG_DoCBBbiwgQ-G6qW0gTOG7hywgxJDDoCBO4bq1bmcsIFZp4buHdCBOYW0!5e0!3m2!1svi!2s!4v1758964824002!5m2!1svi!2s" width="100%" height="400" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            </div>
+
+            <!-- Contact Content -->
+            <div class="contact-content">
+                <!-- Contact Form -->
+                <div class="contact-form-section">
+                    <div class="contact-form-header">
+                        <h2><i class="fa-solid fa-paper-plane"></i> Gửi tin nhắn</h2>
+                        <p>Điền thông tin bên dưới để gửi tin nhắn cho chúng tôi</p>
+                    </div>
+                    
+                    <form id="contact-form" class="contact-form" novalidate>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="name">Họ và tên <span class="required">*</span></label>
+                                <input id="name" name="name" type="text" required placeholder="Nhập họ và tên của bạn">
+                            </div>
+                            <div class="form-group">
+                                <label for="email">Email <span class="required">*</span></label>
+                                <input id="email" name="email" type="email" required placeholder="Nhập email của bạn">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject">Tiêu đề <span class="required">*</span></label>
+                            <input id="subject" name="subject" type="text" required placeholder="Nhập tiêu đề tin nhắn">
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message">Nội dung tin nhắn <span class="required">*</span></label>
+                            <textarea id="message" name="message" rows="6" required placeholder="Mô tả chi tiết vấn đề hoặc câu hỏi của bạn..."></textarea>
+                        </div>
+                        
+                        <button type="submit" id="submitBtn" class="contact-submit-btn">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            <span>Gửi tin nhắn</span>
+                        </button>
+                        
+                        <div id="status" class="contact-status" role="status" aria-live="polite"></div>
+                    </form>
+                </div>
+
+                <!-- Contact Info -->
+                <div class="contact-info-section">
+                    <div class="contact-info-header">
+                        <h2><i class="fa-solid fa-map-marker-alt"></i> Thông tin liên hệ</h2>
+                        <p>Liên hệ trực tiếp với chúng tôi qua các kênh sau</p>
+                    </div>
+                    
+                    <div class="contact-info-content">
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-building"></i>
+                            </div>
+                            <div class="info-content">
+                                <h3>Công ty TNHH MatFlow</h3>
+                                <p>Chi nhánh Đà Nẵng</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-location-dot"></i>
+                            </div>
+                            <div class="info-content">
+                                <h3>Địa chỉ</h3>
+                                <p>82 Nguyễn Công Triều, Phường Hòa An, Quận Cẩm Lệ, TP. Đà Nẵng</p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-phone"></i>
+                            </div>
+                            <div class="info-content">
+                                <h3>Số điện thoại</h3>
+                                <p><a href="tel:0905626568">0905626568</a></p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-envelope"></i>
+                            </div>
+                            <div class="info-content">
+                                <h3>Email</h3>
+                                <p><a href="mailto:MatFlowContact@gmail.com">MatFlowContact@gmail.com</a></p>
+                            </div>
+                        </div>
+                        
+                        <div class="info-item">
+                            <div class="info-icon">
+                                <i class="fa-solid fa-clock"></i>
+                            </div>
+                            <div class="info-content">
+                                <h3>Giờ làm việc</h3>
+                                <p>Thứ 2 - Thứ 6: 8:00 - 17:00<br>Thứ 7: 8:00 - 12:00</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="contact-social">
+                        <h3>Kết nối với chúng tôi</h3>
+                        <div class="social-links">
+                            <a href="https://www.facebook.com/ngo.tam.729267" target="_blank" class="social-link facebook">
+                                <i class="fa-brands fa-facebook-f"></i>
+                                <span>Facebook</span>
+                            </a>
+                            <a href="https://www.instagram.com/jawinsss/" target="_blank" class="social-link instagram">
+                                <i class="fa-brands fa-instagram"></i>
+                                <span>Instagram</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="hp-footer">
+        <div class="hp-footer-container">
+            <div class="footer-main">
+                <div class="footer-section">
+                    <h4>VỀ CHÚNG TÔI</h4>
+                    <ul>
+                        <li><a href="#">Giới thiệu</a></li>
+                        <li><a href="contact.html">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>TƯ VẤN MUA HÀNG</h4>
+                    <ul>
+                        <li><a href="homepage.html">Trang chủ</a></li>
+                        <li><a href="products.html">Sản phẩm</a></li>
+                        <li><a href="#">Giới thiệu</a></li>
+                        <li><a href="#">Tin tức</a></li>
+                        <li><a href="contact.html">Liên hệ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+                    <ul>
+                        <li><a href="../pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
+                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+                        <li><a href="../pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>CHÍNH SÁCH</h4>
+                    <ul>
+                        <li><a href="../pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
+                        <li><a href="../pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
+                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+                        <li><a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
+                    </ul>
+                </div>
+                <div class="footer-section">
+                    <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+                    <div class="social-links">
+                        <a href="https://www.facebook.com/ngo.tam.729267" target="_blank" class="social-link facebook"><i class="fa-brands fa-facebook-f"></i></a>
+                        <a href="https://www.instagram.com/jawinsss/" target="_blank" class="social-link instagram"><i class="fa-brands fa-instagram"></i></a>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-bottom">
+                <div class="footer-bottom-section">
+                    <h4>HÌNH THỨC THANH TOÁN</h4>
+                    <div class="payment-methods">
+                        <div class="payment-method">ZALOPAY</div>
+                        <div class="payment-method">MOMO</div>
+                    </div>
+                </div>
+                <div class="footer-bottom-section">
+                    <h4>ĐƯỢC CHỨNG NHẬN</h4>
+                    <div class="certifications">
+                        <div class="certification">ONLINE.GOV.VN</div>
+                        <div class="certification">ĐÃ ĐĂNG KÝ BỘ CÔNG THƯƠNG</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="footer-copyright">
+                Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+            </div>
+        </div>
+    </footer>
+</body>
+</html>
