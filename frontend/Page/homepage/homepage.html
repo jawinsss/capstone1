@@ -43,8 +43,14 @@
             <nav class="hp-nav">
                 <a href="homepage.html" class="active">
                     <i class="fa-solid fa-house"></i> Trang chủ</a>
-                <a href="products.html">
-                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
+                <div class="nav-dropdown">
+                    <a href="products.html" class="nav-dropdown-toggle">
+                        <i class="fa-solid fa-tag"></i> Sản Phẩm <i class="fa-solid fa-chevron-down"></i>
+                    </a>
+                    <div class="nav-dropdown-menu" id="productsDropdown">
+                        <!-- Categories will be loaded here -->
+                    </div>
+                </div>
                 <a href="contact.html">
                     <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
             </nav>

@@ -155,6 +155,9 @@ document.addEventListener('DOMContentLoaded', () => {
       catMenu.appendChild(li);
     });
 
+    // Load dropdown menu
+    loadProductsDropdown();
+
     // Also fetch backend categories to map names->ids for filtering
     const res = await window.apiService.get('/categories');
     if(res?.success){
@@ -164,20 +167,61 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  async function loadProductsDropdown(){
+    const dropdown = document.getElementById('productsDropdown');
+    if(!dropdown) return;
+    
+    // Ensure categoryNameToId is loaded first
+    if(categoryNameToId.size === 0) {
+      const res = await window.apiService.get('/categories');
+      if(res?.success){
+        const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
+      }
+    }
+    
+    dropdown.innerHTML = '';
+    
+    // Add "Tất cả sản phẩm" option
+    const allProductsLink = document.createElement('a');
+    allProductsLink.className = 'nav-dropdown-item';
+    allProductsLink.href = 'products.html';
+    allProductsLink.innerHTML = '<i class="fa-solid fa-list"></i> Tất cả sản phẩm';
+    dropdown.appendChild(allProductsLink);
+    
+    // Add separator
+    const separator = document.createElement('div');
+    separator.style.height = '1px';
+    separator.style.background = '#e2e8f0';
+    separator.style.margin = '8px 0';
+    dropdown.appendChild(separator);
+    
+    // Add categories
+    STANDARD_CATEGORIES.forEach(c => {
+      const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
+      console.log(`Category: ${c.name}, ID: ${categoryId}`); // Debug log
+      const link = document.createElement('a');
+      link.className = 'nav-dropdown-item';
+      link.href = `product-all.html?category=${categoryId}&name=${encodeURIComponent(c.name)}`;
+      link.innerHTML = `<i class="fa-solid fa-tag"></i> ${c.name}`;
+      dropdown.appendChild(link);
+    });
+  }
+
   let categoryNameToId = new Map();
   function filterByCategoryName(name){
     const id = categoryNameToId.get(String(name).trim().toLowerCase());
     if(id){ 
-      // Navigate to product page with category filter
-      window.location.href = `products.html?category=${id}`;
+      // Navigate to product-all page with category filter
+      window.location.href = `product-all.html?category=${id}&name=${encodeURIComponent(name)}`;
     }
   }
 
   function filterBySubCategory(mainCategoryName, subCategoryName){
     const mainCategoryId = categoryNameToId.get(String(mainCategoryName).trim().toLowerCase());
     if(mainCategoryId){ 
-      // Navigate to product page with subcategory filter
-      window.location.href = `products.html?category=${mainCategoryId}&subcategory=${encodeURIComponent(subCategoryName)}`;
+      // Navigate to product-all page with subcategory filter
+      window.location.href = `product-all.html?category=${mainCategoryId}&name=${encodeURIComponent(mainCategoryName)}&subcategory=${encodeURIComponent(subCategoryName)}`;
     }
   }
 
@@ -306,23 +350,9 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
       const viewAllBtn = sec.querySelector('[data-view-all]');
-      viewAllBtn.addEventListener('click',async ()=>{
-        grid.innerHTML = '';
-        const more = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=16`);
-        const items = more?.success ? (Array.isArray(more.data) ? more.data : more.data?.items || []) : [];
-        items.forEach(p=>{
-          const card = document.createElement('div');
-          card.className = 'hp-card';
-          card.style.cursor = 'pointer';
-          const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
-          card.innerHTML = `
-            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
-            <div class="name">${p.name}</div>
-            <div class="price">${formatVND(p.price)}</div>
-          `;
-          card.addEventListener('click',()=>openProduct(p));
-          grid.appendChild(card);
-        });
+      viewAllBtn.addEventListener('click',()=>{
+        // Navigate to product-all page with category filter
+        window.location.href = `product-all.html?category=${c.id}&name=${encodeURIComponent(c.name)}`;
       });
     }
     } finally {

@@ -9,12 +9,13 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="stylesheet" href="../../styles/product-all.css">
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/cartUtils.js" defer></script>
     <script src="../../js/search.js" defer></script>
-    <script src="../../js/products.js" defer></script>
+    <script src="../../js/product-all.js" defer></script>
     <style>[hidden]{display:none!important}</style>
 </head>
 <body>
@@ -63,7 +64,12 @@
         <div class="hp-main-container">
             <!-- Page Title -->
             <section class="page-title-section">
-                <h1 class="page-title">Tất cả sản phẩm</h1>
+                <h1 class="page-title" id="pageTitle">Sản phẩm</h1>
+                <div class="breadcrumb">
+                    <a href="homepage.html">Trang chủ</a>
+                    <span class="breadcrumb-separator">›</span>
+                    <span id="breadcrumbCategory">Sản phẩm</span>
+                </div>
             </section>
 
             <!-- Banner -->
