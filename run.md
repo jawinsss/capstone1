@@ -42,6 +42,7 @@ npm run start:dev
 - Database tự động tạo qua Prisma migrations
 - Dữ liệu mẫu được seed tự động
 - Backend chạy tại: http://localhost:3000
+- API chạy tại: http://localhost:3000/api
 - PgAdmin: http://localhost:5050
 
 ## 🆘 Lỗi thường gặp

@@ -1,328 +1,141 @@
-# 🚀 MatFlow - Hệ Thống Bán Vật Tư
+# 🏗️ MatFlow - Hệ thống quản lý bán hàng vật liệu xây dựng
 
-> **Hệ thống e-commerce hoàn chỉnh với Admin Panel real-time và tự động hóa**
+<div align="center">
+  <img src="frontend/assets/Icon MatFlow.png" alt="MatFlow Logo" width="120" height="120">
+  
+  **Nền tảng thương mại điện tử chuyên về vật liệu xây dựng và thiết bị công nghiệp**
+  
+  [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+  [![Node.js](https://img.shields.io/badge/node.js-16+-green.svg)](https://nodejs.org/)
+  [![NestJS](https://img.shields.io/badge/NestJS-10+-red.svg)](https://nestjs.com/)
+  [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://postgresql.org/)
+</div>
 
-## ✨ Tính Năng Nổi Bật
+## 🌟 Giới thiệu
 
-### 🎯 Admin Panel (NEW!)
+**MatFlow** là một hệ thống quản lý bán hàng chuyên nghiệp được thiết kế đặc biệt cho ngành vật liệu xây dựng. Với giao diện thân thiện và tính năng mạnh mẽ, MatFlow giúp doanh nghiệp quản lý sản phẩm, đơn hàng và khách hàng một cách hiệu quả.
 
-- **Real-time Data**: Dữ liệu tự động cập nhật theo thời gian thực
-- **Auto-refresh**: Làm mới thông minh với tần suất khác nhau cho từng module
-- **Dynamic Dashboard**: Biểu đồ và thống kê tương tác
-- **Notification System**: Thông báo tự động với animation
-- **Responsive Design**: Tương thích mọi thiết bị
-- **Complete CRUD**: Đầy đủ chức năng quản lý
+## ✨ Tính năng nổi bật
 
-### 🛒 E-commerce Core
+### 🛍️ **Quản lý sản phẩm thông minh**
+- **Danh mục đa cấp**: Hệ thống phân loại sản phẩm theo danh mục và danh mục con
+- **Tìm kiếm nâng cao**: Tìm kiếm sản phẩm theo tên, danh mục, giá cả
+- **Quản lý kho**: Theo dõi tồn kho, cập nhật số lượng tự động
+- **Hình ảnh sản phẩm**: Upload và quản lý nhiều hình ảnh cho mỗi sản phẩm
 
-- Quản lý sản phẩm, đơn hàng, thanh toán
-- Hệ thống người dùng với phân quyền
-- Reviews và ratings
-- Return/refund system
-- Ticket support system
+### 🛒 **Hệ thống đặt hàng hoàn chỉnh**
+- **Giỏ hàng thông minh**: Lưu trữ sản phẩm, tính toán tổng tiền tự động
+- **Quy trình đặt hàng**: Từ giỏ hàng đến thanh toán và xác nhận
+- **Theo dõi đơn hàng**: Trạng thái đơn hàng real-time (Chờ xác nhận, Đang giao, Hoàn thành)
+- **Lịch sử đơn hàng**: Xem lại tất cả đơn hàng đã đặt
+
+### 💳 **Thanh toán linh hoạt**
+- **Nhiều phương thức**: Thanh toán khi nhận hàng, chuyển khoản
+- **Quản lý thanh toán**: Theo dõi trạng thái thanh toán
+- **Báo cáo tài chính**: Thống kê doanh thu, đơn hàng
+
+### 👥 **Quản lý người dùng**
+- **Đăng ký/Đăng nhập**: Hệ thống xác thực bảo mật với JWT
+- **Phân quyền**: Phân biệt người dùng thường và quản trị viên
+- **Hồ sơ cá nhân**: Quản lý thông tin, địa chỉ giao hàng
+
+### 🎯 **Dashboard quản trị**
+- **Thống kê tổng quan**: Doanh thu, đơn hàng, sản phẩm bán chạy
+- **Quản lý sản phẩm**: Thêm, sửa, xóa sản phẩm và danh mục
+- **Quản lý đơn hàng**: Xem, cập nhật trạng thái đơn hàng
+- **Quản lý người dùng**: Xem danh sách và thông tin khách hàng
+
+### 🔧 **Hỗ trợ khách hàng**
+- **Hệ thống ticket**: Khách hàng có thể gửi yêu cầu hỗ trợ
+- **Đánh giá sản phẩm**: Khách hàng đánh giá và bình luận sản phẩm
+- **Chính sách rõ ràng**: Đổi trả, hoàn tiền, vận chuyển
+
+### 📱 **Giao diện responsive**
+- **Thiết kế hiện đại**: Giao diện đẹp mắt, dễ sử dụng
+- **Responsive**: Tương thích với mọi thiết bị (desktop, tablet, mobile)
+- **Trải nghiệm mượt mà**: Tối ưu hóa tốc độ tải trang
+
+## 🏗️ Kiến trúc hệ thống
+
+```
+MatFlow/
+├── frontend/           # Giao diện người dùng (HTML, CSS, JavaScript)
+├── backend/            # API Server (NestJS + Prisma)
+├── database/           # Database PostgreSQL (Docker)
+└── docker-compose.yml  # Cấu hình Docker services
+```
 
 ## 🛠️ Công nghệ sử dụng
 
-### Frontend
-
-- **HTML5, CSS3, JavaScript (ES6+)** - Core technologies
+### **Frontend**
+- **HTML5, CSS3, JavaScript ES6+**
 - **Font Awesome** - Icons
 - **Responsive Design** - Mobile-first approach
-- **Real-time Updates** - Auto-refresh system
-- **Modern UI/UX** - Clean and intuitive interface
 
-### Backend
+### **Backend**
+- **NestJS** - Framework Node.js mạnh mẽ
+- **Prisma** - ORM hiện đại cho database
+- **JWT** - Xác thực và phân quyền
+- **TypeScript** - Type safety
 
-- **NestJS** - Framework Node.js hiện đại
-- **TypeScript** - Type-safe development
-- **Prisma** - Next-generation ORM
-- **PostgreSQL** - Robust database
-- **JWT** - Secure authentication
-- **bcrypt** - Password hashing
-- **Swagger** - API documentation
+### **Database**
+- **PostgreSQL** - Database quan hệ mạnh mẽ
+- **Docker** - Containerization
+- **PgAdmin** - Quản lý database
 
-### Database
+### **DevOps**
+- **Docker Compose** - Multi-container orchestration
+- **Git** - Version control
+- **GitHub** - Code repository
 
-- **PostgreSQL 15** - Production-ready database
-- **Docker Compose** - Container orchestration
-- **Prisma Migrations** - Database versioning
-- **Seeding** - Sample data generation
+## 🚀 Cách chạy dự án
 
-## 📁 Cấu trúc dự án
+Xem file [run.md](run.md) để biết hướng dẫn chi tiết.
 
-capstone1/
-├── frontend/                 # Giao diện người dùng
-│   ├── index.html           # Trang chính
-│   ├── styles/
-│   │   └── main.css        # CSS chính
-│   └── js/
-│       ├── config.js       # Cấu hình
-│       ├── api.js          # Service API
-│       └── main.js         # Logic chính
-├── backend/                 # API Backend
-│   ├── src/
-│   │   ├── auth/           # Xác thực
-│   │   ├── users/          # Quản lý người dùng
-│   │   ├── prisma/         # Database service
-│   │   ├── app.module.ts   # Module chính
-│   │   └── main.ts         # Entry point
-│   ├── prisma/
-│   │   └── schema.prisma   # Database schema
-│   ├── package.json        # Dependencies
-│   └── .env.example        # Environment variables
-├── docker-compose.yml       # Docker services
-├── start.bat               # Script khởi động (Windows)
-└── README.md               # Tài liệu dự án
-
-
-🚀 Cách chạy dự án
-
-### Yêu cầu hệ thống
-
-- **Windows 10/11**
-- **Docker Desktop** (đang chạy)
-- **Node.js 16+** và **npm 8+**
-
-### ⚡ Khởi động nhanh (Khuyến nghị)
-
+### **Khởi động nhanh:**
 ```bash
-# Chỉ cần double-click file này:
-start.bat
+# 1. Clone repository
+git clone <repository-url>
+cd capstone1
+
+# 2. Cài đặt và chạy
+cd backend && npm install && copy .env.example .env
+cd .. && docker-compose up -d postgres
+cd backend && npm run prisma:migrate && npm run prisma:seed && npm run start:dev
+
+# 3. Mở frontend
+# Mở file frontend/index.html trong trình duyệt
 ```
 
-**Hoặc từ terminal:**
+## 📊 Cấu trúc dữ liệu
 
-```bash
-./start.bat
-```
+### **Các bảng chính:**
+- **Users** - Thông tin người dùng
+- **Categories** - Danh mục sản phẩm (có thể lồng nhau)
+- **Products** - Thông tin sản phẩm
+- **Orders** - Đơn hàng
+- **Payments** - Thanh toán
+- **Reviews** - Đánh giá sản phẩm
+- **Tickets** - Hỗ trợ khách hàng
 
-### 🔧 Chạy thủ công
+## 🎯 Mục tiêu dự án
 
-```bash
-# 1. Khởi động database
-docker-compose up -d
+- **Tự động hóa** quy trình bán hàng vật liệu xây dựng
+- **Tối ưu hóa** trải nghiệm mua sắm cho khách hàng
+- **Nâng cao** hiệu quả quản lý cho doanh nghiệp
+- **Mở rộng** thị trường bán hàng online
 
-# 2. Cài đặt và chạy backend
-cd backend
-npm install
-npx prisma generate
-npx prisma db push
-npx prisma db seed
-npm run start:dev
+## 👥 Đóng góp
 
-# 3. Mở admin panel
-# frontend/Page/adminpage/admin.html
-```
-
-## 🔐 Tài khoản đăng nhập
-
-### Admin Panel
-
-- **URL**: `frontend/Page/adminpage/admin.html`
-- **Email**: `admin@matflow.com`
-- **Password**: `admin123`
-
-### Test Users
-
-- **User 1**: `user1@example.com` / `user123`
-- **User 2**: `user2@example.com` / `user123`
-
-## 🌐 Services & URLs
-
-| Service | URL | Description |
-|---------|-----|-------------|
-| **Admin Panel** | `frontend/Page/adminpage/admin.html` | 🎯 Real-time admin dashboard |
-| **Homepage** | `frontend/index.html` | 🏠 Customer frontend |
-| **Backend API** | `http://localhost:3000` | 🔧 REST API server |
-| **Swagger Docs** | `http://localhost:3000/api` | 📚 API documentation |
-| **Database** | `localhost:5432` | 🗄️ PostgreSQL |
-| **pgAdmin** | `http://localhost:5050` | 🔍 Database admin |
-
-## 📊 Admin Panel Features
-
-### 🏠 Dashboard Overview
-
-- **KPI Cards**: GMV, Pending orders, Products, Tickets
-- **Revenue Charts**: Day/Week/Month views
-- **Real-time updates**: Every 30 seconds
-
-### 🛒 Order Management
-
-- **Order List**: All orders with details
-- **Status Tracking**: PENDING → CONFIRMED → SHIPPING → COMPLETED
-- **Auto-refresh**: Every 15 seconds
-
-### 💰 Payment Management
-
-- **Pending Payments**: Awaiting confirmation
-- **One-click Confirm**: Instant payment approval
-- **Auto-refresh**: Every 10 seconds (highest priority)
-
-### 📦 Product Management
-
-- **Product CRUD**: Create, Read, Update, Delete
-- **Image Upload**: Drag & drop multiple images
-- **Category Management**: Organized product categories
-- **Real-time Preview**: Live form preview
-
-### 👥 User Management
-
-- **User List**: All registered users
-- **Status Control**: Active/Inactive users
-- **Registration Tracking**: Sign-up dates and activity
-
-### 🔄 Returns & Refunds
-
-- **Return Requests**: Customer return requests
-- **Approval Workflow**: PENDING → PROCESSING → APPROVED/REJECTED
-- **Refund Processing**: Automated refund calculations
-
-### 💬 Support & Feedback
-
-- **Ticket System**: Customer support tickets
-- **Review Management**: Product reviews moderation
-- **Multi-tab Interface**: Messages/Reviews/Tickets
-
-### 📈 Reports & Analytics
-
-- **Sales Reports**: Revenue analytics
-- **Performance Metrics**: System statistics
-- **Export Functions**: Data export capabilities
-
-## ⚡ Real-time Features
-
-### Auto-refresh Intervals
-
-- **Payments**: 10s (critical)
-- **Orders**: 15s (high)
-- **Returns**: 20s (medium)
-- **Overview**: 30s (standard)
-- **Users/Products**: 60s (low)
-
-### Smart Refresh System
-
-- ✅ Pauses when tab is hidden
-- ✅ Only refreshes active views
-- ✅ Stops all intervals on page unload
-- ✅ Visual loading indicators
-
-### Notification System
-
-- 🔔 Success/Error notifications
-- 🎨 Smooth slide animations
-- ⏰ Auto-hide after 3 seconds
-- 🎯 Context-aware messages
-
-## 🛠️ Development Commands
-
-```bash
-# Database operations
-cd backend
-npx prisma generate          # Generate Prisma client
-npx prisma db push          # Push schema to database
-npx prisma db seed          # Seed with sample data
-npx prisma studio           # Open database browser
-npx prisma migrate dev      # Create new migration
-
-# Backend development
-npm run start:dev           # Start with hot reload
-npm run start:debug         # Start with debugging
-npm run build              # Build for production
-
-# Database management
-docker-compose up -d        # Start database
-docker-compose down         # Stop database
-docker-compose logs         # View logs
-```
-
-## 📱 Mobile Support
-
-- ✅ **Responsive Design**: Works on all devices
-- ✅ **Touch-friendly**: Optimized for mobile interaction
-- ✅ **Adaptive Layout**: Sidebar collapses on mobile
-- ✅ **Fast Loading**: Optimized performance
-
-## 🔍 API Documentation
-
-### Swagger UI
-
-- **URL**: `http://localhost:3000/api`
-- **Features**: Interactive API testing
-- **Authentication**: Bearer token support
-
-### Key Endpoints
-
-```
-GET    /dashboard/overview     # Dashboard KPIs
-GET    /dashboard/revenue      # Revenue data
-GET    /orders                 # List orders
-GET    /products               # List products
-GET    /users                  # List users
-GET    /payments/pending       # Pending payments
-PATCH  /payments/:id/confirm   # Confirm payment
-GET    /returns                # Return requests
-GET    /tickets                # Support tickets
-GET    /reviews                # Product reviews
-```
-
-## 🎯 Project Highlights
-
-### ✨ What Makes This Special
-
-1. **🔄 Real-time Everything**
-   - Live data updates without page refresh
-   - Smart refresh intervals based on data importance
-   - Automatic pause/resume based on tab visibility
-
-2. **🎨 Modern UI/UX**
-   - Clean, professional admin interface
-   - Responsive design for all devices
-   - Smooth animations and transitions
-   - Intuitive navigation and workflows
-
-3. **⚡ Performance Optimized**
-   - Efficient API calls with caching
-   - Lazy loading for large datasets
-   - Optimized database queries
-   - Fast startup with Docker
-
-4. **🔧 Developer Friendly**
-   - TypeScript for type safety
-   - Comprehensive API documentation
-   - Easy setup with automated scripts
-   - Well-structured codebase
-
-5. **📊 Business Ready**
-   - Complete e-commerce functionality
-   - Advanced admin panel
-   - Real-time analytics
-   - Scalable architecture
-
-## 📚 Documentation
-
-- **[Admin Guide](ADMIN_GUIDE.md)** - Detailed admin panel usage
-- **[API Docs](http://localhost:3000/api)** - Swagger documentation
-- **[Setup Guide](SETUP.md)** - Installation instructions
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit changes (`git commit -m 'Add amazing feature'`)
-4. Push to branch (`git push origin feature/amazing-feature`)
-5. Open Pull Request
+Chúng tôi hoan nghênh mọi đóng góp từ cộng đồng! Hãy tạo issue hoặc pull request để cải thiện dự án.
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🎉 Acknowledgments
-
-- **NestJS Team** - Amazing framework
-- **Prisma Team** - Excellent ORM
-- **PostgreSQL** - Reliable database
-- **Docker** - Containerization made easy
+Dự án được phát hành dưới [MIT License](LICENSE).
 
 ---
 
-**🚀 Happy Coding with MatFlow!**
+<div align="center">
+  <p>Được phát triển với ❤️ bởi team Capstone1</p>
+  <p>📧 Liên hệ: ngotam120704@gmail.com</p>
+</div>
