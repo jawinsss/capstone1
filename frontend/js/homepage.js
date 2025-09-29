@@ -116,7 +116,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: 'Phụ Kiện Nâng Hạ', key: 'phu-kien-nang-ha', children: ['Cáp - Xích','Móc - Khóa','Palang'] },
     { name: 'Siêu Thị Keo', key: 'sieu-thi-keo', children: ['Keo silicone','Keo epoxy','Băng keo'] },
     { name: 'Siêu Thị Sơn', key: 'sieu-thi-son', children: ['Sơn nước','Sơn dầu','Sơn epoxy'] },
-    { name: 'Máy Móc- Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
+    { name: 'Máy Móc - Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
     { name: 'Vật Tư Hạ Tầng', key: 'vat-tu-ha-tang', children: ['Ống - Phụ kiện','Cáp - Điện','Bê tông - Nhựa'] },
     { name: 'Vật Tư Kim Khí', key: 'vat-tu-kim-khi', children: ['Bulon - Ốc vít','Lưỡi cắt - Mài','Dụng cụ cầm tay'] },
     { name: 'Vật Tư Phụ Xây Dựng', key: 'vat-tu-phu-xay-dung', children: ['Giàn giáo','Cốp pha','Lưới an toàn'] },
@@ -200,6 +200,18 @@ document.addEventListener('DOMContentLoaded', () => {
     STANDARD_CATEGORIES.forEach(c => {
       const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
       console.log(`Category: ${c.name}, ID: ${categoryId}`); // Debug log
+      
+      // Check if categoryId is empty and try alternative names
+      if (!categoryId) {
+        console.warn(`No categoryId found for: ${c.name}`);
+        // Try without special characters
+        const altName = c.name.replace(/[-\s]/g, '').toLowerCase();
+        const altCategoryId = categoryNameToId.get(altName);
+        if (altCategoryId) {
+          console.log(`Found alternative ID for ${c.name}: ${altCategoryId}`);
+        }
+      }
+      
       const link = document.createElement('a');
       link.className = 'nav-dropdown-item';
       link.href = `product-all.html?category=${categoryId}&name=${encodeURIComponent(c.name)}`;

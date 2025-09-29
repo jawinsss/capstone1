@@ -42,7 +42,7 @@ document.addEventListener('DOMContentLoaded', () => {
     { name: 'Phụ Kiện Nâng Hạ', key: 'phu-kien-nang-ha', children: ['Cáp - Xích','Móc - Khóa','Palang'] },
     { name: 'Siêu Thị Keo', key: 'sieu-thi-keo', children: ['Keo silicone','Keo epoxy','Băng keo'] },
     { name: 'Siêu Thị Sơn', key: 'sieu-thi-son', children: ['Sơn nước','Sơn dầu','Sơn epoxy'] },
-    { name: 'Máy Móc- Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
+    { name: 'Máy Móc - Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
     { name: 'Vật Tư Hạ Tầng', key: 'vat-tu-ha-tang', children: ['Ống - Phụ kiện','Cáp - Điện','Bê tông - Nhựa'] },
     { name: 'Vật Tư Kim Khí', key: 'vat-tu-kim-khi', children: ['Bulon - Ốc vít','Lưỡi cắt - Mài','Dụng cụ cầm tay'] },
     { name: 'Vật Tư Phụ Xây Dựng', key: 'vat-tu-phu-xay-dung', children: ['Giàn giáo','Cốp pha','Lưới an toàn'] },
@@ -111,7 +111,10 @@ document.addEventListener('DOMContentLoaded', () => {
       updatePageTitle();
       
       if (subcategory) {
-        filterProductViewBySubCategory(categoryId, decodeURIComponent(subcategory));
+        // Load categories first, then filter by subcategory
+        loadProductCategories().then(() => {
+          filterProductViewBySubCategory(categoryId, decodeURIComponent(subcategory));
+        });
       } else {
         renderProductList();
       }
@@ -148,60 +151,41 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!pv.catMenu) return;
     pv.catMenu.innerHTML = '';
     
-    // If we have a specific category selected, only show that category and its subcategories
+    // If we have a specific category selected, show its subcategories
     if(pvState.categoryId && pvState.categoryName) {
       const selectedCategory = STANDARD_CATEGORIES.find(c => 
         c.name.toLowerCase() === pvState.categoryName.toLowerCase()
       );
       
       if(selectedCategory) {
-        const li = document.createElement('li');
-        li.className = 'cat-item';
-        li.innerHTML = `<a href="#" data-cat="${selectedCategory.name}" data-cat-id="${pvState.categoryId}">${selectedCategory.name}<i>›</i></a>`;
-        
-        // Add subcategories
-        const sub = document.createElement('div');
-        sub.className = 'cat-children';
-        sub.innerHTML = selectedCategory.children.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
-        li.appendChild(sub);
-        
-        // Click on main category
-        li.querySelector('a').addEventListener('click', (e)=>{
-          e.preventDefault();
-          pvState.filteredItems = null;
-          pvState.page = 1;
-          pvState.sort = 'all';
-          updatePageTitle();
-          document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
-          const defaultSort = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]');
-          if(defaultSort) defaultSort.classList.add('active');
-          renderProductList();
-        });
-        
-        // Click on sub-categories
-        sub.addEventListener('click', (e)=>{
-          e.stopPropagation();
-          const subCategory = e.target.getAttribute('data-subcategory');
-          if(subCategory) {
+        // Show subcategories instead of main category
+        selectedCategory.children.forEach(subCategory => {
+          const li = document.createElement('li');
+          li.className = 'cat-item';
+          li.innerHTML = `<a href="#" data-subcategory="${subCategory}">${subCategory}</a>`;
+          
+          // Click on subcategory
+          li.querySelector('a').addEventListener('click', (e)=>{
+            e.preventDefault();
+            // Remove active class from all subcategories
+            document.querySelectorAll('.cat-item a').forEach(link => {
+              link.classList.remove('active');
+            });
+            // Add active class to clicked subcategory
+            e.target.classList.add('active');
             filterProductViewBySubCategory(pvState.categoryId, subCategory);
-          }
+          });
+          
+          pv.catMenu.appendChild(li);
         });
-        
-        pv.catMenu.appendChild(li);
       }
     } else {
-      // If no specific category, show all categories (fallback)
+      // If no specific category, show all categories (fallback) - no subcategories
       STANDARD_CATEGORIES.forEach(c => {
         const li = document.createElement('li');
         li.className = 'cat-item';
         const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
-        li.innerHTML = `<a href="#" data-cat="${c.name}" data-cat-id="${categoryId}">${c.name}<i>›</i></a>`;
-        
-        // Add subcategories
-        const sub = document.createElement('div');
-        sub.className = 'cat-children';
-        sub.innerHTML = c.children.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
-        li.appendChild(sub);
+        li.innerHTML = `<a href="#" data-cat="${c.name}" data-cat-id="${categoryId}">${c.name}</a>`;
         
         // Click on main category
         li.querySelector('a').addEventListener('click', (e)=>{
@@ -219,19 +203,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const defaultSort = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]');
             if(defaultSort) defaultSort.classList.add('active');
             renderProductList();
-          }
-        });
-        
-        // Click on sub-categories
-        sub.addEventListener('click', (e)=>{
-          e.stopPropagation();
-          const subCategory = e.target.getAttribute('data-subcategory');
-          const categoryId = li.querySelector('a').getAttribute('data-cat-id');
-          const categoryName = li.querySelector('a').getAttribute('data-cat');
-          if(subCategory && categoryId) {
-            pvState.categoryName = categoryName;
-            updatePageTitle();
-            filterProductViewBySubCategory(categoryId, subCategory);
           }
         });
         
@@ -255,6 +226,15 @@ document.addEventListener('DOMContentLoaded', () => {
       pvState.filteredItems = filteredItems;
       pvState.categoryId = categoryId;
       pvState.page = 1;
+      
+      // Set active class for the selected subcategory
+      document.querySelectorAll('.cat-item a').forEach(link => {
+        link.classList.remove('active');
+        if(link.getAttribute('data-subcategory') === subCategoryName) {
+          link.classList.add('active');
+        }
+      });
+      
       renderProductList();
     });
   }
@@ -301,6 +281,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add categories
     STANDARD_CATEGORIES.forEach(c => {
       const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
+      console.log(`Product-All Category: ${c.name}, ID: ${categoryId}`); // Debug log
+      
+      // Check if categoryId is empty and try alternative names
+      if (!categoryId) {
+        console.warn(`No categoryId found for: ${c.name}`);
+        // Try without special characters
+        const altName = c.name.replace(/[-\s]/g, '').toLowerCase();
+        const altCategoryId = categoryNameToId.get(altName);
+        if (altCategoryId) {
+          console.log(`Found alternative ID for ${c.name}: ${altCategoryId}`);
+        }
+      }
+      
       const link = document.createElement('a');
       link.className = 'nav-dropdown-item';
       link.href = `product-all.html?category=${categoryId}&name=${encodeURIComponent(c.name)}`;
