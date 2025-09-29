@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MatFlow - Đăng Nhập Admin</title>
+    <link rel="stylesheet" href="../../styles/admin-login.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+</head>
+<body>
+    <div class="admin-login-container">
+        <div class="admin-login-card">
+            <div class="admin-header">
+                <div class="admin-logo">
+                    <img src="../../assets/Icon MatFlow.png" alt="MatFlow Logo">
+                </div>
+                <h1>Đăng Nhập Admin</h1>
+                <p>Vui lòng đăng nhập để truy cập trang quản trị</p>
+            </div>
+            
+            <form class="admin-login-form" id="adminLoginForm">
+                <div class="form-group">
+                    <label for="adminUsername">Tên đăng nhập hoặc Email</label>
+                    <input type="text" id="adminUsername" name="username" placeholder="Nhập tên đăng nhập hoặc email" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword">Mật khẩu</label>
+                    <input type="password" id="adminPassword" name="password" placeholder="Nhập mật khẩu" required>
+                </div>
+                
+                <div class="form-actions">
+                    <button type="submit" class="btn-login">Đăng Nhập</button>
+                    <a href="../../index.html" class="btn-back">Quay lại trang chủ</a>
+                </div>
+            </form>
+            
+            <div class="admin-footer">
+                <p>&copy; 2025 MatFlow - Hệ thống quản trị</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Spinner -->
+    <div class="loading-spinner hidden" id="loadingSpinner">
+        <div class="spinner"></div>
+    </div>
+
+    <!-- Notification -->
+    <div class="notification hidden" id="notification">
+        <span class="notification-message"></span>
+        <button class="notification-close">&times;</button>
+    </div>
+
+    <script src="../../js/config.js"></script>
+    <script src="../../js/apiService.js"></script>
+    <script src="../../js/admin-login.js"></script>
+</body>
+</html>

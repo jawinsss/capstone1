@@ -150,6 +150,21 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
   background: #f2f4f7
 }
 
+/* Homepage link special styling */
+#homepageLink {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white !important;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+#homepageLink:hover {
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
 .nav-item:focus {
   outline: 2px solid #cbd5e1;
   outline-offset: 2px

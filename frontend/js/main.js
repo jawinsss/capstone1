@@ -49,12 +49,13 @@ class App {
         
         const username = document.getElementById('loginUsername').value.trim();
         const password = document.getElementById('loginPassword').value.trim();
-        const isAdmin = document.getElementById('loginAsAdmin').checked;
+        const isAdmin = false; // Regular user login, not admin
 
         if (!username || !password) {
             this.showNotification('Vui lòng điền đầy đủ thông tin', 'error');
             return;
         }
+
 
         try {
             this.showLoading(true);
@@ -77,11 +78,11 @@ class App {
                     this.redirectAfterLogin(isAdmin, response.data.user);
                 }, 1500);
             } else {
-                this.showNotification(response.message || 'Đăng nhập thất bại', 'error');
+                this.showNotification('Tên đăng nhập hoặc mật khẩu không đúng', 'error');
             }
         } catch (error) {
             console.error('Login error:', error);
-            this.showNotification('Có lỗi xảy ra khi đăng nhập', 'error');
+            this.showNotification('Tên đăng nhập hoặc mật khẩu không đúng', 'error');
         } finally {
             this.showLoading(false);
         }
@@ -158,13 +159,9 @@ class App {
         window.location.href = './Page/homepage/homepage.html';
     }
 
-    // Redirect after login based on admin flag/role
+    // Redirect after login - always go to homepage from index.html
     redirectAfterLogin(isAdmin, user) {
-        if (isAdmin || (user && user.role === 'ADMIN')) {
-            this.showNotification('Chuyển hướng đến trang admin...', 'success');
-            window.location.href = './Page/adminpage/admin.html';
-            return;
-        }
+        // Always redirect to homepage regardless of user role
         this.redirectToHome();
     }
 

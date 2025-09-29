@@ -1409,3 +1409,39 @@ marquee {
 [data-view]:not([hidden]) {
   display: block;
 }
+
+/* Admin Login Section */
+.admin-login-section {
+  margin: 20px 0;
+  text-align: center;
+}
+
+.admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px 16px;
+  border: 2px solid #667eea;
+  border-radius: 8px;
+  background: rgba(102, 126, 234, 0.05);
+  transition: all 0.3s ease;
+  text-align: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 300px;
+}
+
+.admin-link:hover {
+  background: #667eea;
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+}
+
+.admin-link i {
+  font-size: 16px;
+}
