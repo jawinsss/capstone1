@@ -136,6 +136,6 @@ Dự án được phát hành dưới [MIT License](LICENSE).
 ---
 
 <div align="center">
-  <p>Được phát triển với ❤️ bởi team Capstone1</p>
+  <p>Được phát triển với ❤️ bởi team C1SE.51</p>
   <p>📧 Liên hệ: ngotam120704@gmail.com</p>
 </div>
