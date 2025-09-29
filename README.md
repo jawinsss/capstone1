@@ -70,8 +70,6 @@ capstone1/
 │   │   └── schema.prisma   # Database schema
 │   ├── package.json        # Dependencies
 │   └── .env.example        # Environment variables
-├── database/
-│   └── init.sql            # Khởi tạo database
 ├── docker-compose.yml       # Docker services
 ├── start.bat               # Script khởi động (Windows)
 └── README.md               # Tài liệu dự án
