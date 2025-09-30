@@ -49,7 +49,16 @@ export class ProductsService {
       this.prisma.product.findMany({ where, include: { images: true, category: true }, orderBy, skip, take }),
       this.prisma.product.count({ where }),
     ]);
-    return { items, total, page, take, pages: Math.ceil(total / take) };
+    return {
+      success: true,
+      data: items,
+      meta: {
+        total,
+        page,
+        take,
+        pages: Math.ceil(total / take)
+      }
+    };
   }
 
   async findOne(id: string) {
@@ -58,7 +67,10 @@ export class ProductsService {
       include: { images: true, category: true },
     });
     if (!product) throw new NotFoundException('Product not found');
-    return product;
+    return {
+      success: true,
+      data: product
+    };
   }
 
   async create(dto: CreateProductDto) {

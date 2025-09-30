@@ -17,7 +17,9 @@ class SmartSearch {
         try {
             const response = await window.apiService.get('/products?take=1000');
             if (response?.success) {
-                this.products = Array.isArray(response.data) ? response.data : response.data?.items || [];
+                // Handle nested data structure: response.data.data
+                const data = response.data?.data || response.data;
+                this.products = Array.isArray(data) ? data : [];
             }
         } catch (error) {
             console.error('Error loading products:', error);

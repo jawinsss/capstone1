@@ -33,22 +33,32 @@ document.addEventListener('DOMContentLoaded', () => {
     isRendering: false, // Prevent duplicate renders
   };
 
-  // Standard categories and child types to display
-  const STANDARD_CATEGORIES = [
-    { name: 'Sắt Thép', key: 'sat-thep', children: ['Thép hình','Thép tấm','Thép ống','Thép cây'] },
-    { name: 'Hóa Chất', key: 'hoa-chat', children: ['Sơn công nghiệp','Dung môi','Keo dán'] },
-    { name: 'Phụ Kiện Nâng Hạ', key: 'phu-kien-nang-ha', children: ['Cáp - Xích','Móc - Khóa','Palang'] },
-    { name: 'Siêu Thị Keo', key: 'sieu-thi-keo', children: ['Keo silicone','Keo epoxy','Băng keo'] },
-    { name: 'Siêu Thị Sơn', key: 'sieu-thi-son', children: ['Sơn nước','Sơn dầu','Sơn epoxy'] },
-    { name: 'Máy Móc - Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
-    { name: 'Vật Tư Hạ Tầng', key: 'vat-tu-ha-tang', children: ['Ống - Phụ kiện','Cáp - Điện','Bê tông - Nhựa'] },
-    { name: 'Vật Tư Kim Khí', key: 'vat-tu-kim-khi', children: ['Bulon - Ốc vít','Lưỡi cắt - Mài','Dụng cụ cầm tay'] },
-    { name: 'Vật Tư Phụ Xây Dựng', key: 'vat-tu-phu-xay-dung', children: ['Giàn giáo','Cốp pha','Lưới an toàn'] },
-    { name: 'Linh Kiện Lắp Ghép', key: 'linh-kien-lap-ghep', children: ['Khớp nối','Bạc đạn','Ổ bi'] },
-    { name: 'Bảo Hộ Lao Động', key: 'bao-ho-lao-dong', children: ['Mũ - Kính','Găng tay','Giày bảo hộ'] },
-  ];
-
+  // Load categories from API
+  let categories = []; // Initialize categories array
   let categoryNameToId = new Map();
+
+  // Load categories from API
+  async function loadCategories() {
+    try {
+      const res = await window.apiService.get('/categories');
+      
+      if (res?.success) {
+        // Handle nested data structure: res.data.data
+        const data = res.data?.data || res.data;
+        categories = Array.isArray(data) ? data : [];
+        // Build category name to ID mapping
+        categoryNameToId.clear();
+        categories.forEach(cat => {
+          categoryNameToId.set(String(cat.name).trim().toLowerCase(), cat.id);
+        });
+      } else {
+        categories = [];
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      categories = [];
+    }
+  }
 
   // ===== User session UI =====
   async function syncUserUI(){
@@ -97,7 +107,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(categoryNameToId.size === 0) {
       const res = await window.apiService.get('/categories');
       if(res?.success){
-        const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        // Handle nested data structure: res.data.data
+        const data = res.data?.data || res.data;
+        const backendCats = Array.isArray(data) ? data : [];
         categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
       }
     }
@@ -106,22 +118,10 @@ document.addEventListener('DOMContentLoaded', () => {
     pv.catMenu.innerHTML = '';
     
     // Create categories without subcategories
-    STANDARD_CATEGORIES.forEach(c => {
+    categories.forEach(c => {
       const li = document.createElement('li');
       li.className = 'cat-item';
       const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
-      console.log(`Products Category: ${c.name}, ID: ${categoryId}`); // Debug log
-      
-      // Check if categoryId is empty and try alternative names
-      if (!categoryId) {
-        console.warn(`No categoryId found for: ${c.name}`);
-        // Try without special characters
-        const altName = c.name.replace(/[-\s]/g, '').toLowerCase();
-        const altCategoryId = categoryNameToId.get(altName);
-        if (altCategoryId) {
-          console.log(`Found alternative ID for ${c.name}: ${altCategoryId}`);
-        }
-      }
       
       li.innerHTML = `<a href="#" data-cat="${c.name}" data-cat-id="${categoryId}">${c.name}</a>`;
       
@@ -130,12 +130,9 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         const categoryId = e.target.getAttribute('data-cat-id');
         const categoryName = e.target.getAttribute('data-cat');
-        console.log(`Clicked category: ${categoryName}, ID: ${categoryId}`); // Debug log
         if(categoryId) {
           // Navigate to product-all page with category filter
           window.location.href = `product-all.html?category=${categoryId}&name=${encodeURIComponent(categoryName)}`;
-        } else {
-          console.error(`Cannot navigate: No categoryId for ${categoryName}`);
         }
       });
       
@@ -148,8 +145,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
     window.apiService.get(`/products${qs}`).then(res => {
       if(!res?.success) return;
-      const payload = res.data;
-      const allItems = Array.isArray(payload) ? payload : payload?.items || [];
+      // Handle nested data structure: res.data.data
+      const data = res.data?.data || res.data;
+      const allItems = Array.isArray(data) ? data : [];
       
       // Filter by subcategory using localStorage data
       const filteredItems = allItems.filter(p => {
@@ -184,7 +182,9 @@ document.addEventListener('DOMContentLoaded', () => {
     if(categoryNameToId.size === 0) {
       const res = await window.apiService.get('/categories');
       if(res?.success){
-        const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        // Handle nested data structure: res.data.data
+        const data = res.data?.data || res.data;
+        const backendCats = Array.isArray(data) ? data : [];
         categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
       }
     }
@@ -206,7 +206,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdown.appendChild(separator);
     
     // Add categories
-    STANDARD_CATEGORIES.forEach(c => {
+    categories.forEach(c => {
       const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
       const link = document.createElement('a');
       link.className = 'nav-dropdown-item';
@@ -262,18 +262,21 @@ document.addEventListener('DOMContentLoaded', () => {
       } else {
         // Normal API call
         const qs = buildProductQuery();
+        console.log('Products API query:', qs);
         const res = await window.apiService.get(`/products?${qs}`);
+        console.log('Products API response:', res);
         if (!res?.success) {
           console.error('Failed to load products:', res?.message);
           items = [];
           meta = { total: 0 };
           total = 0;
         } else {
-          const payload = res.data;
-          const result = Array.isArray(payload) ? { items: payload, meta: { total: payload.length } } : { items: payload?.items || [], meta: payload?.meta || {} };
-          items = result.items;
-          meta = result.meta;
+          // Handle nested data structure: res.data.data
+          const data = res.data?.data || res.data;
+          items = Array.isArray(data) ? data : [];
+          meta = res.meta || { total: items.length };
           total = Number(meta?.total || items.length || 0);
+          console.log(`Loaded ${items.length} products, total: ${total}`);
         }
       }
       
@@ -295,13 +298,17 @@ document.addEventListener('DOMContentLoaded', () => {
       pvState.totalPages = Math.max(1, Math.ceil(total / pvState.pageSize));
       
       // Build cards
+      if (!Array.isArray(items)) {
+        console.error('Items is not an array:', items);
+        items = [];
+      }
       items.forEach(p=>{
         const card = document.createElement('div');
         card.className = 'hp-card';
         card.style.cursor = 'pointer';
-        const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
+        const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
         card.innerHTML = `
-          <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+          <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
           <div class="name">${p.name}</div>
           <div class="price">${formatVND(p.price)}</div>
         `;
@@ -454,9 +461,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }, 15000);
 
   // Initialize everything
-  initProductView();
+  loadCategories().then(() => {
+    initProductView();
+    loadProductsDropdown(); // Load dropdown after categories are loaded
+    renderProductList(); // Load products after initialization
+  });
   syncUserUI();
   handleURLParams();
-  // Load dropdown menu
-  loadProductsDropdown();
 });

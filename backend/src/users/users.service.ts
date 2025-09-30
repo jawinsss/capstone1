@@ -7,7 +7,7 @@ export class UsersService {
   constructor(private prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.user.findMany({
+    const users = await this.prisma.user.findMany({
       select: {
         id: true,
         username: true,
@@ -19,6 +19,11 @@ export class UsersService {
         createdAt: true,
       },
     });
+    
+    return {
+      success: true,
+      data: users
+    };
   }
 
   async findOne(id: string) {

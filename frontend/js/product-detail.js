@@ -86,13 +86,22 @@ document.addEventListener('DOMContentLoaded', () => {
       showLoading();
       
       const res = await window.apiService.get(`/products/${productId}`);
+      console.log('Product detail API response:', res);
       
       if (!res?.success) {
+        console.error('Failed to load product detail:', res);
         showError();
         return;
       }
 
-      currentProduct = res.data;
+      // Handle nested data structure
+      let productData = res.data;
+      if (productData && typeof productData === 'object' && productData.success && productData.data) {
+        productData = productData.data;
+      }
+      
+      console.log('Product data after processing:', productData);
+      currentProduct = productData;
       displayProductDetail(currentProduct);
       loadRelatedProducts(currentProduct.categoryId, productId);
       hideLoading();
@@ -128,15 +137,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function displayProductDetail(product) {
+    console.log('Displaying product detail:', product);
+    
     // Update breadcrumb
-    breadcrumbProduct.textContent = product.name;
+    breadcrumbProduct.textContent = product.name || 'Sản phẩm';
     
     // Update page title
-    document.title = `${product.name} - MatFlow`;
+    document.title = `${product.name || 'Sản phẩm'} - MatFlow`;
     
     // Update product info
-    productTitle.textContent = product.name;
-    productPrice.textContent = formatVND(product.price);
+    productTitle.textContent = product.name || 'Tên sản phẩm không xác định';
+    productPrice.textContent = formatVND(product.price || 0);
     productDescription.textContent = product.description || 'Không có mô tả chi tiết.';
     
     // Update images

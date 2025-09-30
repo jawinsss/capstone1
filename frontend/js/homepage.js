@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const cartCount = document.getElementById('hpCartCount');
   let activeProduct = null;
   let isRenderingSections = false;
+  let categories = []; // Initialize categories array
   // ===== Simple view router (data-link/data-view + hash) =====
   const views = Array.from(document.querySelectorAll('[data-view]'));
   const navLinks = Array.from(document.querySelectorAll('[data-link]'));
@@ -109,31 +110,56 @@ document.addEventListener('DOMContentLoaded', () => {
     return Number(n||0).toLocaleString('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0});
   }
 
-  // Standard categories and child types to display
-  const STANDARD_CATEGORIES = [
-    { name: 'Sắt Thép', key: 'sat-thep', children: ['Thép hình','Thép tấm','Thép ống','Thép cây'] },
-    { name: 'Hóa Chất', key: 'hoa-chat', children: ['Sơn công nghiệp','Dung môi','Keo dán'] },
-    { name: 'Phụ Kiện Nâng Hạ', key: 'phu-kien-nang-ha', children: ['Cáp - Xích','Móc - Khóa','Palang'] },
-    { name: 'Siêu Thị Keo', key: 'sieu-thi-keo', children: ['Keo silicone','Keo epoxy','Băng keo'] },
-    { name: 'Siêu Thị Sơn', key: 'sieu-thi-son', children: ['Sơn nước','Sơn dầu','Sơn epoxy'] },
-    { name: 'Máy Móc - Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
-    { name: 'Vật Tư Hạ Tầng', key: 'vat-tu-ha-tang', children: ['Ống - Phụ kiện','Cáp - Điện','Bê tông - Nhựa'] },
-    { name: 'Vật Tư Kim Khí', key: 'vat-tu-kim-khi', children: ['Bulon - Ốc vít','Lưỡi cắt - Mài','Dụng cụ cầm tay'] },
-    { name: 'Vật Tư Phụ Xây Dựng', key: 'vat-tu-phu-xay-dung', children: ['Giàn giáo','Cốp pha','Lưới an toàn'] },
-    { name: 'Linh Kiện Lắp Ghép', key: 'linh-kien-lap-ghep', children: ['Khớp nối','Bạc đạn','Ổ bi'] },
-    { name: 'Bảo Hộ Lao Động', key: 'bao-ho-lao-dong', children: ['Mũ - Kính','Găng tay','Giày bảo hộ'] },
-  ];
+  // Load categories from API
+  // var categories = []; // Moved to top of function scope
 
   async function loadCategories(){
-    // Render sidebar from standard list (ignore old grid)
-    catMenu.innerHTML = '';
-    STANDARD_CATEGORIES.forEach(c => {
-      const li = document.createElement('li');
-      li.className = 'cat-item';
-      li.innerHTML = `<span>${c.name}</span><span>›</span>`;
-      const sub = document.createElement('div');
+    try {
+      // Load categories from API
+      const res = await window.apiService.get('/categories');
+      console.log('Categories API response:', res);
+      console.log('Response success:', res?.success);
+      console.log('Response data:', res?.data);
+      console.log('Data type:', typeof res?.data);
+      console.log('Is array:', Array.isArray(res?.data));
+      
+      if (res?.success) {
+        // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+        let data = res.data;
+        if (data && typeof data === 'object' && data.success && data.data) {
+          // Unwrap the nested response
+          data = data.data;
+        }
+        categories = Array.isArray(data) ? data : [];
+        console.log('Categories after processing:', categories);
+        console.log('Categories length:', categories.length);
+      } else {
+        categories = [];
+        console.log('Categories API failed');
+      }
+    } catch (error) {
+      console.error('Error loading categories:', error);
+      categories = [];
+    }
+
+    // Render sidebar from API data
+    if (catMenu) {
+      catMenu.innerHTML = '';
+      if (!Array.isArray(categories)) {
+        console.error('Categories is not an array:', categories);
+        categories = [];
+      }
+    }
+    if (catMenu) {
+      categories.forEach(c => {
+        const li = document.createElement('li');
+        li.className = 'cat-item';
+        li.innerHTML = `<span>${c.name}</span><span>›</span>`;
+        const sub = document.createElement('div');
       sub.className = 'cat-children';
-      sub.innerHTML = c.children.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
+      // Handle subcategories - create default subcategories since API doesn't have children
+      const subcategories = ['Tất cả sản phẩm'];
+      sub.innerHTML = subcategories.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
       li.appendChild(sub);
       
       // Click on main category
@@ -152,30 +178,43 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
       
-      catMenu.appendChild(li);
-    });
-
-    // Load dropdown menu
-    loadProductsDropdown();
+        catMenu.appendChild(li);
+      });
+    }
 
     // Also fetch backend categories to map names->ids for filtering
     const res = await window.apiService.get('/categories');
     if(res?.success){
-      const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+      // Handle nested data structure: res.data.data
+      const data = res.data?.data || res.data;
+      const backendCats = Array.isArray(data) ? data : [];
       categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
       renderCategorySections(backendCats);
     }
+    
+    // Load dropdown menu (after categoryNameToId is loaded)
+    loadProductsDropdown();
+    
+    // Render category sections
+    renderCategorySections(categories);
   }
 
   async function loadProductsDropdown(){
     const dropdown = document.getElementById('productsDropdown');
     if(!dropdown) return;
     
-    // Ensure categoryNameToId is loaded first
-    if(categoryNameToId.size === 0) {
+    // Ensure categories and categoryNameToId are loaded first
+    if(categories.length === 0 || categoryNameToId.size === 0) {
       const res = await window.apiService.get('/categories');
       if(res?.success){
-        const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+        let data = res.data;
+        if (data && typeof data === 'object' && data.success && data.data) {
+          // Unwrap the nested response
+          data = data.data;
+        }
+        const backendCats = Array.isArray(data) ? data : [];
+        categories = backendCats; // Update categories array
         categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
       }
     }
@@ -197,7 +236,7 @@ document.addEventListener('DOMContentLoaded', () => {
     dropdown.appendChild(separator);
     
     // Add categories
-    STANDARD_CATEGORIES.forEach(c => {
+    categories.forEach(c => {
       const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
       console.log(`Category: ${c.name}, ID: ${categoryId}`); // Debug log
       
@@ -241,8 +280,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const qs = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}&take=16` : `?take=16`;
     const res = await window.apiService.get(`/products${qs}`);
     if(!res?.success) return;
-    const payload = res.data;
-    const items = Array.isArray(payload) ? payload : payload?.items || [];
+    // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+    let data = res.data;
+    if (data && typeof data === 'object' && data.success && data.data) {
+      // Unwrap the nested response
+      data = data.data;
+    }
+    const items = Array.isArray(data) ? data : [];
     if(!productGrid){ productGrid = document.getElementById('productsGrid'); }
     if(!productGrid) return;
     productGrid.innerHTML = '';
@@ -266,8 +310,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
     const res = await window.apiService.get(`/products${qs}`);
     if(!res?.success) return;
-    const payload = res.data;
-    const allItems = Array.isArray(payload) ? payload : payload?.items || [];
+    // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+    let data = res.data;
+    if (data && typeof data === 'object' && data.success && data.data) {
+      // Unwrap the nested response
+      data = data.data;
+    }
+    const allItems = Array.isArray(data) ? data : [];
     
     // Filter by subcategory using localStorage data
     const filteredItems = allItems.filter(p => {
@@ -323,16 +372,32 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function renderCategorySections(categories){
+    console.log('renderCategorySections called with:', categories);
     const container = document.getElementById('dynSections');
-    if(!container) return;
+    if(!container) {
+      console.error('dynSections container not found');
+      return;
+    }
     
     // Prevent multiple simultaneous renders
-    if(isRenderingSections) return;
+    if(isRenderingSections) {
+      console.log('Already rendering sections, skipping');
+      return;
+    }
     isRenderingSections = true;
     
     try {
       // Clear previously rendered sections to avoid duplicates
       container.innerHTML = '';
+      
+      // Check if categories is an array
+      if (!Array.isArray(categories)) {
+        console.error('Categories is not an array in renderCategorySections:', categories);
+        categories = [];
+      }
+      
+      console.log('Categories for rendering:', categories);
+      console.log('Categories length:', categories.length);
       
       // Track rendered categories to avoid duplicates
       const renderedCategories = new Set();
@@ -345,15 +410,26 @@ document.addEventListener('DOMContentLoaded', () => {
       container.appendChild(sec);
       const grid = sec.querySelector(`[data-grid-for="${c.id}"]`);
       const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=8`);
+      console.log(`Loading products for category ${c.name} (${c.id}):`, res);
       if(res?.success){
-        const items = Array.isArray(res.data) ? res.data : res.data?.items || [];
+        // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+        let data = res.data;
+        if (data && typeof data === 'object' && data.success && data.data) {
+          // Unwrap the nested response
+          data = data.data;
+        }
+        const items = Array.isArray(data) ? data : [];
+        console.log(`Homepage.js - Found ${items.length} products for category ${c.name}`);
+        console.log('Homepage.js - Items after processing:', items);
+        console.log('Homepage.js - Items type:', typeof items);
+        console.log('Homepage.js - Items is array:', Array.isArray(items));
         items.forEach(p=>{
           const card = document.createElement('div');
           card.className = 'hp-card';
           card.style.cursor = 'pointer';
-          const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
+          const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
           card.innerHTML = `
-            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
             <div class="name">${p.name}</div>
             <div class="price">${formatVND(p.price)}</div>
           `;
@@ -416,30 +492,137 @@ document.addEventListener('DOMContentLoaded', () => {
     if(res?.success){ localStorage.removeItem('cart'); alert('Đặt hàng thành công'); } else { alert(res?.message||'Đặt hàng thất bại'); }
   }
 
+  // Simple product display for testing
+  async function loadSimpleProducts() {
+    console.log('Loading simple products...');
+    const container = document.getElementById('dynSections');
+    if (!container) {
+      console.log('dynSections container not found - skipping simple products load');
+      return;
+    }
+    
+    container.innerHTML = '<div style="padding: 20px; text-align: center;">Đang tải sản phẩm...</div>';
+    
+    try {
+      const res = await window.apiService.get('/products?take=12');
+      console.log('Simple products response:', res);
+      console.log('Response success:', res?.success);
+      console.log('Response data:', res?.data);
+      console.log('Data type:', typeof res?.data);
+      console.log('Is array:', Array.isArray(res?.data));
+      
+      if (res?.success) {
+        // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+        let data = res.data;
+        if (data && typeof data === 'object' && data.success && data.data) {
+          // Unwrap the nested response
+          data = data.data;
+        }
+        const items = Array.isArray(data) ? data : [];
+        console.log('Homepage.js - Items after processing:', items);
+        console.log('Homepage.js - Items length:', items.length);
+        console.log('Homepage.js - Items type:', typeof items);
+        console.log('Homepage.js - Items is array:', Array.isArray(items));
+        
+        if (items.length > 0) {
+          container.innerHTML = `
+          <section class="hp-products">
+            <div class="hp-products-head">
+              <h2>Sản phẩm mới nhất</h2>
+            </div>
+            <div class="hp-card-grid" id="simpleProductsGrid"></div>
+          </section>
+        `;
+        
+        const grid = document.getElementById('simpleProductsGrid');
+        if (grid) {
+          items.forEach(p => {
+            const card = document.createElement('div');
+            card.className = 'hp-card';
+            card.style.cursor = 'pointer';
+            const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
+            card.innerHTML = `
+              <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
+              <div class="name">${p.name}</div>
+              <div class="price">${formatVND(p.price)}</div>
+            `;
+            card.addEventListener('click', () => openProduct(p));
+            grid.appendChild(card);
+          });
+          
+          console.log(`Displayed ${items.length} products`);
+        } else {
+          console.error('Simple products grid not found');
+        }
+        } else {
+          container.innerHTML = '<div style="padding: 20px; text-align: center;">Không có sản phẩm nào</div>';
+          console.log('Homepage.js - No products found - success:', res?.success, 'data length:', res?.data?.length);
+          console.log('Homepage.js - Response data:', res?.data);
+          console.log('Homepage.js - Data type:', typeof res?.data);
+          console.log('Homepage.js - Is array:', Array.isArray(res?.data));
+        }
+      } else {
+        container.innerHTML = '<div style="padding: 20px; text-align: center;">Không có sản phẩm nào</div>';
+        console.log('Homepage.js - No products found - success:', res?.success, 'data length:', res?.data?.length);
+        console.log('Homepage.js - Response data:', res?.data);
+        console.log('Homepage.js - Data type:', typeof res?.data);
+        console.log('Homepage.js - Is array:', Array.isArray(res?.data));
+      }
+    } catch (error) {
+      console.error('Homepage.js - Error loading simple products:', error);
+      container.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Lỗi khi tải sản phẩm</div>';
+    }
+  }
+
   loadCategories();
+  loadSimpleProducts(); // Add simple product loading
   syncUserUI();
   handleInitialRoute();
-
-  // Auto refresh newest products so items created from admin appear on home
-  setInterval(async ()=>{
-    // Only refresh product sections if on homepage
-    const homeView = document.querySelector('[data-view="home"]');
-    if (homeView && !homeView.hasAttribute('hidden')) {
-      // Get fresh categories from backend and render sections
-      try {
-        const res = await window.apiService.get('/categories');
-        if(res?.success){
-          const backendCats = Array.isArray(res.data) ? res.data : res.data?.items || [];
-          // Update category mapping
-          categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
-          // Render sections (this will clear and re-render)
-          renderCategorySections(backendCats);
-        }
-      } catch (error) {
-        console.error('Error refreshing categories:', error);
-      }
+  
+  // Debug: Test API directly
+  setTimeout(async () => {
+    console.log('=== DEBUG: Testing API directly ===');
+    try {
+      const catRes = await window.apiService.get('/categories');
+      console.log('Direct categories test:', catRes);
+      console.log('Direct categories data type:', typeof catRes?.data);
+      console.log('Direct categories is array:', Array.isArray(catRes?.data));
+      
+      const prodRes = await window.apiService.get('/products?take=5');
+      console.log('Direct products test:', prodRes);
+      console.log('Direct products data type:', typeof prodRes?.data);
+      console.log('Direct products is array:', Array.isArray(prodRes?.data));
+    } catch (error) {
+      console.error('Direct API test error:', error);
     }
-  }, 15000);
+  }, 2000);
+
+  // Auto refresh disabled to prevent console spam and data loss
+  // setInterval(async ()=>{
+  //   // Only refresh product sections if on homepage
+  //   const homeView = document.querySelector('[data-view="home"]');
+  //   if (homeView && !homeView.hasAttribute('hidden')) {
+  //     // Get fresh categories from backend and render sections
+  //     try {
+  //       const res = await window.apiService.get('/categories');
+  //       if(res?.success){
+  //         // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+  //         let data = res.data;
+  //         if (data && typeof data === 'object' && data.success && data.data) {
+  //           // Unwrap the nested response
+  //           data = data.data;
+  //         }
+  //         const backendCats = Array.isArray(data) ? data : [];
+  //         // Update category mapping
+  //         categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
+  //         // Render sections (this will clear and re-render)
+  //         renderCategorySections(backendCats);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error refreshing categories:', error);
+  //     }
+  //   }
+  // }, 15000);
   
 });
 

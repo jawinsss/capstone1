@@ -1,18 +1,37 @@
-document.addEventListener('DOMContentLoaded', () => {
-    // ====== STANDARD CATEGORIES ======
-    const STANDARD_CATEGORIES = [
-        { name: 'Sắt Thép', key: 'sat-thep', children: ['Thép hình','Thép tấm','Thép ống','Thép cây'] },
-        { name: 'Hóa Chất', key: 'hoa-chat', children: ['Sơn công nghiệp','Dung môi','Keo dán'] },
-        { name: 'Phụ Kiện Nâng Hạ', key: 'phu-kien-nang-ha', children: ['Cáp - Xích','Móc - Khóa','Palang'] },
-        { name: 'Siêu Thị Keo', key: 'sieu-thi-keo', children: ['Keo silicone','Keo epoxy','Băng keo'] },
-        { name: 'Siêu Thị Sơn', key: 'sieu-thi-son', children: ['Sơn nước','Sơn dầu','Sơn epoxy'] },
-        { name: 'Máy Móc- Thiết Bị', key: 'may-moc-thiet-bi', children: ['Máy hàn','Máy cắt','Dụng cụ điện'] },
-        { name: 'Vật Tư Hạ Tầng', key: 'vat-tu-ha-tang', children: ['Ống - Phụ kiện','Cáp - Điện','Bê tông - Nhựa'] },
-        { name: 'Vật Tư Kim Khí', key: 'vat-tu-kim-khi', children: ['Bulon - Ốc vít','Lưỡi cắt - Mài','Dụng cụ cầm tay'] },
-        { name: 'Vật Tư Phụ Xây Dựng', key: 'vat-tu-phu-xay-dung', children: ['Giàn giáo','Cốp pha','Lưới an toàn'] },
-        { name: 'Linh Kiện Lắp Ghép', key: 'linh-kien-lap-ghep', children: ['Khớp nối','Bạc đạn','Ổ bi'] },
-        { name: 'Bảo Hộ Lao Động', key: 'bao-ho-lao-dong', children: ['Mũ - Kính','Găng tay','Giày bảo hộ'] },
-    ];
+document.addEventListener('DOMContentLoaded', async () => {
+    // ====== CATEGORIES FROM API ======
+    // var categories = []; // Moved to top of function scope
+
+    // Load categories from API
+    async function loadCategories() {
+        try {
+            const res = await window.apiService.get('/categories');
+            console.log('Categories API response:', res);
+            if (res?.success) {
+                // Debug API response structure
+                console.log('Categories res.data type:', typeof res.data);
+                console.log('Categories res.data isArray:', Array.isArray(res.data));
+                console.log('Categories res.data keys:', Object.keys(res.data || {}));
+                
+                // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+                let data = res.data;
+                if (data && typeof data === 'object' && data.success && data.data) {
+                    // Unwrap the nested response
+                    data = data.data;
+                }
+                categories = Array.isArray(data) ? data : [];
+                console.log('Categories loaded:', categories);
+            } else {
+                categories = [];
+            }
+        } catch (error) {
+            console.error('Error loading categories:', error);
+            categories = [];
+        }
+    }
+
+    // Load categories first
+    await loadCategories();
 
     // ====== AUTH GUARD ======
     try {
@@ -243,12 +262,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
             });
         } else if (route === 'products') {
-            realTimeManager.startAutoRefresh('products', () => {
-                const view = document.querySelector('[data-view="products"]');
-                if (view && !view.hidden) {
-                    loadProductsData();
-                }
-            });
+            // Disable auto-refresh for products to prevent console spam
+            // realTimeManager.startAutoRefresh('products', () => {
+            //     const view = document.querySelector('[data-view="products"]');
+            //     if (view && !view.hidden) {
+            //         loadProductsData();
+            //     }
+            // });
         }
 
         // Đồng bộ hash/history
@@ -402,14 +422,29 @@ document.addEventListener('DOMContentLoaded', () => {
             
             try {
                 const res = await window.apiService.get('/categories');
-                if (res?.success && Array.isArray(res.data)) {
+                console.log('Categories API response in form:', res);
+                if (res?.success) {
+                    // Debug API response structure
+                    console.log('Categories form res.data type:', typeof res.data);
+                    console.log('Categories form res.data isArray:', Array.isArray(res.data));
+                    console.log('Categories form res.data keys:', Object.keys(res.data || {}));
+                    
+                    // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+                    let data = res.data;
+                    if (data && typeof data === 'object' && data.success && data.data) {
+                        // Unwrap the nested response
+                        data = data.data;
+                    }
+                    const categories = Array.isArray(data) ? data : [];
+                    console.log('Categories for form:', categories);
+                    
                     mainCategorySelect.innerHTML = '';
                     const placeholder = document.createElement('option');
                     placeholder.textContent = 'Chọn danh mục sản phẩm';
                     placeholder.value = '';
                     mainCategorySelect.appendChild(placeholder);
                     
-                    res.data.forEach(cat => {
+                    categories.forEach(cat => {
                         const opt = document.createElement('option');
                         opt.value = cat.id;
                         opt.textContent = cat.name;
@@ -432,8 +467,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const subCategorySelect = document.getElementById('subCategorySelect');
             if (!subCategorySelect) return;
 
-            // Find matching category in STANDARD_CATEGORIES
-            const matchingCategory = STANDARD_CATEGORIES.find(cat => 
+            // Find matching category in categories from API
+            const matchingCategory = categories.find(cat => 
                 cat.name.toLowerCase() === mainCategoryName.toLowerCase()
             );
 
@@ -466,12 +501,19 @@ document.addEventListener('DOMContentLoaded', () => {
             if (!listPanel) return;
             const container = document.createElement('div');
             container.className = 'list';
-            (products || []).forEach(p => {
+            
+            // Handle API response structure
+            if (!Array.isArray(products)) {
+                console.error('Products is not an array:', products);
+                products = [];
+            }
+            
+            products.forEach(p => {
                 const item = document.createElement('article');
                 item.className = 'list-item';
-                const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/40x40?text=';
+                const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
                 item.innerHTML = `
-                    <img src="${thumb}" alt="${p.name}" class="avatar" style="width:40px;height:40px;object-fit:cover;border-radius:8px" onerror="this.src='https://via.placeholder.com/40x40?text='"/>
+                    <img src="${thumb}" alt="${p.name}" class="avatar" style="width:40px;height:40px;object-fit:cover;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'"/>
                     <div style="flex:1">
                         <div class="list-title">${p.name} <span class="chip ${p.isActive ? 'green' : 'red'}">${p.isActive ? 'Đang bán' : 'Ẩn'}</span></div>
                         <div class="list-sub">Giá: ${formatCurrency(p.price)} • Danh mục: ${p.category?.name || ''} • Kho: ${p.stock}</div>
@@ -513,13 +555,25 @@ document.addEventListener('DOMContentLoaded', () => {
         async function loadProducts() {
             try {
                 const res = await window.apiService.get('/products?take=1000');
+                console.log('Products API response:', res);
                 if (res?.success) {
-                    const payload = res.data;
-                    const items = Array.isArray(payload) ? payload : (payload?.items || []);
+                    // Debug API response structure
+                    console.log('Products res.data type:', typeof res.data);
+                    console.log('Products res.data isArray:', Array.isArray(res.data));
+                    console.log('Products res.data keys:', Object.keys(res.data || {}));
+                    
+                    // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+                    let data = res.data;
+                    if (data && typeof data === 'object' && data.success && data.data) {
+                        // Unwrap the nested response
+                        data = data.data;
+                    }
+                    const items = Array.isArray(data) ? data : [];
+                    console.log('Products items:', items);
                     renderProducts(items);
                     // Update KPIs
                     const stats = view.querySelectorAll('.order-stats .order-stat-value');
-                    const total = Array.isArray(payload) ? items.length : Number(payload?.total || items.length);
+                    const total = items.length;
                     const selling = items.filter(p=>p.isActive).length;
                     const outOfStock = items.filter(p=>Number(p.stock||0)===0).length;
                     if (stats[0]) stats[0].textContent = String(total);
@@ -1345,8 +1399,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const subCategorySelect = document.getElementById('editSubCategory');
         if (!subCategorySelect) return;
 
-        // Find matching category in STANDARD_CATEGORIES
-        const matchingCategory = STANDARD_CATEGORIES.find(cat => 
+        // Find matching category in categories from API
+        const matchingCategory = categories.find(cat => 
             cat.name.toLowerCase() === mainCategoryName.toLowerCase()
         );
 
