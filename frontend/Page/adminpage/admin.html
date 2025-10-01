@@ -13,6 +13,7 @@
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/upload.js" defer></script>
     <script src="../../js/admin.js" defer></script>
+    <script src="../../js/categories.js" defer></script>
     <style>
         [hidden] {
             display: none !important
@@ -46,6 +47,9 @@
             </a>
             <a class="nav-item" href="#products" data-link="products">
                 <i class="fa-solid fa-box"></i><span>Sản phẩm</span>
+            </a>
+            <a class="nav-item" href="#categories" data-link="categories">
+                <i class="fa-solid fa-tags"></i><span>Quản lý danh mục sản phẩm</span>
             </a>
             <a class="nav-item" href="#feedbacks" data-link="feedbacks">
                 <i class="fa-solid fa-message"></i><span>Hỗ trợ & Khiếu nại</span>
@@ -363,13 +367,91 @@
                         <div class="list-sub">Danh mục: Chưa chọn</div>
                         <div class="list-sub">Hình ảnh: 0 ảnh</div>
                         <div style="margin-top: 12px">
-                            <button class="btn" style="background:#22c55e; color:#fff;border-color:#16a34a">
+                            <button class="btn" id="addProductBtn" style="background:#22c55e; color:#fff;border-color:#16a34a" onclick="addProduct()">
                                 Thêm sản phẩm
                             </button>
                             <button class="btn" style="margin-left:8px">Hủy bỏ</button>
                         </div>
                     </div>
                 </section>
+            </section>
+
+            <!-- ========== CATEGORIES MANAGEMENT ========= -->
+            <section id="view-categories" data-view="categories" hidden>
+                <h1>Quản lý danh mục sản phẩm</h1>
+                <p class="muted">Quản lý danh mục chính và danh mục con của sản phẩm</p>
+
+                <div class="tabs">
+                    <button class="tab-btn active" id="categoriesListTab">Danh sách danh mục</button>
+                    <button class="tab-btn" id="addCategoryTab">Thêm danh mục</button>
+                </div>
+
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng danh mục</div>
+                        <div class="order-stat-value" id="totalCategories">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Danh mục chính</div>
+                        <div class="order-stat-value" id="mainCategories">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Danh mục con</div>
+                        <div class="order-stat-value" id="subCategories">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đang hoạt động</div>
+                        <div class="order-stat-value" id="activeCategories">0</div>
+                    </div>
+                </section>
+
+                <!-- Categories List View -->
+                <div id="categoriesListView">
+                    <section class="panel">
+                        <div class="panel-title">
+                            Danh sách danh mục
+                            <button class="btn" id="refreshCategories" style="margin-left: auto;">
+                                <i class="fa-solid fa-refresh"></i> Làm mới
+                            </button>
+                        </div>
+                        <div class="categories-tree" id="categoriesTree">
+                            <!-- Categories will be loaded here -->
+                        </div>
+                    </section>
+                </div>
+
+                <!-- Add Category View -->
+                <div id="addCategoryView" style="display: none;">
+                    <section class="panel">
+                        <div class="panel-title">Thêm danh mục mới</div>
+                        <form id="addCategoryForm">
+                            <div class="filter-grid" style="grid-template-columns: 1fr 1fr;">
+                                <div class="filter-field">
+                                    <label>Tên danh mục *</label>
+                                    <input type="text" id="categoryName" class="input" placeholder="Nhập tên danh mục...">
+                                </div>
+                                <div class="filter-field">
+                                    <label>Danh mục cha</label>
+                                    <select id="parentCategory" class="select">
+                                        <option value="">Chọn danh mục cha (để trống nếu là danh mục chính)</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="filter-field" style="margin-top: 12px;">
+                                <label>Mô tả</label>
+                                <textarea id="categoryDescription" class="textarea" rows="3" placeholder="Nhập mô tả danh mục..."></textarea>
+                            </div>
+                            <div class="split-right" style="margin-top: 12px;">
+                                <button type="submit" class="btn" style="background:#22c55e; color:#fff; border-color:#16a34a">
+                                    <i class="fa-solid fa-plus"></i> Thêm danh mục
+                                </button>
+                                <button type="button" class="btn" id="cancelAddCategory" style="margin-left: 8px;">
+                                    <i class="fa-solid fa-times"></i> Hủy bỏ
+                                </button>
+                            </div>
+                        </form>
+                    </section>
+                </div>
             </section>
 
             <!-- ========== feedback======== -->
@@ -728,6 +810,364 @@
             background: #e5e7eb;
         }
 
+        /* Categories Tree Styles */
+        .categories-tree {
+            padding: 16px;
+        }
+
+        .category-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            margin: 4px 0;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .category-item:hover {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+        }
+
+        .category-item.main-category {
+            background: #eff6ff;
+            border-color: #bfdbfe;
+            font-weight: 600;
+        }
+
+        .category-item.sub-category {
+            margin-left: 32px;
+            background: #f0fdf4;
+            border-color: #bbf7d0;
+        }
+
+        .category-info {
+            flex: 1;
+        }
+
+        .category-name {
+            font-weight: 500;
+            color: #111827;
+            margin-bottom: 4px;
+        }
+
+        .category-description {
+            font-size: 0.875rem;
+            color: #6b7280;
+        }
+
+        .category-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .category-actions .btn {
+            padding: 6px 12px;
+            font-size: 0.75rem;
+        }
+
+        .category-children {
+            margin-left: 16px;
+            border-left: 2px solid #e5e7eb;
+            padding-left: 16px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 48px 24px;
+            color: #6b7280;
+        }
+
+        .empty-state i {
+            font-size: 3rem;
+            margin-bottom: 16px;
+            color: #d1d5db;
+        }
+
+        .category-stats {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .stat-item {
+            background: #f9fafb;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            flex: 1;
+        }
+
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #111827;
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 4px;
+        }
+
+    </style>
+
+    <!-- Edit Category Modal -->
+    <div id="editCategoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Chỉnh sửa danh mục</h3>
+                <button class="modal-close" onclick="closeEditModal()">&times;</button>
+            </div>
+            <form id="editCategoryForm">
+                <div class="form-group">
+                    <label for="editCategoryName">Tên danh mục *</label>
+                    <input type="text" id="editCategoryName" name="name">
+                </div>
+                <div class="form-group">
+                    <label for="editCategoryDescription">Mô tả</label>
+                    <textarea id="editCategoryDescription" name="description" rows="3"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="editParentCategory">Danh mục cha</label>
+                    <select id="editParentCategory" name="parentId">
+                        <option value="">Chọn danh mục cha (để trống nếu là danh mục chính)</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Hủy</button>
+                    <button type="submit" class="btn btn-primary">Cập nhật</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Delete Category Modal -->
+    <div id="deleteCategoryModal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Xác nhận xóa danh mục</h3>
+                <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Bạn có chắc chắn muốn xóa danh mục <strong id="deleteCategoryName"></strong>?</p>
+                <p class="text-danger">Hành động này không thể hoàn tác!</p>
+            </div>
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Hủy</button>
+                <button type="button" class="btn btn-danger" onclick="confirmDeleteCategory()">Xóa</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Styles -->
+    <style>
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .modal-header h3 {
+            margin: 0;
+            color: #111827;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #6b7280;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            color: #374151;
+        }
+
+        .modal-body {
+            padding: 20px;
+            flex: 1;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group input,
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #d1d5db;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            padding: 20px;
+            border-top: 1px solid #e5e7eb;
+            margin-top: auto;
+            flex-shrink: 0;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: all 0.2s;
+        }
+
+        .btn-secondary {
+            background: #f3f4f6;
+            color: #374151;
+        }
+
+        .btn-secondary:hover {
+            background: #e5e7eb;
+        }
+
+        .btn-primary {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .text-danger {
+            color: #ef4444;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        /* Product List Styles */
+        .products-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .product-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+        }
+
+        .product-item:hover {
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .product-info h3 {
+            margin: 0 0 8px 0;
+            color: #111827;
+            font-size: 16px;
+        }
+
+        .product-info p {
+            margin: 4px 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .product-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-sm {
+            padding: 6px 12px;
+            font-size: 12px;
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+            border: none;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .empty-state {
+            text-align: center;
+            color: #6b7280;
+            padding: 40px;
+            font-style: italic;
+        }
     </style>
 </body>
 

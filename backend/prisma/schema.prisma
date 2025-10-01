@@ -50,6 +50,8 @@ model Category {
   parent      Category?  @relation("CategoryToCategory", fields: [parentId], references: [id])
   children    Category[] @relation("CategoryToCategory")
 
+  // Unique constraint: same name cannot exist under same parent
+  @@unique([name, parentId], name: "unique_name_per_parent")
   @@map("categories")
 }
 

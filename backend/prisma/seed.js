@@ -41,50 +41,78 @@ var bcrypt = require("bcryptjs");
 var prisma = new client_1.PrismaClient();
 function main() {
     return __awaiter(this, void 0, void 0, function () {
-        var hashedPassword, password, admin, admin1;
+        var adminUsers, _i, adminUsers_1, userData, hashedPassword, user;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
-                    console.log('Starting database seeding...');
-                    return [4 /*yield*/, bcrypt.hash('password', 10)];
+                    console.log('Starting database seed...');
+                    // Clear existing data
+                    console.log('Clearing existing data...');
+                    return [4 /*yield*/, prisma.productImage.deleteMany()];
                 case 1:
-                    hashedPassword = _a.sent();
-                    return [4 /*yield*/, bcrypt.hash('tamdeptrai', 10)];
+                    _a.sent();
+                    return [4 /*yield*/, prisma.product.deleteMany()];
                 case 2:
-                    password = _a.sent();
-                    return [4 /*yield*/, prisma.user.upsert({
-                            where: { email: 'ngotam120704@gmail.com' },
-                            update: {},
-                            create: {
-                                email: 'ngotam120704@gmail.com',
-                                username: 'ngotam',
-                                password: hashedPassword,
-                                fullName: 'ngo minh tam',
-                                phone: '0905626568',
-                                role: 'ADMIN',
-                                isActive: true,
-                            },
-                        })];
+                    _a.sent();
+                    return [4 /*yield*/, prisma.category.deleteMany()];
                 case 3:
-                    admin = _a.sent();
-                    return [4 /*yield*/, prisma.user.upsert({
-                            where: { email: 'khoa@gmail.com' },
-                            update: {},
-                            create: {
-                                email: 'khoa@gmail.com',
-                                username: 'nguyenkhoa',
-                                password: password,
-                                fullName: 'nguyen dang khoa',
-                                phone: '0905626568',
-                                role: 'ADMIN',
-                                isActive: true,
+                    _a.sent();
+                    return [4 /*yield*/, prisma.user.deleteMany()];
+                case 4:
+                    _a.sent();
+                    // Create admin users
+                    console.log('Creating admin users...');
+                    adminUsers = [
+                        {
+                            username: 'ngotam',
+                            email: 'ngotam@matflow.com',
+                            password: 'tamdeptrai',
+                            fullName: 'Ngô Tâm',
+                            phone: '0905626568',
+                            role: client_1.UserRole.ADMIN,
+                            isActive: true,
+                        },
+                        {
+                            username: 'nguyenkhoa',
+                            email: 'nguyenkhoa@matflow.com',
+                            password: 'tamdeptrai',
+                            fullName: 'Nguyễn Khoa',
+                            phone: '0905626568',
+                            role: client_1.UserRole.ADMIN,
+                            isActive: true,
+                        }
+                    ];
+                    _i = 0, adminUsers_1 = adminUsers;
+                    _a.label = 5;
+                case 5:
+                    if (!(_i < adminUsers_1.length)) return [3 /*break*/, 9];
+                    userData = adminUsers_1[_i];
+                    return [4 /*yield*/, bcrypt.hash(userData.password, 10)];
+                case 6:
+                    hashedPassword = _a.sent();
+                    return [4 /*yield*/, prisma.user.create({
+                            data: {
+                                username: userData.username,
+                                email: userData.email,
+                                password: hashedPassword,
+                                fullName: userData.fullName,
+                                phone: userData.phone,
+                                role: userData.role,
+                                isActive: userData.isActive,
                             },
                         })];
-                case 4:
-                    admin1 = _a.sent();
-                    console.log('Admin user created:', admin.email);
-                    console.log('Admin user created:', admin1.email);
-                    console.log('Database seeding completed!');
+                case 7:
+                    user = _a.sent();
+                    console.log("Admin user created: ".concat(user.username, " (").concat(user.fullName, ")"));
+                    _a.label = 8;
+                case 8:
+                    _i++;
+                    return [3 /*break*/, 5];
+                case 9:
+                    console.log(' Database seed completed!');
+                    console.log(' Admin credentials:');
+                    console.log('   Username: ngotam, Password: admin123');
+                    console.log('   Username: nguyenkhoa, Password: admin123');
                     return [2 /*return*/];
             }
         });
@@ -92,7 +120,7 @@ function main() {
 }
 main()
     .catch(function (e) {
-    console.error('Error during seeding:', e);
+    console.error('Seed failed:', e);
     process.exit(1);
 })
     .finally(function () { return __awaiter(void 0, void 0, void 0, function () {

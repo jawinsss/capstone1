@@ -27,8 +27,13 @@ export class ProductsController {
   @Roles('ADMIN')
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create product (ADMIN)' })
-  create(@Body() dto: CreateProductDto) {
-    return this.productsService.create(dto);
+  async create(@Body() dto: CreateProductDto) {
+    try {
+      return await this.productsService.create(dto);
+    } catch (error) {
+      console.error('Create product error:', error);
+      throw error;
+    }
   }
 
   @Patch(':id')

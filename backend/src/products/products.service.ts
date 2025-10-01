@@ -74,20 +74,40 @@ export class ProductsService {
   }
 
   async create(dto: CreateProductDto) {
-    return this.prisma.product.create({
-      data: {
-        name: dto.name,
-        slug: await this.generateUniqueSlug(dto.name),
-        description: dto.description,
-        price: Math.max(0, Math.trunc(dto.price || 0)),
-        stock: Math.max(0, Math.trunc(dto.stock || 0)),
-        categoryId: dto.categoryId,
-        images: dto.images?.length
-          ? { create: dto.images.map((i) => ({ url: i.url, alt: i.alt, order: i.order ?? 0 })) }
-          : undefined,
-      },
-      include: { images: true, category: true },
-    });
+    try {
+      // Validate required fields
+      if (!dto.name || !dto.categoryId) {
+        throw new Error('Name and categoryId are required');
+      }
+
+      // Check if category exists
+      const category = await this.prisma.category.findUnique({
+        where: { id: dto.categoryId },
+        select: { id: true }
+      });
+      
+      if (!category) {
+        throw new Error('Category not found');
+      }
+
+      return await this.prisma.product.create({
+        data: {
+          name: dto.name,
+          slug: await this.generateUniqueSlug(dto.name),
+          description: dto.description,
+          price: Math.max(0, Math.trunc(dto.price || 0)),
+          stock: Math.max(0, Math.trunc(dto.stock || 0)),
+          categoryId: dto.categoryId,
+          images: dto.images?.length
+            ? { create: dto.images.map((i) => ({ url: i.url, alt: i.alt, order: i.order ?? 0 })) }
+            : undefined,
+        },
+        include: { images: true, category: true },
+      });
+    } catch (error) {
+      console.error('ProductsService.create error:', error);
+      throw error;
+    }
   }
 
   async update(id: string, dto: UpdateProductDto) {

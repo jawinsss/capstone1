@@ -115,8 +115,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function loadCategories(){
     try {
-      // Load categories from API
-      const res = await window.apiService.get('/categories');
+      // Load only parent categories from API
+      const res = await window.apiService.get('/categories/main');
       console.log('Categories API response:', res);
       console.log('Response success:', res?.success);
       console.log('Response data:', res?.data);
@@ -124,10 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Is array:', Array.isArray(res?.data));
       
       if (res?.success) {
-        // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+
         let data = res.data;
         if (data && typeof data === 'object' && data.success && data.data) {
-          // Unwrap the nested response
+
           data = data.data;
         }
         categories = Array.isArray(data) ? data : [];
@@ -142,7 +142,7 @@ document.addEventListener('DOMContentLoaded', () => {
       categories = [];
     }
 
-    // Render sidebar from API data
+
     if (catMenu) {
       catMenu.innerHTML = '';
       if (!Array.isArray(categories)) {
@@ -156,25 +156,51 @@ document.addEventListener('DOMContentLoaded', () => {
         li.className = 'cat-item';
         li.innerHTML = `<span>${c.name}</span><span>›</span>`;
         const sub = document.createElement('div');
-      sub.className = 'cat-children';
-      // Handle subcategories - create default subcategories since API doesn't have children
-      const subcategories = ['Tất cả sản phẩm'];
-      sub.innerHTML = subcategories.map(ch=>`<div class="hp-cat" data-subcategory="${ch}">${ch}</div>`).join('');
-      li.appendChild(sub);
+        sub.className = 'cat-children';
+        sub.innerHTML = '<div class="hp-cat loading">Đang tải...</div>';
+        li.appendChild(sub);
+        
+
+        li.addEventListener('mouseenter', async () => {
+          if (sub.querySelector('.loading')) {
+            try {
+              const res = await window.apiService.get(`/categories/${c.id}/subcategories`);
+              let childrenCategories = [];
+              if (res?.success && res.data) {
+                childrenCategories = Array.isArray(res.data) ? res.data : [];
+              } else if (Array.isArray(res)) {
+                childrenCategories = res;
+              }
+              
+              if (childrenCategories.length > 0) {
+                sub.innerHTML = childrenCategories.map(child => 
+                  `<div class="hp-cat" data-subcategory="${child.name}" data-category-id="${child.id}">${child.name}</div>`
+                ).join('');
+              } else {
+                sub.innerHTML = '<div class="hp-cat">Chưa có danh mục con</div>';
+              }
+            } catch (error) {
+              console.error('Error loading children categories:', error);
+              sub.innerHTML = '<div class="hp-cat">Lỗi tải danh mục con</div>';
+            }
+          }
+        });
       
-      // Click on main category
+
       li.addEventListener('click', (e)=>{
-        // Avoid closing when clicking submenu; just load products for parent category
+
         e.stopPropagation();
         filterByCategoryName(c.name);
       });
       
-      // Click on sub-categories
+
       sub.addEventListener('click', (e)=>{
         e.stopPropagation();
         const subCategory = e.target.getAttribute('data-subcategory');
-        if(subCategory) {
-          filterBySubCategory(c.name, subCategory);
+        const categoryId = e.target.getAttribute('data-category-id');
+        if(subCategory && categoryId) {
+
+          filterByCategoryId(categoryId, subCategory);
         }
       });
       
@@ -182,20 +208,20 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Also fetch backend categories to map names->ids for filtering
-    const res = await window.apiService.get('/categories');
+
+    const res = await window.apiService.get('/categories/main');
     if(res?.success){
-      // Handle nested data structure: res.data.data
+
       const data = res.data?.data || res.data;
       const backendCats = Array.isArray(data) ? data : [];
       categoryNameToId = new Map(backendCats.map(x=>[String(x.name).trim().toLowerCase(), x.id]));
       renderCategorySections(backendCats);
     }
     
-    // Load dropdown menu (after categoryNameToId is loaded)
+
     loadProductsDropdown();
     
-    // Render category sections
+
     renderCategorySections(categories);
   }
 
@@ -203,14 +229,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const dropdown = document.getElementById('productsDropdown');
     if(!dropdown) return;
     
-    // Ensure categories and categoryNameToId are loaded first
+
     if(categories.length === 0 || categoryNameToId.size === 0) {
-      const res = await window.apiService.get('/categories');
+      const res = await window.apiService.get('/categories/main');
       if(res?.success){
-        // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+
         let data = res.data;
         if (data && typeof data === 'object' && data.success && data.data) {
-          // Unwrap the nested response
+
           data = data.data;
         }
         const backendCats = Array.isArray(data) ? data : [];
@@ -265,6 +291,13 @@ document.addEventListener('DOMContentLoaded', () => {
     if(id){ 
       // Navigate to product-all page with category filter
       window.location.href = `product-all.html?category=${id}&name=${encodeURIComponent(name)}`;
+    }
+  }
+
+  function filterByCategoryId(categoryId, categoryName){
+    if(categoryId){ 
+      // Navigate to product-all page with category filter
+      window.location.href = `product-all.html?category=${categoryId}&name=${encodeURIComponent(categoryName)}`;
     }
   }
 
