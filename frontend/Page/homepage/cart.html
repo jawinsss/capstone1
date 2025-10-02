@@ -12,6 +12,7 @@
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/header-avatar.js" defer></script>
     <script src="../../js/cartUtils.js" defer></script>
     <script src="../../js/search.js" defer></script>
     <script src="../../js/cart.js" defer></script>
@@ -24,7 +25,16 @@
             <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
             <div class="hp-top-actions">
                 <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
-                <span id="hpUserName" class="hp-top-hint"></span>
+                
+                <!-- User Avatar (shown when logged in) -->
+                <div id="hpUserAvatar" class="hp-user-avatar" hidden>
+                    <div class="hp-avatar-circle">
+                        <span id="hpUserInitials">U</span>
+                    </div>
+                    <a id="hpUserName" class="hp-user-name" href="../userpage/user.html" style="text-decoration: none; color: inherit; cursor: pointer;"></a>
+                </div>
+                
+                <!-- Login/Logout Links -->
                 <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
                 <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
                 <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
