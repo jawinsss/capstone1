@@ -43,7 +43,20 @@ class CategoriesManager {
     async loadCategories() {
         try {
             const response = await apiService.get('/categories');
-            this.categories = response.data || [];
+            
+            // Handle nested API response structure
+            let categoriesData = [];
+            if (response?.success && response.data) {
+                if (typeof response.data === 'object' && response.data.success && Array.isArray(response.data.data)) {
+                    // Nested response: {success: true, data: {success: true, data: [...]}}
+                    categoriesData = response.data.data;
+                } else if (Array.isArray(response.data)) {
+                    // Direct response: {success: true, data: [...]}
+                    categoriesData = response.data;
+                }
+            }
+            
+            this.categories = categoriesData;
             this.updateStats();
             this.renderCategoriesTree();
             this.loadParentCategories();
@@ -56,7 +69,20 @@ class CategoriesManager {
     async loadParentCategories() {
         try {
             const response = await apiService.get('/categories/main');
-            this.mainCategories = response.data || [];
+            
+            // Handle nested API response structure
+            let mainCategoriesData = [];
+            if (response?.success && response.data) {
+                if (typeof response.data === 'object' && response.data.success && Array.isArray(response.data.data)) {
+                    // Nested response: {success: true, data: {success: true, data: [...]}}
+                    mainCategoriesData = response.data.data;
+                } else if (Array.isArray(response.data)) {
+                    // Direct response: {success: true, data: [...]}
+                    mainCategoriesData = response.data;
+                }
+            }
+            
+            this.mainCategories = mainCategoriesData;
             this.populateParentSelect();
         } catch (error) {
             console.error('Error loading main categories:', error);

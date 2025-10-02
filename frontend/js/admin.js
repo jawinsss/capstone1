@@ -5,7 +5,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let submitTimeout = null;
     
     // ====== CATEGORIES FROM API ======
-    // var categories = []; // Moved to top of function scope
+    var categories = []; // Global categories array
 
     // Load categories from API - GLOBAL FUNCTION
     async function loadCategories() {
@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
                 let data = res.data;
-                if (data && typeof data === 'object' && data.success && data.data) {
+                if (data && typeof data === 'object' && data.success && Array.isArray(data.data)) {
                     // Unwrap the nested response
                     data = data.data;
                 }
@@ -423,7 +423,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Handle both wrapped and direct response formats
             let mainCategories = [];
             if (res?.success && res.data) {
-                mainCategories = Array.isArray(res.data) ? res.data : [];
+                // Check if res.data is nested response: {success: true, data: [...]}
+                if (typeof res.data === 'object' && res.data.success && Array.isArray(res.data.data)) {
+                    mainCategories = res.data.data;
+                } else if (Array.isArray(res.data)) {
+                    mainCategories = res.data;
+                }
             } else if (Array.isArray(res)) {
                 mainCategories = res;
             } else if (res?.data && Array.isArray(res.data)) {
@@ -456,7 +461,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const res = await window.apiService.get('/categories');
                 if (res?.success) {
                     let data = res.data;
-                    if (data && typeof data === 'object' && data.success && data.data) {
+                    if (data && typeof data === 'object' && data.success && Array.isArray(data.data)) {
                         data = data.data;
                     }
                     categoriesData = Array.isArray(data) ? data : [];
@@ -557,7 +562,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Update global categories with new data
                 if (res.data) {
-                    categories = res.data;
+                    // Handle API response structure properly
+                    let data = res.data;
+                    if (data && typeof data === 'object' && data.success && Array.isArray(data.data)) {
+                        data = data.data;
+                    }
+                    categories = Array.isArray(data) ? data : [];
                     window.lastCategoriesLoad = Date.now();
                 }
                 
@@ -606,7 +616,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const now = Date.now();
         if (window.lastCategoriesLoad && (now - window.lastCategoriesLoad) < 30000 && categories && categories.length > 0) {
             console.log('Using cached categories data');
-            renderCategoriesList();
+            renderCategoriesTree(categories);
             isLoadingCategories = false;
             return;
         }
@@ -618,7 +628,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             // Handle both wrapped and direct response formats
             let categoriesData = [];
             if (res?.success && res.data) {
-                categoriesData = Array.isArray(res.data) ? res.data : [];
+                // Check if res.data is nested response: {success: true, data: [...]}
+                if (typeof res.data === 'object' && res.data.success && Array.isArray(res.data.data)) {
+                    categoriesData = res.data.data;
+                } else if (Array.isArray(res.data)) {
+                    categoriesData = res.data;
+                }
             } else if (Array.isArray(res)) {
                 categoriesData = res;
             } else if (res?.data && Array.isArray(res.data)) {
@@ -981,7 +996,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 let parentCategories = [];
                 if (res?.success && res.data) {
-                    parentCategories = Array.isArray(res.data) ? res.data : [];
+                    // Check if res.data is nested response: {success: true, data: [...]}
+                    if (typeof res.data === 'object' && res.data.success && Array.isArray(res.data.data)) {
+                        parentCategories = res.data.data;
+                    } else if (Array.isArray(res.data)) {
+                        parentCategories = res.data;
+                    }
                 } else if (Array.isArray(res)) {
                     parentCategories = res;
                 }
@@ -1034,7 +1054,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 let childrenCategories = [];
                 if (res?.success && res.data) {
-                    childrenCategories = Array.isArray(res.data) ? res.data : [];
+                    // Check if res.data is nested response: {success: true, data: [...]}
+                    if (typeof res.data === 'object' && res.data.success && Array.isArray(res.data.data)) {
+                        childrenCategories = res.data.data;
+                    } else if (Array.isArray(res.data)) {
+                        childrenCategories = res.data;
+                    }
                 } else if (Array.isArray(res)) {
                     childrenCategories = res;
                 }

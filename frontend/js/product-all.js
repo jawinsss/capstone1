@@ -256,13 +256,20 @@ document.addEventListener('DOMContentLoaded', () => {
               if(categoryId) {
                 pvState.categoryId = categoryId;
                 pvState.categoryName = categoryName;
-                pvState.filteredItems = null;
+                pvState.filteredItems = null; // Clear filtered items to use direct API call
                 pvState.page = 1;
                 pvState.sort = 'all';
                 updatePageTitle();
                 document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
                 const defaultSort = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]');
                 if(defaultSort) defaultSort.classList.add('active');
+                
+                // Set active class for the selected subcategory
+                document.querySelectorAll('.cat-item a').forEach(link => {
+                  link.classList.remove('active');
+                });
+                e.target.classList.add('active');
+                
                 renderProductList();
               }
             });
@@ -277,20 +284,41 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function filterProductViewBySubCategory(categoryId, subCategoryName){
-    const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
+    console.log('Filtering by subcategory:', subCategoryName, 'Parent ID:', categoryId);
+    console.log('Available categories:', categories.length);
+    
+    // Find the subcategory by name (it should be in the flat categories array)
+    const subCategory = categories.find(cat => 
+      cat.name.toLowerCase() === subCategoryName.toLowerCase()
+    );
+    
+    if (!subCategory) {
+      console.error('Subcategory not found:', subCategoryName);
+      console.log('Available category names:', categories.map(c => c.name));
+      return;
+    }
+    
+    console.log('Found subcategory:', subCategory.name, 'ID:', subCategory.id, 'Parent ID:', subCategory.parentId);
+    
+    // Use the subcategory ID instead of parent category ID
+    const qs = `?categoryId=${encodeURIComponent(subCategory.id)}&take=1000`;
+    console.log('API query:', `/products${qs}`);
+    
     window.apiService.get(`/products${qs}`).then(res => {
-      if(!res?.success) return;
+      if(!res?.success) {
+        console.error('Failed to load products for subcategory:', res?.message);
+        return;
+      }
+      
       // Handle nested data structure: res.data.data
       const data = res.data?.data || res.data;
       const allItems = Array.isArray(data) ? data : [];
       
-      const filteredItems = allItems.filter(p => {
-        const savedSubCategory = getProductSubCategory(p.id);
-        return savedSubCategory === subCategoryName;
-      });
+      console.log(`Found ${allItems.length} products for subcategory: ${subCategoryName}`);
       
-      pvState.filteredItems = filteredItems;
-      pvState.categoryId = categoryId;
+      pvState.filteredItems = allItems; // Use all items directly since API already filters by subcategory
+      pvState.categoryId = subCategory.id; // Update to subcategory ID
+      pvState.categoryName = subCategoryName; // Update category name
       pvState.page = 1;
       
       // Set active class for the selected subcategory
@@ -302,6 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       renderProductList();
+    }).catch(error => {
+      console.error('Error loading subcategory products:', error);
     });
   }
 

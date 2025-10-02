@@ -21,4 +21,29 @@ export class UpdateUserDto {
   @IsOptional()
   @IsIn(['USER', 'ADMIN'])
   role?: 'USER' | 'ADMIN';
+
+  @ApiProperty({ description: 'Province/City', required: false })
+  @IsOptional()
+  @IsString()
+  province?: string;
+
+  @ApiProperty({ description: 'District', required: false })
+  @IsOptional()
+  @IsString()
+  district?: string;
+
+  @ApiProperty({ description: 'Ward/Commune', required: false })
+  @IsOptional()
+  @IsString()
+  ward?: string;
+
+  @ApiProperty({ description: 'Street address (house number, street name)', required: false })
+  @IsOptional()
+  @IsString()
+  street?: string;
+
+  @ApiProperty({ description: 'Full address', required: false })
+  @IsOptional()
+  @IsString()
+  fullAddress?: string;
 }

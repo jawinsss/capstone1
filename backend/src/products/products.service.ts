@@ -38,7 +38,24 @@ export class ProductsService {
     const page = Math.max(Number(params?.page) || 1, 1);
     const skip = (page - 1) * take;
     const where: any = {};
-    if (params?.categoryId) where.categoryId = params.categoryId;
+    
+    // Handle categoryId - include products from subcategories
+    if (params?.categoryId) {
+      // First, get all subcategories of the given category
+      const subcategories = await this.prisma.category.findMany({
+        where: {
+          parentId: params.categoryId
+        },
+        select: { id: true }
+      });
+      
+      // Create array of category IDs (parent + all subcategories)
+      const categoryIds = [params.categoryId, ...subcategories.map(sub => sub.id)];
+      
+      // Find products in any of these categories
+      where.categoryId = { in: categoryIds };
+    }
+    
     if (params?.q) where.name = { contains: String(params.q), mode: 'insensitive' };
     if (params?.minPrice || params?.maxPrice) where.price = {
       gte: params.minPrice ? Math.trunc(params.minPrice) : undefined,
