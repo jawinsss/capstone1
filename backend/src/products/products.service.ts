@@ -21,6 +21,14 @@ export interface UpdateProductDto {
   images?: { url: string; alt?: string; order?: number }[];
 }
 
+export interface ApiResponse<T = any> {
+  success: boolean;
+  data?: T;
+  message?: string;
+  meta?: any;
+  statusCode?: number;
+}
+
 @Injectable()
 export class ProductsService {
   constructor(private readonly prisma: PrismaService) {}
@@ -62,22 +70,40 @@ export class ProductsService {
   }
 
   async findOne(id: string) {
-    const product = await this.prisma.product.findUnique({
-      where: { id },
-      include: { images: true, category: true },
-    });
-    if (!product) throw new NotFoundException('Product not found');
-    return {
-      success: true,
-      data: product
-    };
+    try {
+      const product = await this.prisma.product.findUnique({
+        where: { id },
+        include: { images: true, category: true },
+      });
+      
+      if (!product) {
+        return {
+          success: false,
+          message: 'Product not found'
+        };
+      }
+      
+      return {
+        success: true,
+        data: product
+      };
+    } catch (error) {
+      console.error('ProductsService.findOne error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to find product'
+      };
+    }
   }
 
   async create(dto: CreateProductDto) {
     try {
       // Validate required fields
       if (!dto.name || !dto.categoryId) {
-        throw new Error('Name and categoryId are required');
+        return {
+          success: false,
+          message: 'Name and categoryId are required'
+        };
       }
 
       // Check if category exists
@@ -87,10 +113,13 @@ export class ProductsService {
       });
       
       if (!category) {
-        throw new Error('Category not found');
+        return {
+          success: false,
+          message: 'Category not found'
+        };
       }
 
-      return await this.prisma.product.create({
+      const product = await this.prisma.product.create({
         data: {
           name: dto.name,
           slug: await this.generateUniqueSlug(dto.name),
@@ -104,45 +133,103 @@ export class ProductsService {
         },
         include: { images: true, category: true },
       });
+
+      return {
+        success: true,
+        data: product
+      };
     } catch (error) {
       console.error('ProductsService.create error:', error);
-      throw error;
+      return {
+        success: false,
+        message: error.message || 'Failed to create product'
+      };
     }
   }
 
   async update(id: string, dto: UpdateProductDto) {
-    await this.ensureExists(id);
-    return this.prisma.product.update({
-      where: { id },
-      data: {
-        name: dto.name,
-        slug: dto.name ? await this.generateUniqueSlug(dto.name) : undefined,
-        description: dto.description,
-        price: dto.price !== undefined ? Math.max(0, Math.trunc(dto.price)) : undefined,
-        stock: dto.stock !== undefined ? Math.max(0, Math.trunc(dto.stock)) : undefined,
-        categoryId: dto.categoryId,
-        isActive: dto.isActive,
-        // For simplicity, replace images if provided
-        images: dto.images
-          ? {
-              deleteMany: { productId: id },
-              create: dto.images.map((i) => ({ url: i.url, alt: i.alt, order: i.order ?? 0 })),
-            }
-          : undefined,
-      },
-      include: { images: true, category: true },
-    });
+    try {
+      const exists = await this.ensureExists(id);
+      if (!exists.success) {
+        return exists;
+      }
+
+      const product = await this.prisma.product.update({
+        where: { id },
+        data: {
+          name: dto.name,
+          slug: dto.name ? await this.generateUniqueSlug(dto.name) : undefined,
+          description: dto.description,
+          price: dto.price !== undefined ? Math.max(0, Math.trunc(dto.price)) : undefined,
+          stock: dto.stock !== undefined ? Math.max(0, Math.trunc(dto.stock)) : undefined,
+          categoryId: dto.categoryId,
+          isActive: dto.isActive,
+          // For simplicity, replace images if provided
+          images: dto.images
+            ? {
+                deleteMany: { productId: id },
+                create: dto.images.map((i) => ({ url: i.url, alt: i.alt, order: i.order ?? 0 })),
+              }
+            : undefined,
+        },
+        include: { images: true, category: true },
+      });
+
+      return {
+        success: true,
+        data: product
+      };
+    } catch (error) {
+      console.error('ProductsService.update error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to update product'
+      };
+    }
   }
 
   async remove(id: string) {
-    await this.ensureExists(id);
-    await this.prisma.productImage.deleteMany({ where: { productId: id } });
-    return this.prisma.product.delete({ where: { id } });
+    try {
+      const exists = await this.ensureExists(id);
+      if (!exists.success) {
+        return exists;
+      }
+
+      await this.prisma.productImage.deleteMany({ where: { productId: id } });
+      await this.prisma.product.delete({ where: { id } });
+
+      return {
+        success: true,
+        message: 'Product deleted successfully'
+      };
+    } catch (error) {
+      console.error('ProductsService.remove error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to delete product'
+      };
+    }
   }
 
   private async ensureExists(id: string) {
-    const exists = await this.prisma.product.findUnique({ where: { id }, select: { id: true } });
-    if (!exists) throw new NotFoundException('Product not found');
+    try {
+      const exists = await this.prisma.product.findUnique({ where: { id }, select: { id: true } });
+      if (!exists) {
+        return {
+          success: false,
+          message: 'Product not found'
+        };
+      }
+      return {
+        success: true
+      };
+    } catch (error) {
+      console.error('ProductsService.ensureExists error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to check product existence'
+      };
+    }
   }
 
   private async generateUniqueSlug(name: string): Promise<string> {

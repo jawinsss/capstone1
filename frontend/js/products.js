@@ -37,10 +37,10 @@ document.addEventListener('DOMContentLoaded', () => {
   let categories = []; // Initialize categories array
   let categoryNameToId = new Map();
 
-  // Load categories from API
+  // Load categories from API - only parent categories
   async function loadCategories() {
     try {
-      const res = await window.apiService.get('/categories');
+      const res = await window.apiService.get('/categories/main');
       
       if (res?.success) {
         // Handle nested data structure: res.data.data
@@ -51,6 +51,7 @@ document.addEventListener('DOMContentLoaded', () => {
         categories.forEach(cat => {
           categoryNameToId.set(String(cat.name).trim().toLowerCase(), cat.id);
         });
+        console.log('Loaded parent categories:', categories.length);
       } else {
         categories = [];
       }
@@ -105,7 +106,7 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadProductCategories(){
     // Ensure categoryNameToId is loaded first
     if(categoryNameToId.size === 0) {
-      const res = await window.apiService.get('/categories');
+      const res = await window.apiService.get('/categories/main');
       if(res?.success){
         // Handle nested data structure: res.data.data
         const data = res.data?.data || res.data;
@@ -180,7 +181,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Ensure categoryNameToId is loaded first
     if(categoryNameToId.size === 0) {
-      const res = await window.apiService.get('/categories');
+      const res = await window.apiService.get('/categories/main');
       if(res?.success){
         // Handle nested data structure: res.data.data
         const data = res.data?.data || res.data;

@@ -19,33 +19,53 @@ export class CategoriesService {
   constructor(private readonly prisma: PrismaService) {}
 
   async findAll() {
-    return this.prisma.category.findMany({
-      where: { isActive: true },
-      include: {
-        parent: true,
-        children: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      },
-      orderBy: { name: 'asc' },
-    });
+    try {
+      const categories = await this.prisma.category.findMany({
+        where: { isActive: true },
+        include: {
+          parent: true,
+          children: {
+            where: { isActive: true },
+            orderBy: { name: 'asc' }
+          }
+        },
+        orderBy: { name: 'asc' },
+      });
+
+      return {
+        success: true,
+        data: categories
+      };
+    } catch (error) {
+      console.error('CategoriesService.findAll error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to load categories'
+      };
+    }
   }
 
   async findMainCategories() {
-    return this.prisma.category.findMany({
-      where: { 
-        isActive: true,
-        parentId: null 
-      },
-      include: {
-        children: {
-          where: { isActive: true },
-          orderBy: { name: 'asc' }
-        }
-      },
-      orderBy: { name: 'asc' },
-    });
+    try {
+      const categories = await this.prisma.category.findMany({
+        where: { 
+          isActive: true,
+          parentId: null 
+        },
+        orderBy: { name: 'asc' },
+      });
+
+      return {
+        success: true,
+        data: categories
+      };
+    } catch (error) {
+      console.error('CategoriesService.findMainCategories error:', error);
+      return {
+        success: false,
+        message: error.message || 'Failed to load main categories'
+      };
+    }
   }
 
   async findSubcategories(parentId: string) {

@@ -40,7 +40,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let categoryNameToId = new Map();
   let categoryIdToName = new Map();
 
-  // Load categories from API
+  // Load categories from API - include children for product-all page
   async function loadCategories() {
     try {
       const res = await window.apiService.get('/categories');
@@ -56,6 +56,7 @@ document.addEventListener('DOMContentLoaded', () => {
           categoryNameToId.set(String(cat.name).trim().toLowerCase(), cat.id);
           categoryIdToName.set(cat.id, cat.name);
         });
+        console.log('Product-all loaded categories with children:', categories.length);
       } else {
         categories = [];
       }
@@ -171,13 +172,13 @@ document.addEventListener('DOMContentLoaded', () => {
         c.name.toLowerCase() === pvState.categoryName.toLowerCase()
       );
       
-      if(selectedCategory) {
-        // Show subcategories instead of main category
-        const children = selectedCategory.children || [];
-        children.forEach(subCategory => {
+      if(selectedCategory && selectedCategory.children && selectedCategory.children.length > 0) {
+        // Show subcategories of the selected main category
+        console.log('Showing subcategories for:', selectedCategory.name, selectedCategory.children);
+        selectedCategory.children.forEach(subCategory => {
           const li = document.createElement('li');
           li.className = 'cat-item';
-          li.innerHTML = `<a href="#" data-subcategory="${subCategory}">${subCategory}</a>`;
+          li.innerHTML = `<a href="#" data-subcategory="${subCategory.name}">${subCategory.name}</a>`;
           
           // Click on subcategory
           li.querySelector('a').addEventListener('click', (e)=>{
@@ -188,22 +189,32 @@ document.addEventListener('DOMContentLoaded', () => {
             });
             // Add active class to clicked subcategory
             e.target.classList.add('active');
-            filterProductViewBySubCategory(pvState.categoryId, subCategory);
+            filterProductViewBySubCategory(pvState.categoryId, subCategory.name);
           });
           
           pv.catMenu.appendChild(li);
         });
-      }
-    } else {
-      // If no specific category, show all categories (fallback) - no subcategories
-      categories.forEach(c => {
+      } else {
+        // No subcategories found, show message
         const li = document.createElement('li');
         li.className = 'cat-item';
-        const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
-        li.innerHTML = `<a href="#" data-cat="${c.name}" data-cat-id="${categoryId}">${c.name}</a>`;
+        li.innerHTML = `<span style="color: #666; font-style: italic;">Không có danh mục con</span>`;
+        pv.catMenu.appendChild(li);
+      }
+    } else {
+      // If no specific category, show all main categories with their children
+      const mainCategories = categories.filter(cat => !cat.parentId);
+      console.log('Showing main categories with children:', mainCategories.length);
+      
+      mainCategories.forEach(mainCategory => {
+        // Add main category
+        const mainLi = document.createElement('li');
+        mainLi.className = 'cat-item main-category';
+        const categoryId = categoryNameToId.get(mainCategory.name.toLowerCase()) || '';
+        mainLi.innerHTML = `<a href="#" data-cat="${mainCategory.name}" data-cat-id="${categoryId}" style="font-weight: bold; color: #2563eb;">${mainCategory.name}</a>`;
         
         // Click on main category
-        li.querySelector('a').addEventListener('click', (e)=>{
+        mainLi.querySelector('a').addEventListener('click', (e)=>{
           e.preventDefault();
           const categoryId = e.target.getAttribute('data-cat-id');
           const categoryName = e.target.getAttribute('data-cat');
@@ -217,11 +228,50 @@ document.addEventListener('DOMContentLoaded', () => {
             document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
             const defaultSort = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]');
             if(defaultSort) defaultSort.classList.add('active');
+            // Reload categories to show subcategories
+            loadProductCategories();
             renderProductList();
           }
         });
         
-        pv.catMenu.appendChild(li);
+        pv.catMenu.appendChild(mainLi);
+        
+        // Add children categories if they exist
+        if(mainCategory.children && mainCategory.children.length > 0) {
+          const childrenContainer = document.createElement('ul');
+          childrenContainer.className = 'subcategories';
+          childrenContainer.style.marginLeft = '20px';
+          childrenContainer.style.marginTop = '5px';
+          
+          mainCategory.children.forEach(child => {
+            const childLi = document.createElement('li');
+            childLi.className = 'cat-item subcategory';
+            childLi.innerHTML = `<a href="#" data-cat="${child.name}" data-cat-id="${child.id}" style="font-size: 0.9em; color: #666;">${child.name}</a>`;
+            
+            // Click on child category
+            childLi.querySelector('a').addEventListener('click', (e)=>{
+              e.preventDefault();
+              const categoryId = e.target.getAttribute('data-cat-id');
+              const categoryName = e.target.getAttribute('data-cat');
+              if(categoryId) {
+                pvState.categoryId = categoryId;
+                pvState.categoryName = categoryName;
+                pvState.filteredItems = null;
+                pvState.page = 1;
+                pvState.sort = 'all';
+                updatePageTitle();
+                document.querySelectorAll('.filter-tabs .filter-tab').forEach(b=>b.classList.remove('active'));
+                const defaultSort = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]');
+                if(defaultSort) defaultSort.classList.add('active');
+                renderProductList();
+              }
+            });
+            
+            childrenContainer.appendChild(childLi);
+          });
+          
+          pv.catMenu.appendChild(childrenContainer);
+        }
       });
     }
   }
