@@ -116,6 +116,21 @@ async function updateProfileUI(user) {
         if (addressInput) addressInput.value = user.fullAddress;
     }
     
+    // Update avatar from database
+    if (user.avt_img) {
+        // Store in localStorage for consistency
+        localStorage.setItem('profileAvatar', user.avt_img);
+        // Apply avatar data
+        if (typeof applyAvatarData === 'function') {
+            applyAvatarData(user.avt_img);
+        }
+        // Show remove button
+        const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+        if (removeAvatarBtn) {
+            removeAvatarBtn.style.display = 'inline-block';
+        }
+    }
+    
     // Update address data for search dropdowns
     if (user.province || user.provinceName) {
         // Get province name if not already available
@@ -698,7 +713,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     changeAvatarBtn.addEventListener('click', () => avatarInput.click())
   
     // Khi người dùng chọn file ảnh
-    avatarInput.addEventListener('change', (e) => {
+    avatarInput.addEventListener('change', async (e) => {
       const file = e.target.files && e.target.files[0]
       if (!file) return
   
@@ -712,27 +727,90 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         return
       }
   
-      const reader = new FileReader()
-      reader.onload = function (ev) {
-        const dataUrl = ev.target.result
-        // preview and persist to localStorage
-        try {
+      // Show loading state
+      changeAvatarBtn.textContent = 'Đang tải...'
+      changeAvatarBtn.disabled = true
+  
+      try {
+        // Convert file to base64
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = (ev) => resolve(ev.target.result)
+          reader.onerror = reject
+          reader.readAsDataURL(file)
+        })
+  
+        // Save to database via API
+        const response = await window.apiService.patch('/users/profile', {
+          avt_img: dataUrl
+        })
+  
+        if (response.success) {
+          // Update local storage
           localStorage.setItem('profileAvatar', dataUrl)
-        } catch (err) {
-          console.warn('Không lưu được ảnh vào localStorage:', err)
+          
+          // Update UI
+          applyAvatarData(dataUrl)
+          removeAvatarBtn.style.display = 'inline-block'
+          
+          // Update header avatar
+          if (window.HeaderAvatar && window.HeaderAvatar.refreshUserData) {
+            await window.HeaderAvatar.refreshUserData()
+          }
+          
+          showModal('Thành công', 'Ảnh đại diện đã được cập nhật!', null, null)
+        } else {
+          throw new Error(response.message || 'Có lỗi xảy ra khi cập nhật ảnh')
         }
-        applyAvatarData(dataUrl)
-        removeAvatarBtn.style.display = 'inline-block'
+      } catch (error) {
+        console.error('Error uploading avatar:', error)
+        showModal('Lỗi', 'Không thể cập nhật ảnh đại diện. Vui lòng thử lại.', null, null)
+      } finally {
+        // Reset button state
+        changeAvatarBtn.textContent = 'Thay ảnh'
+        changeAvatarBtn.disabled = false
+        // Clear file input
+        avatarInput.value = ''
       }
-      reader.readAsDataURL(file)
     })
   
     // Remove avatar: xóa localStorage và trả về placeholder
-    removeAvatarBtn.addEventListener('click', () => {
-      // remove stored avatar
-      localStorage.removeItem('profileAvatar')
-      applyAvatarData(null)
-      removeAvatarBtn.style.display = 'none'
+    removeAvatarBtn.addEventListener('click', async () => {
+      // Show loading state
+      removeAvatarBtn.textContent = 'Đang xóa...'
+      removeAvatarBtn.disabled = true
+      
+      try {
+        // Remove from database via API
+        const response = await window.apiService.patch('/users/profile', {
+          avt_img: null
+        })
+        
+        if (response.success) {
+          // Remove from local storage
+          localStorage.removeItem('profileAvatar')
+          
+          // Update UI
+          applyAvatarData(null)
+          removeAvatarBtn.style.display = 'none'
+          
+          // Update header avatar
+          if (window.HeaderAvatar && window.HeaderAvatar.refreshUserData) {
+            await window.HeaderAvatar.refreshUserData()
+          }
+          
+          showModal('Thành công', 'Ảnh đại diện đã được xóa!', null, null)
+        } else {
+          throw new Error(response.message || 'Có lỗi xảy ra khi xóa ảnh')
+        }
+      } catch (error) {
+        console.error('Error removing avatar:', error)
+        showModal('Lỗi', 'Không thể xóa ảnh đại diện. Vui lòng thử lại.', null, null)
+      } finally {
+        // Reset button state
+        removeAvatarBtn.textContent = 'Xóa ảnh'
+        removeAvatarBtn.disabled = false
+      }
     })
   
     // ensure initials reflect name at page load

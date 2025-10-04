@@ -17,6 +17,7 @@ model User {
   password  String
   fullName  String
   phone     String?
+  avt_img   String?  // Avatar image URL
   role      UserRole @default(USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

@@ -14,6 +14,7 @@ const HEADER_AVATAR_CONFIG = {
     // Element selectors
     SELECTORS: {
         userAvatar: '#hpUserAvatar',
+        avatarCircle: '.hp-avatar-circle',
         userInitials: '#hpUserInitials',
         userName: '#hpUserName',
         loginLink: '#hpLoginLink',
@@ -108,6 +109,98 @@ function generateInitials(fullName) {
     } catch (error) {
         log('Error generating initials:', error);
         return HEADER_AVATAR_CONFIG.DEFAULT_INITIALS;
+    }
+}
+
+// Create or update avatar image element
+function createAvatarImage(avatarUrl, fullName) {
+    const userAvatar = safeQuerySelector(HEADER_AVATAR_CONFIG.SELECTORS.userAvatar);
+    if (!userAvatar) return false;
+
+    try {
+        // Remove existing avatar image if any
+        const existingImg = userAvatar.querySelector('#hpUserAvatarImg');
+        if (existingImg) {
+            existingImg.remove();
+        }
+
+        if (avatarUrl && avatarUrl.trim() !== '') {
+            // Create image element with professional styling
+            const img = document.createElement('img');
+            img.id = 'hpUserAvatarImg';
+            img.src = avatarUrl;
+            img.alt = fullName || 'User Avatar';
+            img.className = 'hp-avatar-image';
+            img.style.cssText = `
+                width: 100%;
+                height: 100%;
+                border-radius: 50%;
+                object-fit: cover;
+                display: block;
+                position: absolute;
+                top: 0;
+                left: 0;
+                z-index: 1;
+                filter: brightness(0.9) contrast(1.1);
+                transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                overflow: hidden;
+            `;
+
+            // Hide initials when avatar image is present
+            const initialsElement = safeQuerySelector(HEADER_AVATAR_CONFIG.SELECTORS.userInitials);
+            if (initialsElement) {
+                initialsElement.style.display = 'none';
+            }
+
+            // Add hover effects for professional interaction
+            userAvatar.addEventListener('mouseenter', () => {
+                img.style.filter = 'brightness(1.1) contrast(1.2)';
+            });
+
+            userAvatar.addEventListener('mouseleave', () => {
+                img.style.filter = 'brightness(0.9) contrast(1.1)';
+            });
+
+            // Add image to avatar circle container
+            const avatarCircle = safeQuerySelector(HEADER_AVATAR_CONFIG.SELECTORS.avatarCircle);
+            if (avatarCircle) {
+                avatarCircle.appendChild(img);
+            } else {
+                userAvatar.appendChild(img);
+            }
+            log('Avatar image created, initials hidden:', avatarUrl);
+            return true;
+        } else {
+            // Show initials only when no avatar image
+            const initialsElement = safeQuerySelector(HEADER_AVATAR_CONFIG.SELECTORS.userInitials);
+            if (initialsElement) {
+                initialsElement.style.cssText = `
+                    display: flex;
+                    z-index: 1;
+                    position: relative;
+                    background: transparent;
+                    border-radius: 50%;
+                    width: 100%;
+                    height: 100%;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: 800;
+                    font-size: 13px;
+                    text-transform: uppercase;
+                    letter-spacing: 0.8px;
+                    color: white;
+                    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+                    top: auto;
+                    left: auto;
+                    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+                `;
+            }
+            log('No avatar image, showing initials only');
+            return false;
+        }
+    } catch (error) {
+        log('Error creating avatar image:', error);
+        return false;
     }
 }
 
@@ -256,6 +349,29 @@ function updateHeaderUserInfo(user) {
             safeTextContent(elements.userInitials, initials);
             safeTextContent(elements.userName, user.fullName);
             
+            // Update avatar image if available
+            if (user.avt_img) {
+                createAvatarImage(user.avt_img, user.fullName);
+            } else {
+                // Ensure initials are visible if no avatar image
+                const initialsElement = safeQuerySelector(HEADER_AVATAR_CONFIG.SELECTORS.userInitials);
+                if (initialsElement) {
+                    initialsElement.style.display = 'flex';
+                    initialsElement.style.zIndex = '1';
+                    initialsElement.style.position = 'relative';
+                    initialsElement.style.background = 'transparent';
+                    initialsElement.style.borderRadius = '50%';
+                    initialsElement.style.width = '100%';
+                    initialsElement.style.height = '100%';
+                    initialsElement.style.alignItems = 'center';
+                    initialsElement.style.justifyContent = 'center';
+                    initialsElement.style.fontWeight = '700';
+                    initialsElement.style.textShadow = 'none';
+                    initialsElement.style.top = 'auto';
+                    initialsElement.style.left = 'auto';
+                }
+            }
+            
             // Show admin link if user is admin
             if (user.role === 'ADMIN' || user.role === 'admin') {
                 safeToggleVisibility(elements.adminLink, true);
@@ -355,12 +471,25 @@ async function checkAuthAndUpdateHeader() {
 function initializeHeaderAvatar() {
     log('Initializing header avatar');
     
+    // Wait for DOM to be ready and API service to be available
+    const initFunction = () => {
+        // Check if API service is available
+        if (typeof window.apiService === 'undefined') {
+            log('API service not ready, retrying in 100ms...');
+            setTimeout(initFunction, 100);
+            return;
+        }
+        
+        log('API service ready, checking auth...');
+        checkAuthAndUpdateHeader();
+    };
+    
     // Wait for DOM to be ready
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', checkAuthAndUpdateHeader);
+        document.addEventListener('DOMContentLoaded', initFunction);
     } else {
         // DOM is already ready
-        checkAuthAndUpdateHeader();
+        initFunction();
     }
 }
 
@@ -385,6 +514,28 @@ function forceUpdateHeader(user) {
     updateHeaderUserInfo(user);
 }
 
+// Force refresh avatar (useful after profile updates)
+async function forceRefreshAvatar() {
+    log('Force refreshing avatar...');
+    try {
+        // Clear cache
+        localStorage.removeItem('user_data');
+        localStorage.removeItem('admin_data');
+        
+        // Reload user profile
+        const user = await loadUserProfile();
+        if (user) {
+            updateHeaderUserInfo(user);
+            log('Avatar refreshed successfully');
+        } else {
+            log('No user data found, showing logged out state');
+            updateHeaderUserInfo(null);
+        }
+    } catch (error) {
+        log('Error refreshing avatar:', error);
+    }
+}
+
 // ========================================
 // AUTO-INITIALIZATION
 // ========================================
@@ -406,6 +557,7 @@ if (typeof window !== 'undefined') {
         checkAuthAndUpdateHeader,
         refreshUserData,
         forceUpdateHeader,
+        forceRefreshAvatar,
         
         // Utility functions
         isAuthenticated,

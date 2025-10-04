@@ -56,4 +56,9 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   wardName?: string;
+
+  @ApiProperty({ description: 'Avatar image URL', required: false })
+  @IsOptional()
+  @IsString()
+  avt_img?: string;
 }
