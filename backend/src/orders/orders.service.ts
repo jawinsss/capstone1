@@ -18,6 +18,33 @@ export class OrdersService {
     return this.prisma.order.update({ where: { id }, data: { status } });
   }
 
+  async getUserOrders(userId: string) {
+    const orders = await this.prisma.order.findMany({
+      where: { userId },
+      include: { 
+        items: { 
+          include: { 
+            product: {
+              select: {
+                id: true,
+                name: true,
+                price: true,
+                images: true
+              }
+            } 
+          } 
+        } 
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    return {
+      success: true,
+      data: orders,
+      message: 'Danh sách đơn hàng của người dùng'
+    };
+  }
+
   async create(payload: any) {
     // payload: { customer: { fullName, email, phone, address }, items: [{ productId, quantity }], payment: { method } }
     const code = `ORD-${Date.now()}`;

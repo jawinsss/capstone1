@@ -408,7 +408,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('renderCategorySections called with:', categories);
     const container = document.getElementById('dynSections');
     if(!container) {
-      console.error('dynSections container not found');
+      console.warn('dynSections container not found - skipping category sections render');
       return;
     }
     
@@ -530,7 +530,7 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('Loading simple products...');
     const container = document.getElementById('dynSections');
     if (!container) {
-      console.log('dynSections container not found - skipping simple products load');
+      console.warn('dynSections container not found - skipping simple products load');
       return;
     }
     

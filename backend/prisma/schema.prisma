@@ -23,11 +23,13 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Address fields
-  province    String?  // Tỉnh/thành
-  district    String?  // Quận/huyện  
-  ward        String?  // Phường/xã
-  street      String?  // Số nhà, tên đường
-  fullAddress String?  // Địa chỉ đầy đủ
+  province     String?  
+  provinceName String?  
+  district     String?   
+  ward         String?  
+  wardName     String?  
+  street       String? 
+  fullAddress  String?  
 
   // Relations
   orders    Order[]

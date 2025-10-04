@@ -16,7 +16,7 @@ class UserAPI {
 
     // Get user orders
     async getOrders() {
-        return await this.apiService.get('/orders');
+        return await this.apiService.get('/orders/user');
     }
 
     // Change password
@@ -26,38 +26,7 @@ class UserAPI {
 
     // Get notifications
     async getNotifications() {
-        // Try to get from API first, fallback to mock data
-        try {
-            const response = await this.apiService.get('/notifications');
-            if (response.success) {
-                return response;
-            }
-        } catch (error) {
-            console.warn('Notifications API not available, using mock data:', error);
-        }
-        
-        // Fallback to mock data if API is not available
-        return {
-            success: true,
-            data: [
-                {
-                    id: 1,
-                    title: "Đơn hàng #DH001 đã được xác nhận",
-                    message: "Đơn hàng Sắt thép xây dựng của bạn đã được xác nhận và đang được chuẩn bị",
-                    type: "order",
-                    isRead: false,
-                    createdAt: new Date(Date.now() - 2 * 60 * 1000) // 2 phút trước
-                },
-                {
-                    id: 2,
-                    title: "Khuyến mãi đặc biệt - Giảm 20%",
-                    message: "Áp dụng cho tất cả sản phẩm vật tư xây dựng. Mã: KIMKH20. Có hiệu lực đến 31/12/2023",
-                    type: "promotion",
-                    isRead: false,
-                    createdAt: new Date(Date.now() - 60 * 60 * 1000) // 1 giờ trước
-                }
-            ]
-        };
+        return await this.apiService.get('/notifications/user');
     }
 }
 
@@ -97,58 +66,117 @@ async function loadUserProfile() {
 function updateProfileUI(user) {
     // Update form fields
     if (user.fullName) {
-        document.getElementById('fullName').value = user.fullName;
-        document.getElementById('displayName').textContent = user.fullName;
-        document.querySelector('.user-name').textContent = user.fullName;
+        const fullNameInput = document.getElementById('fullName');
+        const displayName = document.getElementById('displayName');
+        const userName = document.querySelector('.user-name');
+        
+        if (fullNameInput) fullNameInput.value = user.fullName;
+        if (displayName) displayName.textContent = user.fullName;
+        if (userName) userName.textContent = user.fullName;
     }
     
     if (user.email) {
-        document.getElementById('email').value = user.email;
+        const emailInput = document.getElementById('email');
+        if (emailInput) emailInput.value = user.email;
     }
     
     if (user.phone) {
-        document.getElementById('phoneNumber').value = user.phone;
+        const phoneInput = document.getElementById('phoneNumber');
+        if (phoneInput) phoneInput.value = user.phone;
     }
     
     if (user.fullAddress) {
-        document.getElementById('address').value = user.fullAddress;
+        const addressInput = document.getElementById('address');
+        if (addressInput) addressInput.value = user.fullAddress;
     }
     
-    if (user.province) {
-        document.getElementById('provinceSelect').value = user.province;
+    // Update address data for search dropdowns
+    if (user.province || user.provinceName) {
+        // Set province data for search dropdown
+        if (window.selectedProvince) {
+            // Update existing selected province
+            window.selectedProvince = {
+                code: user.province,
+                name: user.provinceName || user.province,
+                name_with_type: user.provinceName || user.province
+            };
+        } else {
+            // Create new province data
+            window.selectedProvince = {
+                code: user.province,
+                name: user.provinceName || user.province,
+                name_with_type: user.provinceName || user.province
+            };
+        }
+        
+        // Update province dropdown display
+        const provinceDropdown = window.provinceDropdown;
+        if (provinceDropdown) {
+            provinceDropdown.setValue(user.provinceName || user.province);
+        }
     }
     
-    if (user.ward) {
-        document.getElementById('wardSelect').value = user.ward;
+    if (user.ward || user.wardName) {
+        // Set ward data for search dropdown
+        if (window.selectedWard) {
+            // Update existing selected ward
+            window.selectedWard = {
+                code: user.ward,
+                id: user.ward,
+                name: user.wardName || user.ward,
+                name_with_type: user.wardName || user.ward
+            };
+        } else {
+            // Create new ward data
+            window.selectedWard = {
+                code: user.ward,
+                id: user.ward,
+                name: user.wardName || user.ward,
+                name_with_type: user.wardName || user.ward
+            };
+        }
+        
+        // Update ward dropdown display
+        const wardDropdown = window.wardDropdown;
+        if (wardDropdown) {
+            wardDropdown.setValue(user.wardName || user.ward);
+        }
     }
     
     if (user.street) {
-        document.getElementById('addressStreet').value = user.street;
+        const streetInput = document.getElementById('addressStreet');
+        if (streetInput) streetInput.value = user.street;
     }
     
     if (user.gender) {
-        document.getElementById('gender').value = user.gender;
+        const genderSelect = document.getElementById('gender');
+        if (genderSelect) genderSelect.value = user.gender;
     }
     
     // Update additional info
     if (user.createdAt) {
         const joinDate = new Date(user.createdAt).toLocaleDateString('vi-VN');
-        document.getElementById('joinDate').textContent = joinDate;
+        const joinDateElement = document.getElementById('joinDate');
+        if (joinDateElement) joinDateElement.textContent = joinDate;
     }
     
     // Update user role
     if (user.role) {
-        document.getElementById('userRole').textContent = user.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng';
+        const userRoleElement = document.getElementById('userRole');
+        if (userRoleElement) userRoleElement.textContent = user.role === 'ADMIN' ? 'Quản trị viên' : 'Người dùng';
     }
     
     // Update account status (mock data for now)
-    document.getElementById('accountStatus').textContent = 'Vàng';
+    const accountStatusElement = document.getElementById('accountStatus');
+    if (accountStatusElement) accountStatusElement.textContent = 'Vàng';
     
     // Update header user info
     updateHeaderUserInfo(user);
     
     // Update avatar initials
-    updateAvatarInitials();
+    if (window.updateAvatarInitials) {
+      window.updateAvatarInitials();
+    }
 }
 
 // Load user orders
@@ -170,11 +198,13 @@ async function loadUserOrders() {
 
 // Update order statistics
 function updateOrderStats(orders) {
-    const totalOrders = orders ? orders.length : 0;
+    // Ensure orders is an array
+    const ordersArray = Array.isArray(orders) ? orders : [];
+    const totalOrders = ordersArray.length;
     document.getElementById('totalOrders').textContent = `${totalOrders} đơn`;
     
     // Calculate loyalty points (mock calculation)
-    const totalSpent = orders ? orders.reduce((sum, order) => sum + (order.total || 0), 0) : 0;
+    const totalSpent = ordersArray.reduce((sum, order) => sum + (order.totalAmount || order.total || 0), 0);
     const loyaltyPoints = Math.floor(totalSpent / 1000); // 1 point per 1000 VND
     document.getElementById('loyaltyPoints').textContent = `${loyaltyPoints.toLocaleString()} điểm`;
 }
@@ -186,7 +216,8 @@ function updateOrdersUI(orders) {
     
     ordersList.innerHTML = '';
     
-    if (!orders || orders.length === 0) {
+    // Ensure orders is an array
+    if (!orders || !Array.isArray(orders) || orders.length === 0) {
         ordersList.innerHTML = '<div class="no-orders">Bạn chưa có đơn hàng nào.</div>';
         return;
     }
@@ -201,25 +232,32 @@ function updateOrdersUI(orders) {
 function createOrderElement(order) {
     const orderDiv = document.createElement('div');
     orderDiv.className = 'order-item';
-    orderDiv.setAttribute('data-status', order.status || 'pending');
+    orderDiv.setAttribute('data-status', order.status || 'PENDING');
     
     const statusClass = getStatusClass(order.status);
     const statusText = getStatusText(order.status);
     
+    // Get first product image or use placeholder
+    const firstItem = order.items && order.items.length > 0 ? order.items[0] : null;
+    const productImage = firstItem && firstItem.product && firstItem.product.images && firstItem.product.images.length > 0 
+        ? firstItem.product.images[0].url 
+        : 'https://via.placeholder.com/120x120';
+    const productName = firstItem && firstItem.product ? firstItem.product.name : 'Sản phẩm';
+    
     orderDiv.innerHTML = `
         <div class="order-image">
-            <img src="${order.productImage || 'https://via.placeholder.com/120x120'}" alt="${order.productName || 'Sản phẩm'}" class="product-image">
+            <img src="${productImage}" alt="${productName}" class="product-image">
         </div>
         <div class="order-info">
-            <h4>${order.productName || 'Sản phẩm'}</h4>
-            <p class="order-price">${formatPrice(order.total || 0)}</p>
+            <h4>${order.code || 'Đơn hàng'}</h4>
+            <p class="order-price">${formatPrice(order.totalAmount || 0)}</p>
             <p class="order-date">Ngày đặt: ${formatDate(order.createdAt)}</p>
             <span class="order-status ${statusClass}">${statusText}</span>
         </div>
         <div class="order-actions">
             <button class="btn-secondary" onclick="handleViewDetails(this.closest('.order-item'))">Xem chi tiết</button>
-            ${order.status === 'completed' ? '<button class="btn-success" onclick="handleBuyAgain(this.closest(\'.order-item\'))">Mua lại</button>' : ''}
-            ${order.status === 'pending' ? '<button class="btn-danger" onclick="handleCancelOrder(this.closest(\'.order-item\'))">Hủy đơn</button>' : ''}
+            ${order.status === 'COMPLETED' ? '<button class="btn-success" onclick="handleBuyAgain(this.closest(\'.order-item\'))">Mua lại</button>' : ''}
+            ${order.status === 'PENDING' ? '<button class="btn-danger" onclick="handleCancelOrder(this.closest(\'.order-item\'))">Hủy đơn</button>' : ''}
         </div>
     `;
     
@@ -229,22 +267,22 @@ function createOrderElement(order) {
 // Helper functions
 function getStatusClass(status) {
     const statusMap = {
-        'pending': 'pending',
-        'confirmed': 'shipping',
-        'shipping': 'shipping',
-        'completed': 'completed',
-        'cancelled': 'cancelled'
+        'PENDING': 'pending',
+        'CONFIRMED': 'confirmed',
+        'SHIPPING': 'shipping',
+        'COMPLETED': 'completed',
+        'CANCELLED': 'cancelled'
     };
     return statusMap[status] || 'pending';
 }
 
 function getStatusText(status) {
     const statusMap = {
-        'pending': 'Chờ thanh toán',
-        'confirmed': 'Chờ giao hàng',
-        'shipping': 'Chờ giao hàng',
-        'completed': 'Hoàn thành',
-        'cancelled': 'Đã hủy'
+        'PENDING': 'Chờ thanh toán',
+        'CONFIRMED': 'Đã xác nhận',
+        'SHIPPING': 'Đang giao hàng',
+        'COMPLETED': 'Hoàn thành',
+        'CANCELLED': 'Đã hủy'
     };
     return statusMap[status] || 'Chờ xử lý';
 }
@@ -310,7 +348,9 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   
   // Mark all notifications as read
   // - Chuyển tất cả .notification-item.unread -> .read và cập nhật giao diện
-  document.querySelector(".mark-all-read").addEventListener("click", () => {
+  const markAllReadBtn = document.querySelector(".mark-all-read")
+  if (markAllReadBtn) {
+    markAllReadBtn.addEventListener("click", () => {
     document.querySelectorAll(".notification-item.unread").forEach((item) => {
       item.classList.remove("unread")
       item.classList.add("read")
@@ -322,13 +362,18 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         markReadBtn.disabled = true
       }
     })
-    document.querySelector(".notification-count").textContent = "0"
-    document.querySelector(".notification-alert").style.display = "none"
-  })
+      const notificationCount = document.querySelector(".notification-count")
+      const notificationAlert = document.querySelector(".notification-alert")
+      if (notificationCount) notificationCount.textContent = "0"
+      if (notificationAlert) notificationAlert.style.display = "none"
+    })
+  }
   
   // Individual notification mark as read
   // - Gắn listener cho từng nút "Đánh dấu đã đọc"
-  document.querySelectorAll(".notification-item .btn-primary").forEach((button) => {
+  const notificationButtons = document.querySelectorAll(".notification-item .btn-primary")
+  if (notificationButtons.length > 0) {
+    notificationButtons.forEach((button) => {
     if (button.textContent.trim() === "Đánh dấu đã đọc") {
       button.addEventListener("click", function () {
         const notificationItem = this.closest(".notification-item")
@@ -356,6 +401,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       })
     }
   })
+  }
   
   // Load notifications
   async function loadNotifications() {
@@ -378,7 +424,8 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     
     notificationsList.innerHTML = '';
     
-    if (!notifications || notifications.length === 0) {
+    // Ensure notifications is an array
+    if (!notifications || !Array.isArray(notifications) || notifications.length === 0) {
       notificationsList.innerHTML = '<div class="no-notifications">Bạn chưa có thông báo nào.</div>';
       return;
     }
@@ -505,7 +552,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     document.getElementById('accountStatus').textContent = 'Đang tải...';
     document.getElementById('userRole').textContent = 'Đang tải...';
   }
-
+  
   // Initialize username synchronization on page load
   document.addEventListener("DOMContentLoaded", async () => {
     // Check authentication first
@@ -535,15 +582,15 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     if (fullNameInput && sidebarUserName) {
       sidebarUserName.textContent = fullNameInput.value
     }
-
+  
     // ---- Avatar: load from localStorage (if any) and sync with sidebar ----
     const profileImg = document.getElementById('profileAvatarImg')
     const placeholder = document.getElementById('profileAvatarPlaceholder')
     const sidebarAvatar = document.querySelector('.user-avatar')
-
+  
     // helper: return initials (first letter of first word + first letter of last word)
     // - Trả về 'U' nếu fullName rỗng
-    function getInitials(fullName) {
+    window.getInitials = function(fullName) {
       if (!fullName) return 'U'
       const parts = fullName.trim().split(/\s+/).filter(Boolean)
       if (parts.length === 1) return parts[0].charAt(0).toUpperCase()
@@ -551,23 +598,26 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       const last = parts[parts.length - 1].charAt(0).toUpperCase()
       return (first + last)
     }
-
+  
     // updateAvatarInitials:
     // - Cập nhật initials ở placeholder trên trang profile và sidebar (khi không có ảnh)
-    function updateAvatarInitials() {
+    window.updateAvatarInitials = function() {
       const name = document.getElementById('fullName')?.value || ''
-      const initials = getInitials(name)
+      const initials = window.getInitials(name)
       // profile placeholder inside profile page
       const span = document.querySelector('#profileAvatarPlaceholder #avatarInitial') || document.querySelector('#profileAvatarPlaceholder span')
       if (span) span.textContent = initials
-
+  
       // sidebar avatar only when no image set
+      const sidebarAvatar = document.querySelector('.user-avatar')
+      if (sidebarAvatar) {
       const sidebarImg = sidebarAvatar.querySelector('img')
       if (!sidebarImg) {
         sidebarAvatar.innerHTML = `<span>${initials}</span>`
+        }
       }
     }
-
+  
     // applyAvatarData:
     // - Hiển thị ảnh nếu có dataUrl, ngược lại hiển thị placeholder initials
     function applyAvatarData(dataUrl) {
@@ -576,38 +626,44 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         profileImg.style.display = 'block'
         placeholder.style.display = 'none'
         // update sidebar avatar: replace inner content with img
+        const sidebarAvatar = document.querySelector('.user-avatar')
+        if (sidebarAvatar) {
         sidebarAvatar.innerHTML = `<img id="sidebarAvatarImg" src="${dataUrl}" alt="User avatar">`
+        }
       } else {
         // revert to placeholder initials in sidebar
         profileImg.src = ''
         profileImg.style.display = 'none'
         placeholder.style.display = 'block'
         // use initials (first + last) instead of single letter
-        const initials = getInitials(document.getElementById('fullName')?.value || '')
+        const initials = window.getInitials(document.getElementById('fullName')?.value || '')
+        const sidebarAvatar = document.querySelector('.user-avatar')
+        if (sidebarAvatar) {
         sidebarAvatar.innerHTML = `<span>${initials}</span>`
+        }
         // ensure profile placeholder initial is synced
         const pSpan = document.querySelector('#profileAvatarPlaceholder #avatarInitial') || document.querySelector('#profileAvatarPlaceholder span')
         if (pSpan) pSpan.textContent = initials
       }
     }
-
+  
     // Load stored avatar from localStorage (nếu có)
     const storedAvatar = localStorage.getItem('profileAvatar')
     applyAvatarData(storedAvatar)
-
+  
     // Wire up avatar input and buttons
     const avatarInput = document.getElementById('avatarInput')
     const changeAvatarBtn = document.getElementById('changeAvatarBtn')
     const removeAvatarBtn = document.getElementById('removeAvatarBtn')
-
+  
     // Mở file picker khi click vào nút đổi avatar
     changeAvatarBtn.addEventListener('click', () => avatarInput.click())
-
+  
     // Khi người dùng chọn file ảnh
     avatarInput.addEventListener('change', (e) => {
       const file = e.target.files && e.target.files[0]
       if (!file) return
-
+  
       // Optional: basic file size/type check
       if (!file.type.startsWith('image/')) {
         showModal('Lỗi', 'Vui lòng chọn tệp ảnh hợp lệ.', null, null)
@@ -617,7 +673,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         showModal('Lỗi', 'Kích thước ảnh quá lớn (tối đa 5MB).', null, null)
         return
       }
-
+  
       const reader = new FileReader()
       reader.onload = function (ev) {
         const dataUrl = ev.target.result
@@ -632,7 +688,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       }
       reader.readAsDataURL(file)
     })
-
+  
     // Remove avatar: xóa localStorage và trả về placeholder
     removeAvatarBtn.addEventListener('click', () => {
       // remove stored avatar
@@ -640,9 +696,11 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       applyAvatarData(null)
       removeAvatarBtn.style.display = 'none'
     })
-
+  
     // ensure initials reflect name at page load
-    updateAvatarInitials()
+    if (window.updateAvatarInitials) {
+      window.updateAvatarInitials()
+    }
   })
   
   // Enhanced sync function that updates both sidebar and display name
@@ -754,82 +812,100 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   let provincesData = {}
   let wardsData = {}
   
-  // Load province.json and ward.json, populate selects and wire change handlers
+  // Initialize search dropdowns for provinces and wards
   document.addEventListener("DOMContentLoaded", () => {
-    const provinceSelect = document.getElementById("provinceSelect")
-    const wardSelect = document.getElementById("wardSelect")
+    const provinceContainer = document.getElementById("provinceSearchContainer")
+    const wardContainer = document.getElementById("wardSearchContainer")
     const addressStreet = document.getElementById("addressStreet")
+    
+    if (!provinceContainer || !wardContainer || !addressStreet) {
+      console.warn('Address form elements not found, skipping address initialization')
+      return
+    }
+    
     const mainAddress = document.getElementById("address")
+    let selectedProvince = null
+    let selectedWard = null
   
-    // Helper to update the combined address input (street / wardName / provinceName)
+    // Helper to update the combined address input
     function updateCombinedAddress() {
       const street = addressStreet?.value?.trim() || ""
-      const provinceCode = provinceSelect?.value || ""
-      const wardCode = wardSelect?.value || ""
-      const provinceName = provincesData[provinceCode] ? provincesData[provinceCode].name_with_type || provincesData[provinceCode].name : ""
-      const wardName = (wardsData[wardCode] && (wardsData[wardCode].name_with_type || wardsData[wardCode].name)) || ""
+      const provinceName = selectedProvince ? (selectedProvince.name_with_type || selectedProvince.name) : ""
+      const wardName = selectedWard ? (selectedWard.name_with_type || selectedWard.name) : ""
   
       const parts = []
       if (street) parts.push(street)
       if (wardName) parts.push(wardName)
       if (provinceName) parts.push(provinceName)
   
+      if (mainAddress) {
       mainAddress.value = parts.join(" / ")
+      }
+    }
+
+    // Initialize province search dropdown
+    const provinceDropdown = new SearchDropdown(provinceContainer, {
+      placeholder: 'Tìm kiếm tỉnh/thành phố...',
+      apiUrl: 'http://localhost:3000/locations/provinces',
+      limit: 5,
+      onSelect: (province) => {
+        selectedProvince = province
+        window.selectedProvince = province // Store globally for saveChanges
+        selectedWard = null
+        window.selectedWard = null
+        wardDropdown.clearSearch()
+        updateCombinedAddress()
+        console.log('Selected province:', province)
+      }
+    })
+    
+    // Store dropdown references globally
+    window.provinceDropdown = provinceDropdown
+
+    // Initialize ward search dropdown (will be updated when province is selected)
+    const wardDropdown = new SearchDropdown(wardContainer, {
+      placeholder: 'Vui lòng chọn tỉnh/thành phố trước...',
+      apiUrl: '', // Will be set when province is selected
+      limit: 5,
+      onSelect: (ward) => {
+        selectedWard = ward
+        window.selectedWard = ward // Store globally for saveChanges
+        updateCombinedAddress()
+        console.log('Selected ward:', ward)
+      }
+    })
+    
+    // Store dropdown references globally
+    window.wardDropdown = wardDropdown
+
+    // Update ward dropdown when province changes
+    provinceDropdown.options.onSelect = (province) => {
+      selectedProvince = province
+      window.selectedProvince = province // Store globally for saveChanges
+      selectedWard = null
+      window.selectedWard = null
+      wardDropdown.clearSearch()
+      
+      // Update ward dropdown API URL with selected province
+      wardDropdown.options.apiUrl = `http://localhost:3000/locations/wards/${province.code}`
+      wardDropdown.loadInitialData()
+      
+      updateCombinedAddress()
+      console.log('Selected province:', province)
     }
   
-    // Load provinces
-    fetch("province.json")
-      .then((r) => r.json())
-      .then((data) => {
-        provincesData = data
-        if (provinceSelect) {
-          provinceSelect.innerHTML = `<option value="">Chọn tỉnh/thành</option>`
-          Object.keys(data).forEach((code) => {
-            const p = data[code]
-            const opt = document.createElement("option")
-            opt.value = code
-            opt.textContent = p.name_with_type || p.name
-            provinceSelect.appendChild(opt)
-          })
-        }
-      })
-      .catch((err) => console.warn("Không tải được province.json:", err))
-  
-    // Load ward.json and expect ward objects to include name or name_with_type
-    fetch("ward.json")
-      .then((r) => r.json())
-      .then((data) => {
-        wardsData = data
-      })
-      .catch((err) => console.warn("Không tải được ward.json:", err))
-  
-    // When province changes, populate ward select with ward NAMES from ward.json
-    provinceSelect?.addEventListener("change", () => {
-      const selected = provinceSelect.value
-      wardSelect.innerHTML = `<option value="">Chọn phường/xã</option>`
-      if (!selected) {
-        updateCombinedAddress()
-        return
-      }
-      Object.keys(wardsData).forEach((wardCode) => {
-        const w = wardsData[wardCode]
-        if (w && w.parent_code === selected) {
-          // Prefer name_with_type or name fields from ward.json
-          const name = w.name_with_type || w.name
-          if (name) {
-            const opt = document.createElement("option")
-            opt.value = wardCode
-            opt.textContent = name
-            wardSelect.appendChild(opt)
-          }
-        }
-      })
-      updateCombinedAddress()
-    })
-  
-    // Update combined address when ward or street changes
-    wardSelect?.addEventListener("change", updateCombinedAddress)
+    // Update combined address when street changes
     addressStreet?.addEventListener("input", updateCombinedAddress)
+    
+    // Initially disable search dropdowns
+    setTimeout(() => {
+      if (window.provinceDropdown) {
+        window.provinceDropdown.disable();
+      }
+      if (window.wardDropdown) {
+        window.wardDropdown.disable();
+      }
+    }, 100);
   })
   
   // parseAddressParts:
@@ -869,6 +945,8 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     // Disable all fields
     editableFields.forEach((field) => {
       const element = document.getElementById(field.id)
+      if (!element) return; // Skip if element not found
+      
       if (field.type === "input") {
         element.setAttribute("readonly", true)
         element.style.background = "var(--gray-100)"
@@ -881,6 +959,14 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         element.style.borderColor = "var(--gray-300)"
       }
     })
+    
+    // Disable search dropdowns
+    if (window.provinceDropdown) {
+      window.provinceDropdown.disable();
+    }
+    if (window.wardDropdown) {
+      window.wardDropdown.disable();
+    }
   }
   
   // Toggle edit mode: bật/tắt chế độ chỉnh sửa
@@ -899,6 +985,8 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       // Enable all fields
       editableFields.forEach((field) => {
         const element = document.getElementById(field.id)
+        if (!element) return; // Skip if element not found
+        
         if (field.type === "input") {
           element.removeAttribute("readonly")
           element.style.background = "white"
@@ -911,6 +999,14 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           element.style.borderColor = "var(--teal)"
         }
       })
+      
+      // Enable search dropdowns
+      if (window.provinceDropdown) {
+        window.provinceDropdown.enable();
+      }
+      if (window.wardDropdown) {
+        window.wardDropdown.enable();
+      }
   
       // Khi nhập tên, cập nhật hiển thị tức thì
       document.getElementById("fullName").addEventListener("input", () => {
@@ -927,13 +1023,24 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   // - Validate các trường, kiểm tra email/phone/address, hiện modal xác nhận, gọi API thực tế
   async function saveChanges() {
     // Simple validation
-    const fullName = document.getElementById("fullName").value.trim()
-    const phoneNumber = document.getElementById("phoneNumber").value.trim()
-    const email = document.getElementById("email").value.trim()
-    const address = document.getElementById("address").value.trim()
+    const fullName = document.getElementById("fullName")?.value?.trim() || ""
+    const phoneNumber = document.getElementById("phoneNumber")?.value?.trim() || ""
+    const email = document.getElementById("email")?.value?.trim() || ""
+    const addressStreet = document.getElementById("addressStreet")?.value?.trim() || ""
+    
+    // Get selected province and ward from search dropdowns
+    const selectedProvince = window.selectedProvince || null
+    const selectedWard = window.selectedWard || null
+    
+    // Build full address
+    const addressParts = []
+    if (addressStreet) addressParts.push(addressStreet)
+    if (selectedWard) addressParts.push(selectedWard.name_with_type || selectedWard.name)
+    if (selectedProvince) addressParts.push(selectedProvince.name_with_type || selectedProvince.name)
+    const fullAddress = addressParts.join(" / ")
   
-    if (!fullName || !phoneNumber || !email || !address) {
-      showModal("Lỗi", "Vui lòng điền đầy đủ thông tin!", null, null)
+    if (!fullName || !phoneNumber || !email) {
+      showModal("Lỗi", "Vui lòng điền đầy đủ thông tin bắt buộc!", null, null)
       return
     }
   
@@ -952,35 +1059,20 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       return
     }
   
-    // Address validation: phải có 4 phần (Đường, Phường, Thành phố)
-    const parts = parseAddressParts(address)
-    const names = ["Đường", "Phường", "Thành phố"]
-  
-    let addressValid = false
-  
-    // Flow A: full-address string with 4 parts
-    if (parts.length >= 4) {
-      let ok = true
-      for (let i = 0; i < 4; i++) {
-        const val = parts[i] || ''
-        if (!val) { ok = false; break }
-        if (!hasLetter(val)) { ok = false; break }
-      }
-      addressValid = ok
+    // Address validation: check if we have at least street address
+    if (!addressStreet.trim()) {
+      showModal("Lỗi", "Vui lòng nhập địa chỉ đường!", null, null)
+      return
     }
-  
-    // Flow B: use selects + street (accept street like '82 xuan thieu')
-    if (!addressValid) {
-      const hasProvince = provinceSelect && provinceSelect.value
-      const hasWard = wardSelect && wardSelect.value
-      const streetValue = (document.getElementById('addressStreet')?.value || '').trim()
-      if (hasProvince && hasWard && streetValue && hasLetter(streetValue)) {
-        addressValid = true
-      }
+    
+    // Optional: check if province and ward are selected
+    if (!selectedProvince) {
+      showModal("Lỗi", "Vui lòng chọn tỉnh/thành phố!", null, null)
+      return
     }
-  
-    if (!addressValid) {
-      showModal("Lỗi", "Địa chỉ không hợp lệ. Bạn có thể nhập đầy đủ theo định dạng 'Đường, Phường, Thành phố' hoặc chọn Tỉnh/Phường rồi nhập Số nhà/Tên đường (ví dụ: '82 Xuan Thieu').", null, null)
+    
+    if (!selectedWard) {
+      showModal("Lỗi", "Vui lòng chọn phường/xã!", null, null)
       return
     }
   
@@ -995,27 +1087,29 @@ document.querySelectorAll(".nav-item").forEach((item) => {
             fullName: fullName,
             email: email,
             phone: phoneNumber,
-            fullAddress: address,
-            province: document.getElementById('provinceSelect').value,
-            ward: document.getElementById('wardSelect').value,
-            street: document.getElementById('addressStreet').value
+            fullAddress: fullAddress,
+            province: selectedProvince?.code || '',
+            provinceName: selectedProvince?.name_with_type || selectedProvince?.name || '',
+            ward: selectedWard?.code || selectedWard?.id || '',
+            wardName: selectedWard?.name_with_type || selectedWard?.name || '',
+            street: addressStreet
           };
           
           // Call API to update profile
           const response = await userAPI.updateProfile(updateData);
           
           if (response.success) {
-            updateDisplayName()
-            syncUserName()
-            
-            showModal(
-              "Thành công",
-              "Cập nhật thông tin thành công!",
-              () => {
-                exitEditMode()
-              },
-              null,
-            )
+        updateDisplayName()
+        syncUserName()
+  
+          showModal(
+            "Thành công",
+            "Cập nhật thông tin thành công!",
+            () => {
+              exitEditMode()
+            },
+            null,
+          )
           } else {
             showModal("Lỗi", response.message || "Có lỗi xảy ra khi cập nhật thông tin.", null, null)
           }
@@ -1051,9 +1145,9 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   }
   
   // Event listeners
-  editBtn.addEventListener("click", toggleEditMode)
-  saveBtn.addEventListener("click", saveChanges)
-  cancelBtn.addEventListener("click", cancelChanges)
+  if (editBtn) editBtn.addEventListener("click", toggleEditMode)
+  if (saveBtn) saveBtn.addEventListener("click", saveChanges)
+  if (cancelBtn) cancelBtn.addEventListener("click", cancelChanges)
   
   // Order action buttons functionality
   // - Xử lý Xem chi tiết, Mua lại, Hủy đơn
@@ -1150,6 +1244,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   const passwordChangeForm = document.getElementById('passwordChangeForm');
   
   // Open password modal
+  if (changePasswordBtn) {
   changePasswordBtn.addEventListener('click', function() {
       passwordModal.classList.add('show');
       document.body.style.overflow = 'hidden';
@@ -1158,6 +1253,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       passwordChangeForm.reset();
       document.getElementById('passwordError').style.display = 'none';
   });
+  }
   
   // Close password modal
   function closePasswordModalFunc() {
@@ -1169,15 +1265,17 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       document.getElementById('passwordError').style.display = 'none';
   }
   
-  closePasswordModal.addEventListener('click', closePasswordModalFunc);
-  cancelPasswordChange.addEventListener('click', closePasswordModalFunc);
+  if (closePasswordModal) closePasswordModal.addEventListener('click', closePasswordModalFunc);
+  if (cancelPasswordChange) cancelPasswordChange.addEventListener('click', closePasswordModalFunc);
   
   // Close modal when clicking overlay
+  if (passwordModal) {
   passwordModal.addEventListener('click', function(e) {
       if (e.target === passwordModal) {
           closePasswordModalFunc();
       }
   });
+  }
   
   // Close modal with Escape key
   document.addEventListener('keydown', function(e) {
@@ -1228,7 +1326,8 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   }
   
   // Handle password change form submission
-  confirmPasswordChange.addEventListener('click', async function() {
+  if (confirmPasswordChange) {
+    confirmPasswordChange.addEventListener('click', async function() {
       const currentPassword = document.getElementById('currentPassword').value;
       const newPassword = document.getElementById('newPassword').value;
       const confirmPassword = document.getElementById('confirmPassword').value;
@@ -1268,16 +1367,16 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           });
           
           if (response.success) {
-              // Close modal
-              closePasswordModalFunc();
-              
-              // Show success message
-              showModal(
-                  'Thành công',
-                  'Mật khẩu đã được thay đổi thành công!',
-                  null,
-                  null
-              );
+          // Close modal
+          closePasswordModalFunc();
+          
+          // Show success message
+          showModal(
+              'Thành công',
+              'Mật khẩu đã được thay đổi thành công!',
+              null,
+              null
+          );
           } else {
               showPasswordError(response.message || 'Có lỗi xảy ra khi thay đổi mật khẩu.');
           }
@@ -1289,10 +1388,13 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           confirmPasswordChange.disabled = false;
           confirmPasswordChange.textContent = 'Đổi mật khẩu';
       }
-  });
+    });
+  }
   
   // Real-time password validation feedback
-  document.getElementById('newPassword').addEventListener('input', function() {
+  const newPasswordInput = document.getElementById('newPassword')
+  if (newPasswordInput) {
+    newPasswordInput.addEventListener('input', function() {
       const password = this.value;
       const requirements = document.querySelector('.password-requirements small');
       
@@ -1309,8 +1411,11 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           requirements.textContent = 'Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số';
       }
   });
+  }
   
-  document.getElementById('confirmPassword').addEventListener('input', function() {
+  const confirmPasswordInput = document.getElementById('confirmPassword')
+  if (confirmPasswordInput) {
+    confirmPasswordInput.addEventListener('input', function() {
       const newPassword = document.getElementById('newPassword').value;
       const confirmPassword = this.value;
       
@@ -1325,6 +1430,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           hidePasswordError();
       }
   });
+  }
   
   // Notification Settings Modal Functionality
   // - Lưu/khôi phục các cài đặt tạm thời khi mở modal

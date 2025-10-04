@@ -46,4 +46,14 @@ export class UpdateUserDto {
   @IsOptional()
   @IsString()
   fullAddress?: string;
+
+  @ApiProperty({ description: 'Province name (display name)', required: false })
+  @IsOptional()
+  @IsString()
+  provinceName?: string;
+
+  @ApiProperty({ description: 'Ward name (display name)', required: false })
+  @IsOptional()
+  @IsString()
+  wardName?: string;
 }

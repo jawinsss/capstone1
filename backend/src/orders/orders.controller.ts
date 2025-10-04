@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, UseGuards, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -30,6 +30,14 @@ export class OrdersController {
   @Post()
   createOrder(@Body() body: any) {
     return this.ordersService.create(body);
+  }
+
+  // Get user orders
+  @Get('user')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  getUserOrders(@Req() req) {
+    return this.ordersService.getUserOrders(req.user.id);
   }
 }
 

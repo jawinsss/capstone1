@@ -13,6 +13,8 @@ import { ReturnsModule } from './returns/returns.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { ReviewsModule } from './reviews/reviews.module';
 import { ContactModule } from './contact/contact.module';
+import { LocationsModule } from './locations/locations.module';
+import { NotificationsModule } from './notifications/notifications.module';
 
 @Module({
   imports: [
@@ -31,6 +33,8 @@ import { ContactModule } from './contact/contact.module';
     TicketsModule,
     ReviewsModule,
     ContactModule,
+    LocationsModule,
+    NotificationsModule,
   ],
   controllers: [HealthController],
 })

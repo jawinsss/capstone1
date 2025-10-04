@@ -25,6 +25,7 @@
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/header-avatar.js" defer></script>
     <script src="../../js/search.js" defer></script>
+    <script src="../../js/search-dropdown.js" defer></script>
     <script src="../../js/homepage.js" defer></script>
     <script src="../../js/backToTop.js" defer></script>
     <script src="../../js/user.js" defer></script>
@@ -225,12 +226,14 @@
                                 <div class="form-group">
                                     <label>Địa chỉ</label>
                                     <div class="address-fields">
-                                        <select id="provinceSelect" disabled>
-                                            <option value="">Chọn tỉnh/thành</option>
-                                        </select>
-                                        <select id="wardSelect" disabled>
-                                            <option value="">Chọn phường/xã</option>
-                                        </select>
+                                        <div class="form-group">
+                                            <label for="provinceSearch">Tỉnh/Thành phố</label>
+                                            <div id="provinceSearchContainer"></div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="wardSearch">Phường/Xã</label>
+                                            <div id="wardSearchContainer"></div>
+                                        </div>
                                     </div>
                                     <input type="text" id="addressStreet" placeholder="Số nhà, tên đường" readonly>
                                 </div>
