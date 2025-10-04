@@ -28,6 +28,32 @@ class UserAPI {
     async getNotifications() {
         return await this.apiService.get('/notifications/user');
     }
+
+    // Get province name by code
+    async getProvinceName(code) {
+        try {
+            const response = await this.apiService.get(`/locations/provinces?search=${code}&limit=1`);
+            if (response.success && response.data.length > 0) {
+                return response.data[0].name_with_type || response.data[0].name;
+            }
+        } catch (error) {
+            console.error('Error getting province name:', error);
+        }
+        return code; // fallback to code if not found
+    }
+
+    // Get ward name by code and province code
+    async getWardName(wardCode, provinceCode) {
+        try {
+            const response = await this.apiService.get(`/locations/wards/${provinceCode}?search=${wardCode}&limit=1`);
+            if (response.success && response.data.length > 0) {
+                return response.data[0].name_with_type || response.data[0].name;
+            }
+        } catch (error) {
+            console.error('Error getting ward name:', error);
+        }
+        return wardCode; // fallback to code if not found
+    }
 }
 
 // Initialize user API
@@ -51,7 +77,7 @@ async function loadUserProfile() {
         const response = await userAPI.getProfile();
         if (response.success) {
             const user = response.data;
-            updateProfileUI(user);
+            await updateProfileUI(user);
         } else {
             console.error('Failed to load profile:', response.message);
             showModal('Lỗi', 'Không thể tải thông tin người dùng. Vui lòng thử lại.', null, null);
@@ -63,7 +89,7 @@ async function loadUserProfile() {
 }
 
 // Update profile UI with user data
-function updateProfileUI(user) {
+async function updateProfileUI(user) {
     // Update form fields
     if (user.fullName) {
         const fullNameInput = document.getElementById('fullName');
@@ -92,54 +118,66 @@ function updateProfileUI(user) {
     
     // Update address data for search dropdowns
     if (user.province || user.provinceName) {
+        // Get province name if not already available
+        let provinceName = user.provinceName;
+        if (!provinceName && user.province) {
+            provinceName = await userAPI.getProvinceName(user.province);
+        }
+        
         // Set province data for search dropdown
         if (window.selectedProvince) {
             // Update existing selected province
             window.selectedProvince = {
                 code: user.province,
-                name: user.provinceName || user.province,
-                name_with_type: user.provinceName || user.province
+                name: provinceName || user.province,
+                name_with_type: provinceName || user.province
             };
         } else {
             // Create new province data
             window.selectedProvince = {
                 code: user.province,
-                name: user.provinceName || user.province,
-                name_with_type: user.provinceName || user.province
+                name: provinceName || user.province,
+                name_with_type: provinceName || user.province
             };
         }
         
         // Update province dropdown display
         const provinceDropdown = window.provinceDropdown;
         if (provinceDropdown) {
-            provinceDropdown.setValue(user.provinceName || user.province);
+            provinceDropdown.setValue(provinceName || user.province);
         }
     }
     
     if (user.ward || user.wardName) {
+        // Get ward name if not already available
+        let wardName = user.wardName;
+        if (!wardName && user.ward && user.province) {
+            wardName = await userAPI.getWardName(user.ward, user.province);
+        }
+        
         // Set ward data for search dropdown
         if (window.selectedWard) {
             // Update existing selected ward
             window.selectedWard = {
                 code: user.ward,
                 id: user.ward,
-                name: user.wardName || user.ward,
-                name_with_type: user.wardName || user.ward
+                name: wardName || user.ward,
+                name_with_type: wardName || user.ward
             };
         } else {
             // Create new ward data
             window.selectedWard = {
                 code: user.ward,
                 id: user.ward,
-                name: user.wardName || user.ward,
-                name_with_type: user.wardName || user.ward
+                name: wardName || user.ward,
+                name_with_type: wardName || user.ward
             };
         }
         
         // Update ward dropdown display
         const wardDropdown = window.wardDropdown;
         if (wardDropdown) {
-            wardDropdown.setValue(user.wardName || user.ward);
+            wardDropdown.setValue(wardName || user.ward);
         }
     }
     
