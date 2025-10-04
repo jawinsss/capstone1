@@ -59,11 +59,19 @@ document.addEventListener('DOMContentLoaded', function() {
 
             if (response.success) {
                 // Login successful
-                showNotification(`Đăng nhập thành công! Chào mừng ${response.data.user.username}!`, 'success');
+                showNotification(`Đăng nhập thành công! Chào mừng ${response.data.user.fullName || response.data.user.username}!`, 'success');
                 
-                // Store token and user data
+                // Store admin token and data separately
+                localStorage.setItem('admin_token', response.data.accessToken);
+                localStorage.setItem('admin_data', JSON.stringify(response.data.user));
+                // Also store in legacy keys for backward compatibility
                 localStorage.setItem('token', response.data.accessToken);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
+                
+                // Update admin avatar immediately if on admin page
+                if (typeof window.adminAvatarManager !== 'undefined') {
+                    window.adminAvatarManager.updateAdminUI(response.data.user);
+                }
                 
                 // Redirect to admin dashboard after 2 seconds
                 setTimeout(() => {

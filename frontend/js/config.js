@@ -37,6 +37,11 @@ const CONFIG = {
         AUTH_TOKEN: 'auth_token',
         USER_INFO: 'user_info',
         CART_ITEMS: 'cart_items',
+        // Separate keys for admin and user
+        USER_TOKEN: 'user_token',
+        USER_DATA: 'user_data',
+        ADMIN_TOKEN: 'admin_token',
+        ADMIN_DATA: 'admin_data',
     },
 
     // Pagination

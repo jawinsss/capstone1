@@ -40,10 +40,33 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ====== AUTH GUARD ======
     try {
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-        if (!token) {
+        // Check for admin token specifically
+        const adminToken = localStorage.getItem('admin_token');
+        const adminData = localStorage.getItem('admin_data');
+        const legacyToken = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        
+        if (!adminToken && !legacyToken) {
             window.location.replace('../../index.html');
             return;
+        }
+        
+        // If using legacy token, check if it's admin
+        if (!adminToken && legacyToken) {
+            const userData = JSON.parse(localStorage.getItem('user') || '{}');
+            if (userData.role !== 'ADMIN') {
+                window.location.replace('../../index.html');
+                return;
+            }
+        }
+        
+        // Initialize admin avatar if admin data exists
+        if (adminData && typeof window.adminAvatarManager !== 'undefined') {
+            try {
+                const parsedAdminData = JSON.parse(adminData);
+                window.adminAvatarManager.updateAdminUI(parsedAdminData);
+            } catch (error) {
+                console.error('Error parsing admin data:', error);
+            }
         }
     } catch (_) { /* ignore */ }
 
@@ -323,15 +346,24 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             try {
-                ['accessToken', 'refreshToken', 'token', 'user', 'role'].forEach(k => {
-                    localStorage.removeItem(k); sessionStorage.removeItem(k);
+                // Only clear admin-specific keys
+                ['admin_token', 'admin_data'].forEach(k => {
+                    localStorage.removeItem(k);
+                    sessionStorage.removeItem(k);
                 });
+                
+                // Clear cookies
                 document.cookie.split(';').forEach(c => {
                     const n = c.split('=')[0].trim();
                     if (n) document.cookie = `${n}=; Max-Age=0; path=/`;
                 });
+                
+                // Use auth context manager if available
+                if (typeof window.authContextManager !== 'undefined') {
+                    window.authContextManager.logoutAdmin();
+                }
             } catch (_) { }
-            window.location.replace('../../index.html'); // đổi path nếu index.html ở chỗ khác
+            window.location.replace('../../index.html');
         });
     }
 

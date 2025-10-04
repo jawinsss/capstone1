@@ -94,7 +94,13 @@ document.addEventListener('DOMContentLoaded', () => {
   if(logoutBtn){
     logoutBtn.addEventListener('click', ()=>{
       try {
-        ['accessToken','refreshToken','token','user'].forEach(k=>{localStorage.removeItem(k); sessionStorage.removeItem(k);});
+        // Only clear user-specific data
+        ['user_token','user_data'].forEach(k=>{localStorage.removeItem(k); sessionStorage.removeItem(k);});
+        
+        // Use auth context manager if available
+        if (typeof window.authContextManager !== 'undefined') {
+          window.authContextManager.logoutUser();
+        }
       } catch(_){}
       syncUserUI();
     });

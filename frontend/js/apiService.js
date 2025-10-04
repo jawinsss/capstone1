@@ -34,7 +34,15 @@ class ApiService {
         };
 
         // Add authorization header if token exists
-        const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        // Priority: user_token > admin_token > legacy tokens
+        let token = localStorage.getItem('user_token');
+        if (!token) {
+            token = localStorage.getItem('admin_token');
+        }
+        if (!token) {
+            token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        }
+        
         if (token) {
             config.headers.Authorization = `Bearer ${token}`;
         }

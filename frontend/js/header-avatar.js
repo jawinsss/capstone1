@@ -6,8 +6,10 @@ const HEADER_AVATAR_CONFIG = {
     PROFILE_ENDPOINT: '/users/profile',
     
     // Local storage keys
-    TOKEN_KEYS: ['token', 'accessToken', 'authToken'],
-    USER_DATA_KEY: 'userProfile',
+    TOKEN_KEYS: ['user_token', 'token', 'accessToken', 'authToken'],
+    USER_DATA_KEY: 'user_data',
+    ADMIN_TOKEN_KEY: 'admin_token',
+    ADMIN_DATA_KEY: 'admin_data',
     
     // Element selectors
     SELECTORS: {
@@ -111,13 +113,18 @@ function generateInitials(fullName) {
 
 // Get authentication token
 function getAuthToken() {
-    for (const key of HEADER_AVATAR_CONFIG.TOKEN_KEYS) {
-        const token = localStorage.getItem(key);
-        if (token) {
-            return token;
+    // Priority: user_token > admin_token > legacy tokens
+    let token = localStorage.getItem('user_token');
+    if (!token) {
+        token = localStorage.getItem('admin_token');
+    }
+    if (!token) {
+        for (const key of ['token', 'accessToken', 'authToken']) {
+            token = localStorage.getItem(key);
+            if (token) break;
         }
     }
-    return null;
+    return token;
 }
 
 // Check if user is authenticated
@@ -128,16 +135,23 @@ function isAuthenticated() {
 // Get cached user data
 function getCachedUserData() {
     try {
-        const cached = localStorage.getItem(HEADER_AVATAR_CONFIG.USER_DATA_KEY);
-        if (cached) {
-            const data = JSON.parse(cached);
-            // Check if cache is still valid
-            if (data.timestamp && (Date.now() - data.timestamp) < HEADER_AVATAR_CONFIG.CACHE_DURATION) {
+        // Priority: user_data > admin_data > legacy user
+        let userData = localStorage.getItem('user_data');
+        if (!userData) {
+            userData = localStorage.getItem('admin_data');
+        }
+        if (!userData) {
+            userData = localStorage.getItem('user');
+        }
+        
+        if (userData) {
+            const data = JSON.parse(userData);
+            // If it's wrapped with timestamp, extract user
+            if (data.timestamp && data.user) {
                 return data.user;
-            } else {
-                // Cache expired, remove it
-                localStorage.removeItem(HEADER_AVATAR_CONFIG.USER_DATA_KEY);
             }
+            // If it's direct user data
+            return data;
         }
     } catch (error) {
         log('Error reading cached user data:', error);
@@ -148,11 +162,8 @@ function getCachedUserData() {
 // Cache user data
 function cacheUserData(user) {
     try {
-        const data = {
-            user: user,
-            timestamp: Date.now()
-        };
-        localStorage.setItem(HEADER_AVATAR_CONFIG.USER_DATA_KEY, JSON.stringify(data));
+        // Store user data directly without timestamp wrapper
+        localStorage.setItem('user_data', JSON.stringify(user));
     } catch (error) {
         log('Error caching user data:', error);
     }
@@ -280,13 +291,14 @@ function handleLogout() {
     try {
         log('User logging out');
         
-        // Clear all auth tokens
-        HEADER_AVATAR_CONFIG.TOKEN_KEYS.forEach(key => {
-            localStorage.removeItem(key);
-        });
+        // Clear user-specific data only
+        localStorage.removeItem('user_token');
+        localStorage.removeItem('user_data');
         
-        // Clear cached user data
-        localStorage.removeItem(HEADER_AVATAR_CONFIG.USER_DATA_KEY);
+        // Use auth context manager if available
+        if (typeof window.authContextManager !== 'undefined') {
+            window.authContextManager.logoutUser();
+        }
         
         // Update UI
         updateHeaderUserInfo(null);
@@ -360,8 +372,8 @@ function initializeHeaderAvatar() {
 async function refreshUserData() {
     log('Refreshing user data');
     
-    // Clear cache
-    localStorage.removeItem(HEADER_AVATAR_CONFIG.USER_DATA_KEY);
+    // Clear user data cache
+    localStorage.removeItem('user_data');
     
     // Reload and update
     await checkAuthAndUpdateHeader();

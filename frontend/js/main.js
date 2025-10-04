@@ -68,6 +68,10 @@ class App {
 
             if (response.success) {
                 this.currentUser = response.data.user;
+                // Store user token and data separately
+                localStorage.setItem('user_token', response.data.accessToken);
+                localStorage.setItem('user_data', JSON.stringify(response.data.user));
+                // Also store in legacy keys for backward compatibility
                 localStorage.setItem('token', response.data.accessToken);
                 localStorage.setItem('user', JSON.stringify(response.data.user));
                 
