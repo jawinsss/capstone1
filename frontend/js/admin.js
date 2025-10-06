@@ -2332,8 +2332,343 @@ document.addEventListener('DOMContentLoaded', async () => {
         });
     }
 
+    // ====== USER MANAGEMENT ======
+    let users = [];
+    let selectedUser = null;
+    let currentUserTab = 'all';
+
+    // Load users from API
+    async function loadUsers() {
+        try {
+            const res = await window.apiService.get('/users');
+            console.log('Users API response:', res);
+            
+            if (res?.success && res?.data) {
+                // Handle nested response structure: {success: true, data: {success: true, data: [...]}}
+                let userData = res.data;
+                if (userData && typeof userData === 'object' && userData.success && Array.isArray(userData.data)) {
+                    // Unwrap the nested response
+                    userData = userData.data;
+                } else if (Array.isArray(userData)) {
+                    // Direct array response
+                    userData = userData;
+                } else {
+                    userData = [];
+                }
+                
+                users = userData;
+                console.log('Users loaded:', users);
+                renderUsers();
+                updateUserStats();
+            } else {
+                users = [];
+                renderUsers();
+                updateUserStats();
+            }
+        } catch (error) {
+            console.error('Error loading users:', error);
+            users = [];
+            renderUsers();
+            updateUserStats();
+        }
+    }
+
+    // Render users list
+    function renderUsers() {
+        const usersList = document.getElementById('usersList');
+        if (!usersList) return;
+
+        const filteredUsers = getFilteredUsers();
+        
+        if (filteredUsers.length === 0) {
+            usersList.innerHTML = `
+                <div class="empty-users">
+                    <i class="fa-solid fa-users"></i>
+                    <div>Không có người dùng nào</div>
+                </div>
+            `;
+            return;
+        }
+
+        usersList.innerHTML = filteredUsers.map(user => `
+            <div class="user-item" data-user-id="${user.id}" onclick="selectUser('${user.id}')">
+                <div class="user-avatar">
+                    ${user.avt_img ? 
+                        `<img src="${user.avt_img}" alt="${user.fullName}" />` : 
+                        user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'
+                    }
+                </div>
+                <div class="user-info">
+                    <div class="user-name">
+                        ${user.fullName || 'Chưa có tên'}
+                        <span class="user-role ${user.role}">${user.role}</span>
+                    </div>
+                    <div class="user-email">${user.email}</div>
+                </div>
+                <div class="user-status">
+                    <div class="status-dot ${user.isActive ? 'active' : 'inactive'}"></div>
+                    <span>${user.isActive ? 'Hoạt động' : 'Đã khóa'}</span>
+                </div>
+                <div class="user-actions">
+                    <button class="btn btn-sm" onclick="event.stopPropagation(); editUser('${user.id}')" title="Chỉnh sửa">
+                        <i class="fa-solid fa-edit"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); toggleUserStatus('${user.id}')" title="${user.isActive ? 'Khóa' : 'Mở khóa'}">
+                        <i class="fa-solid fa-${user.isActive ? 'lock' : 'unlock'}"></i>
+                    </button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Get filtered users based on current tab
+    function getFilteredUsers() {
+        switch (currentUserTab) {
+            case 'active':
+                return users.filter(user => user.isActive);
+            case 'inactive':
+                return users.filter(user => !user.isActive);
+            case 'admin':
+                return users.filter(user => user.role === 'ADMIN');
+            default:
+                return users;
+        }
+    }
+
+    // Select user
+    function selectUser(userId) {
+        // Remove previous selection
+        document.querySelectorAll('.user-item').forEach(item => {
+            item.classList.remove('selected');
+        });
+
+        // Add selection to clicked item
+        const userItem = document.querySelector(`[data-user-id="${userId}"]`);
+        if (userItem) {
+            userItem.classList.add('selected');
+        }
+
+        // Find and display user details
+        selectedUser = users.find(user => user.id === userId);
+        if (selectedUser) {
+            renderUserDetails(selectedUser);
+        }
+    }
+
+    // Render user details
+    function renderUserDetails(user) {
+        const userDetails = document.getElementById('userDetails');
+        if (!userDetails) return;
+
+        userDetails.innerHTML = `
+            <div class="user-details">
+                <div class="user-details-header">
+                    <div class="user-details-avatar">
+                        ${user.avt_img ? 
+                            `<img src="${user.avt_img}" alt="${user.fullName}" />` : 
+                            user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'
+                        }
+                    </div>
+                    <div class="user-details-info">
+                        <h3>${user.fullName || 'Chưa có tên'}</h3>
+                        <p>${user.email}</p>
+                    </div>
+                </div>
+                <div class="user-details-content">
+                    <div class="detail-group">
+                        <div class="detail-label">Tên đăng nhập</div>
+                        <div class="detail-value">${user.username || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Số điện thoại</div>
+                        <div class="detail-value">${user.phone || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Giới tính</div>
+                        <div class="detail-value">${user.gender || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Vai trò</div>
+                        <div class="detail-value">
+                            <span class="user-role ${user.role}">${user.role}</span>
+                        </div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Trạng thái</div>
+                        <div class="detail-value">
+                            <span class="status-dot ${user.isActive ? 'active' : 'inactive'}"></span>
+                            ${user.isActive ? 'Hoạt động' : 'Đã khóa'}
+                        </div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Địa chỉ</div>
+                        <div class="detail-value">${user.fullAddress || 'N/A'}</div>
+                    </div>
+                    <div class="detail-group">
+                        <div class="detail-label">Ngày tạo</div>
+                        <div class="detail-value">${user.createdAt ? new Date(user.createdAt).toLocaleDateString('vi-VN') : 'N/A'}</div>
+                    </div>
+                </div>
+                <div class="user-details-actions">
+                    <button class="btn" onclick="editUser('${user.id}')">
+                        <i class="fa-solid fa-edit"></i> Chỉnh sửa
+                    </button>
+                    <button class="btn btn-danger" onclick="toggleUserStatus('${user.id}')">
+                        <i class="fa-solid fa-${user.isActive ? 'lock' : 'unlock'}"></i>
+                        ${user.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
+                    </button>
+                    <button class="btn btn-danger" onclick="deleteUser('${user.id}')">
+                        <i class="fa-solid fa-trash"></i> Xóa
+                    </button>
+                </div>
+            </div>
+        `;
+    }
+
+    // Update user statistics
+    function updateUserStats() {
+        const totalUsers = users.length;
+        const activeUsers = users.filter(user => user.isActive).length;
+        const inactiveUsers = users.filter(user => !user.isActive).length;
+        const adminUsers = users.filter(user => user.role === 'ADMIN').length;
+
+        const totalUsersEl = document.getElementById('totalUsers');
+        const activeUsersEl = document.getElementById('activeUsers');
+        const inactiveUsersEl = document.getElementById('inactiveUsers');
+        const adminUsersEl = document.getElementById('adminUsers');
+
+        if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+        if (activeUsersEl) activeUsersEl.textContent = activeUsers;
+        if (inactiveUsersEl) inactiveUsersEl.textContent = inactiveUsers;
+        if (adminUsersEl) adminUsersEl.textContent = adminUsers;
+    }
+
+    // Toggle user status (activate/deactivate)
+    async function toggleUserStatus(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+
+        const action = user.isActive ? 'khóa' : 'mở khóa';
+        if (!confirm(`Bạn có chắc chắn muốn ${action} tài khoản này?`)) {
+            return;
+        }
+
+        try {
+            const res = await window.apiService.patch(`/users/${userId}/deactivate`);
+            console.log('Toggle user status response:', res);
+            
+            if (res?.success) {
+                showNotification(`${action.charAt(0).toUpperCase() + action.slice(1)} tài khoản thành công!`, 'success');
+                await loadUsers();
+            } else {
+                alert(res?.message || `${action.charAt(0).toUpperCase() + action.slice(1)} tài khoản thất bại`);
+            }
+        } catch (error) {
+            console.error('Toggle user status error:', error);
+            alert(`Có lỗi khi ${action} tài khoản: ${error.message || 'Lỗi không xác định'}`);
+        }
+    }
+
+    // Edit user
+    function editUser(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+
+        // For now, just show an alert. You can implement a modal later
+        alert(`Chỉnh sửa thông tin người dùng: ${user.fullName || user.email}`);
+    }
+
+    // Delete user
+    async function deleteUser(userId) {
+        const user = users.find(u => u.id === userId);
+        if (!user) return;
+
+        if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${user.fullName || user.email}"? Hành động này không thể hoàn tác!`)) {
+            return;
+        }
+
+        try {
+            const res = await window.apiService.delete(`/users/${userId}`);
+            console.log('Delete user response:', res);
+            
+            if (res?.success) {
+                showNotification('Xóa tài khoản thành công!', 'success');
+                await loadUsers();
+                // Clear selection if deleted user was selected
+                if (selectedUser && selectedUser.id === userId) {
+                    selectedUser = null;
+                    document.getElementById('userDetails').innerHTML = `
+                        <div class="user-details-placeholder">
+                            <div class="placeholder-icon">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
+                        </div>
+                    `;
+                }
+            } else {
+                alert(res?.message || 'Xóa tài khoản thất bại');
+            }
+        } catch (error) {
+            console.error('Delete user error:', error);
+            alert('Có lỗi khi xóa tài khoản: ' + (error.message || 'Lỗi không xác định'));
+        }
+    }
+
+    // Handle user tab switching
+    function handleUserTabSwitch(tab) {
+        // Update active tab
+        document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+            btn.classList.remove('active');
+        });
+        document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+
+        // Update current tab and re-render
+        currentUserTab = tab;
+        renderUsers();
+    }
+
+    // Initialize user management
+    function initUserManagement() {
+        // Load users when users view is shown
+        const usersView = document.getElementById('view-users');
+        if (usersView) {
+            const observer = new MutationObserver((mutations) => {
+                mutations.forEach((mutation) => {
+                    if (mutation.type === 'attributes' && mutation.attributeName === 'hidden') {
+                        if (!usersView.hidden) {
+                            loadUsers();
+                        }
+                    }
+                });
+            });
+            observer.observe(usersView, { attributes: true });
+        }
+
+        // Handle tab switching
+        document.querySelectorAll('.tab-btn[data-tab]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const tab = btn.dataset.tab;
+                handleUserTabSwitch(tab);
+            });
+        });
+
+        // Handle refresh button
+        const refreshBtn = document.getElementById('refreshUsers');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', loadUsers);
+        }
+    }
+
+    // Initialize user management
+    initUserManagement();
+
     // Make functions global
     window.addProduct = addProduct;
     window.editProduct = editProduct;
     window.deleteProduct = deleteProduct;
+    window.selectUser = selectUser;
+    window.editUser = editUser;
+    window.toggleUserStatus = toggleUserStatus;
+    window.deleteUser = deleteUser;
 });

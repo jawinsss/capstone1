@@ -483,24 +483,55 @@
             <!-- =========== user ========= -->
             <section id="view-users" data-view="users" hidden>
                 <h1>Quản lý người dùng</h1>
-                <div calss="tabs">
-                    <button class="tab-btn active">Người dùng</button>
-                    <button class="tab-btn">Đã khóa</button>
-                    <button class="tab-btn">Vi phạm</button>
+                <p class="muted">Quản lý tài khoản người dùng trong hệ thống</p>
+                
+                <div class="tabs">
+                    <button class="tab-btn active" data-tab="all">Tất cả</button>
+                    <button class="tab-btn" data-tab="active">Đang hoạt động</button>
+                    <button class="tab-btn" data-tab="inactive">Đã khóa</button>
+                    <button class="tab-btn" data-tab="admin">Quản trị viên</button>
                 </div>
+
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng người dùng</div>
+                        <div class="order-stat-value" id="totalUsers">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đang hoạt động</div>
+                        <div class="order-stat-value" id="activeUsers">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Đã khóa</div>
+                        <div class="order-stat-value" id="inactiveUsers">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Quản trị viên</div>
+                        <div class="order-stat-value" id="adminUsers">0</div>
+                    </div>
+                </section>
 
                 <div class="split">
                     <section class="panel">
-                        <div class="list"></div>
+                        <div class="panel-title">
+                            Danh sách người dùng
+                            <button class="btn" id="refreshUsers" style="margin-left: auto;">
+                                <i class="fa-solid fa-refresh"></i> Làm mới
+                            </button>
+                        </div>
+                        <div class="users-list" id="usersList">
+                            <!-- Users will be loaded here -->
+                        </div>
                     </section>
-                    <section class="split-right">
-                        <div class="list-sub"></div>
-                        <div class="list-sub"></div>
-                        <div class="list-sub"></div>
-                        <div class="list-sub"></div>
+                    <section class="split-right" id="userDetails">
+                        <div class="user-details-placeholder">
+                            <div class="placeholder-icon">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
+                        </div>
                     </section>
                 </div>
-                <button class="btn-danger">KHÓA TÀI KHOẢN</button>
             </section>
 
             <!-- =========== payments ========= -->
@@ -1171,6 +1202,259 @@
             color: #6b7280;
             padding: 40px;
             font-style: italic;
+        }
+
+        /* User Management Styles */
+        .users-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 600px;
+            overflow-y: auto;
+        }
+
+        .user-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 16px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            background: white;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .user-item:hover {
+            background: #f9fafb;
+            border-color: #d1d5db;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+        }
+
+        .user-item.selected {
+            background: #eff6ff;
+            border-color: #3b82f6;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .user-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #111827;
+            margin-bottom: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-email {
+            font-size: 14px;
+            color: #6b7280;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .user-role {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 500;
+            margin-left: 8px;
+        }
+
+        .user-role.ADMIN {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .user-role.USER {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+
+        .user-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.active {
+            background: #10b981;
+        }
+
+        .status-dot.inactive {
+            background: #ef4444;
+        }
+
+        .user-actions {
+            display: flex;
+            gap: 4px;
+            margin-left: 12px;
+        }
+
+        .btn-sm {
+            padding: 4px 8px;
+            font-size: 12px;
+            border-radius: 4px;
+        }
+
+        .user-details-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 300px;
+            color: #6b7280;
+        }
+
+        .placeholder-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #d1d5db;
+        }
+
+        .placeholder-text {
+            font-size: 16px;
+        }
+
+        .user-details {
+            padding: 20px;
+        }
+
+        .user-details-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .user-details-avatar {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 16px;
+            font-weight: 600;
+            color: #6b7280;
+            font-size: 24px;
+        }
+
+        .user-details-avatar img {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+
+        .user-details-info h3 {
+            margin: 0 0 4px 0;
+            color: #111827;
+            font-size: 18px;
+        }
+
+        .user-details-info p {
+            margin: 0;
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .user-details-content {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .detail-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .detail-label {
+            font-weight: 500;
+            color: #374151;
+            font-size: 14px;
+        }
+
+        .detail-value {
+            color: #6b7280;
+            font-size: 14px;
+        }
+
+        .user-details-actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 20px;
+            padding-top: 16px;
+            border-top: 1px solid #e5e7eb;
+        }
+
+        .loading-spinner {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .spinner {
+            width: 32px;
+            height: 32px;
+            border: 3px solid #e5e7eb;
+            border-top: 3px solid #3b82f6;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .empty-users {
+            text-align: center;
+            padding: 40px;
+            color: #6b7280;
+        }
+
+        .empty-users i {
+            font-size: 48px;
+            margin-bottom: 16px;
+            color: #d1d5db;
         }
     </style>
 </body>
