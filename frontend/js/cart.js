@@ -38,6 +38,9 @@ class CartManager {
                 // Handle nested data structure: response.data.data
                 const data = response.data?.data || response.data;
                 this.products = Array.isArray(data) ? data : [];
+                
+                // Validate cart items against current products
+                this.validateCartItems();
             } else {
                 console.error('Failed to load products:', response);
                 this.products = [];
@@ -45,6 +48,36 @@ class CartManager {
         } catch (error) {
             console.error('Error loading products:', error);
             this.products = [];
+        }
+    }
+
+    // Validate cart items against current products from database
+    validateCartItems() {
+        if (this.cart.length === 0) return;
+        
+        console.log('Validating cart items against database...');
+        console.log('Cart items before validation:', this.cart.length);
+        console.log('Available products:', this.products.length);
+        
+        const validProductIds = new Set(this.products.map(p => p.id));
+        const originalCartLength = this.cart.length;
+        
+        // Filter out items that no longer exist in database
+        this.cart = this.cart.filter(item => {
+            const isValid = validProductIds.has(item.productId);
+            if (!isValid) {
+                console.log(`Removing invalid cart item: ${item.productId}`);
+            }
+            return isValid;
+        });
+        
+        const removedCount = originalCartLength - this.cart.length;
+        if (removedCount > 0) {
+            console.log(`Removed ${removedCount} invalid items from cart`);
+            this.saveCartToStorage();
+            this.updateCartCount();
+        } else {
+            console.log('All cart items are valid');
         }
     }
 

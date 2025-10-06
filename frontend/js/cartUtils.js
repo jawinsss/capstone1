@@ -163,12 +163,59 @@ class CartUtils {
         const currentCount = this.getCartCount();
         console.log('Cart initialized with count:', currentCount);
     }
+
+    // Validate cart against products from database
+    static async validateCartWithDatabase() {
+        try {
+            // Load current products from API
+            const response = await window.apiService.get('/products?take=1000');
+            if (!response?.success) {
+                console.error('Failed to load products for validation:', response);
+                return;
+            }
+
+            const data = response.data?.data || response.data;
+            const products = Array.isArray(data) ? data : [];
+            const validProductIds = new Set(products.map(p => p.id));
+            
+            // Get current cart
+            const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+            if (cart.length === 0) return;
+            
+            console.log('Validating cart against database...');
+            console.log('Cart items before validation:', cart.length);
+            console.log('Available products:', products.length);
+            
+            // Filter out invalid items
+            const validCart = cart.filter(item => {
+                const isValid = validProductIds.has(item.productId);
+                if (!isValid) {
+                    console.log(`Removing invalid cart item: ${item.productId}`);
+                }
+                return isValid;
+            });
+            
+            const removedCount = cart.length - validCart.length;
+            if (removedCount > 0) {
+                console.log(`Removed ${removedCount} invalid items from cart`);
+                localStorage.setItem('cart', JSON.stringify(validCart));
+                this.updateCartCount();
+            } else {
+                console.log('All cart items are valid');
+            }
+        } catch (error) {
+            console.error('Error validating cart with database:', error);
+        }
+    }
 }
 
 // Auto-initialize cart count when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // Only clean cart data, don't reset completely
     CartUtils.initCartCount();
+    
+    // Validate cart against database
+    await CartUtils.validateCartWithDatabase();
 });
 
 // Remove the automatic reset on script load
