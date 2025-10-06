@@ -17,6 +17,11 @@ export class UpdateUserDto {
   @IsString()
   phone?: string;
 
+  @ApiProperty({ description: 'User gender', required: false })
+  @IsOptional()
+  @IsIn(['Nam', 'Nữ', 'Khác'])
+  gender?: 'Nam' | 'Nữ' | 'Khác';
+
   @ApiProperty({ description: 'User role', required: false })
   @IsOptional()
   @IsIn(['USER', 'ADMIN'])

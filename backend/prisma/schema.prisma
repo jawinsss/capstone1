@@ -18,6 +18,7 @@ model User {
   fullName  String
   phone     String?
   avt_img   String?  // Avatar image URL
+  gender    String?  // Giới tính: Nam, Nữ, Khác
   role      UserRole @default(USER)
   isActive  Boolean  @default(true)
   createdAt DateTime @default(now())

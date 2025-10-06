@@ -1197,6 +1197,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     const fullName = document.getElementById("fullName")?.value?.trim() || ""
     const phoneNumber = document.getElementById("phoneNumber")?.value?.trim() || ""
     const email = document.getElementById("email")?.value?.trim() || ""
+    const gender = document.getElementById("gender")?.value || ""
     const addressStreet = document.getElementById("addressStreet")?.value?.trim() || ""
     
     // Get selected province and ward from search dropdowns
@@ -1258,6 +1259,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
             fullName: fullName,
             email: email,
             phone: phoneNumber,
+            gender: gender,
             fullAddress: fullAddress,
             province: selectedProvince?.code || '',
             provinceName: selectedProvince?.name_with_type || selectedProvince?.name || '',
