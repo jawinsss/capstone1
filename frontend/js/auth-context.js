@@ -44,14 +44,19 @@ class AuthContextManager {
         };
     }
 
-    // Update current context based on available tokens
+    // Update current context based on available tokens and current page
     updateCurrentContext() {
         const userToken = localStorage.getItem('user_token');
         const adminToken = localStorage.getItem('admin_token');
 
         if (userToken && adminToken) {
-            // Both contexts exist - determine priority
-            this.currentContext = 'user'; // User takes priority
+            // Both contexts exist - determine priority based on current page
+            const currentPath = window.location.pathname;
+            if (currentPath.includes('admin') || currentPath.includes('adminpage')) {
+                this.currentContext = 'admin';
+            } else {
+                this.currentContext = 'user';
+            }
         } else if (userToken) {
             this.currentContext = 'user';
         } else if (adminToken) {
@@ -150,6 +155,26 @@ class AuthContextManager {
             return localStorage.getItem('admin_token');
         }
         return null;
+    }
+
+    // Switch to specific context
+    switchContext(context) {
+        if (context === 'user' && localStorage.getItem('user_token')) {
+            this.currentContext = 'user';
+            this.dispatchAuthContextChanged();
+            return true;
+        } else if (context === 'admin' && localStorage.getItem('admin_token')) {
+            this.currentContext = 'admin';
+            this.dispatchAuthContextChanged();
+            return true;
+        }
+        return false;
+    }
+
+    // Force context update based on current page
+    forceContextUpdate() {
+        this.updateCurrentContext();
+        this.dispatchAuthContextChanged();
     }
 }
 

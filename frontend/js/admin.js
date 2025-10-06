@@ -40,30 +40,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ====== AUTH GUARD ======
     try {
-        // Check for admin token specifically
-        const adminToken = localStorage.getItem('admin_token');
-        const adminData = localStorage.getItem('admin_data');
-        const legacyToken = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        // Check for admin authentication using AuthContextManager
+        let isAdminAuthenticated = false;
+        let adminData = null;
         
-        if (!adminToken && !legacyToken) {
-            window.location.replace('../../index.html');
-            return;
+        if (typeof window !== 'undefined' && window.authContextManager) {
+            const context = window.authContextManager.getCurrentContext();
+            const userData = window.authContextManager.getCurrentUserData();
+            
+            if (context === 'admin' && userData && userData.role === 'ADMIN') {
+                isAdminAuthenticated = true;
+                adminData = userData;
+            }
+        } else {
+            // Fallback to legacy logic
+            const adminToken = localStorage.getItem('admin_token');
+            const legacyToken = localStorage.getItem('token') || localStorage.getItem('accessToken');
+            
+            if (adminToken) {
+                isAdminAuthenticated = true;
+                adminData = JSON.parse(localStorage.getItem('admin_data') || '{}');
+            } else if (legacyToken) {
+                const userData = JSON.parse(localStorage.getItem('user') || '{}');
+                if (userData.role === 'ADMIN') {
+                    isAdminAuthenticated = true;
+                    adminData = userData;
+                }
+            }
         }
         
-        // If using legacy token, check if it's admin
-        if (!adminToken && legacyToken) {
-            const userData = JSON.parse(localStorage.getItem('user') || '{}');
-            if (userData.role !== 'ADMIN') {
-                window.location.replace('../../index.html');
-                return;
-            }
+        if (!isAdminAuthenticated) {
+            window.location.replace('../../index.html');
+            return;
         }
         
         // Initialize admin avatar if admin data exists
         if (adminData && typeof window.adminAvatarManager !== 'undefined') {
             try {
-                const parsedAdminData = JSON.parse(adminData);
-                window.adminAvatarManager.updateAdminUI(parsedAdminData);
+                window.adminAvatarManager.updateAdminUI(adminData);
             } catch (error) {
                 console.error('Error parsing admin data:', error);
             }

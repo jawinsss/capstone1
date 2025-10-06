@@ -34,13 +34,21 @@ class ApiService {
         };
 
         // Add authorization header if token exists
-        // Priority: user_token > admin_token > legacy tokens
-        let token = localStorage.getItem('user_token');
-        if (!token) {
-            token = localStorage.getItem('admin_token');
-        }
-        if (!token) {
-            token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+        // Use AuthContextManager if available, otherwise fallback to legacy logic
+        let token = null;
+        
+        if (typeof window !== 'undefined' && window.authContextManager) {
+            // Use AuthContextManager to get the appropriate token for current context
+            token = window.authContextManager.getCurrentToken();
+        } else {
+            // Fallback to legacy logic
+            token = localStorage.getItem('user_token');
+            if (!token) {
+                token = localStorage.getItem('admin_token');
+            }
+            if (!token) {
+                token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+            }
         }
         
         if (token) {

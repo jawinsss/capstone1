@@ -61,7 +61,17 @@ const userAPI = new UserAPI();
 
 // Check authentication and redirect if needed
 function checkAuth() {
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    let token = null;
+    
+    // Use AuthContextManager if available
+    if (typeof window !== 'undefined' && window.authContextManager) {
+        token = window.authContextManager.getCurrentToken();
+    } else {
+        // Fallback to legacy logic
+        token = localStorage.getItem('user_token') || localStorage.getItem('admin_token') || 
+                localStorage.getItem('token') || localStorage.getItem('accessToken');
+    }
+    
     if (!token) {
         // Clear all authentication data and refresh
         ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{

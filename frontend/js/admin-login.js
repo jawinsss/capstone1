@@ -64,9 +64,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 // Store admin token and data separately
                 localStorage.setItem('admin_token', response.data.accessToken);
                 localStorage.setItem('admin_data', JSON.stringify(response.data.user));
-                // Also store in legacy keys for backward compatibility
-                localStorage.setItem('token', response.data.accessToken);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+                
+                // Update AuthContextManager if available
+                if (typeof window !== 'undefined' && window.authContextManager) {
+                    window.authContextManager.updateCurrentContext();
+                    window.authContextManager.dispatchAuthContextChanged();
+                }
                 
                 // Update admin avatar immediately if on admin page
                 if (typeof window.adminAvatarManager !== 'undefined') {

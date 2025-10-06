@@ -206,6 +206,12 @@ function createAvatarImage(avatarUrl, fullName) {
 
 // Get authentication token
 function getAuthToken() {
+    // Use AuthContextManager if available
+    if (typeof window !== 'undefined' && window.authContextManager) {
+        return window.authContextManager.getCurrentToken();
+    }
+    
+    // Fallback to legacy logic
     // Priority: user_token > admin_token > legacy tokens
     let token = localStorage.getItem('user_token');
     if (!token) {
@@ -228,6 +234,12 @@ function isAuthenticated() {
 // Get cached user data
 function getCachedUserData() {
     try {
+        // Use AuthContextManager if available
+        if (typeof window !== 'undefined' && window.authContextManager) {
+            return window.authContextManager.getCurrentUserData();
+        }
+        
+        // Fallback to legacy logic
         // Priority: user_data > admin_data > legacy user
         let userData = localStorage.getItem('user_data');
         if (!userData) {

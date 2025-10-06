@@ -179,18 +179,38 @@ document.addEventListener('DOMContentLoaded', () => {
     // Sync user UI
     async function syncUserUI() {
       let user = null;
-      try { 
-        user = JSON.parse(localStorage.getItem('user') || 'null'); 
-      } catch(_) {}
+      let token = null;
       
-      const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+      // Use AuthContextManager if available
+      if (typeof window !== 'undefined' && window.authContextManager) {
+        user = window.authContextManager.getCurrentUserData();
+        token = window.authContextManager.getCurrentToken();
+      } else {
+        // Fallback to legacy logic
+        try { 
+          user = JSON.parse(localStorage.getItem('user_data') || localStorage.getItem('admin_data') || localStorage.getItem('user') || 'null'); 
+        } catch(_) {}
+        
+        token = localStorage.getItem('user_token') || localStorage.getItem('admin_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
+      }
+      
       if(!user && token){
         // attempt to get profile
         try {
           const res = await window.apiService.get('/users/profile');
           if(res?.success){ 
             user = res.data; 
-            localStorage.setItem('user', JSON.stringify(user)); 
+            // Store in appropriate context
+            if (typeof window !== 'undefined' && window.authContextManager) {
+              const context = window.authContextManager.getCurrentContext();
+              if (context === 'user') {
+                localStorage.setItem('user_data', JSON.stringify(user));
+              } else if (context === 'admin') {
+                localStorage.setItem('admin_data', JSON.stringify(user));
+              }
+            } else {
+              localStorage.setItem('user_data', JSON.stringify(user));
+            }
           }
         } catch(_) {}
       }

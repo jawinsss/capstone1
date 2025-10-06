@@ -74,11 +74,34 @@ document.addEventListener('DOMContentLoaded', () => {
   // ===== User session UI =====
   async function syncUserUI(){
     let user = null;
-    try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(_) {}
-    const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
+    let token = null;
+    
+    // Use AuthContextManager if available
+    if (typeof window !== 'undefined' && window.authContextManager) {
+      user = window.authContextManager.getCurrentUserData();
+      token = window.authContextManager.getCurrentToken();
+    } else {
+      // Fallback to legacy logic
+      try { user = JSON.parse(localStorage.getItem('user_data') || localStorage.getItem('admin_data') || localStorage.getItem('user') || 'null'); } catch(_) {}
+      token = localStorage.getItem('user_token') || localStorage.getItem('admin_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
+    }
+    
     if(!user && token){
       const res = await window.apiService.get('/users/profile');
-      if(res?.success){ user = res.data; localStorage.setItem('user', JSON.stringify(user)); }
+      if(res?.success){ 
+        user = res.data; 
+        // Store in appropriate context
+        if (typeof window !== 'undefined' && window.authContextManager) {
+          const context = window.authContextManager.getCurrentContext();
+          if (context === 'user') {
+            localStorage.setItem('user_data', JSON.stringify(user));
+          } else if (context === 'admin') {
+            localStorage.setItem('admin_data', JSON.stringify(user));
+          }
+        } else {
+          localStorage.setItem('user_data', JSON.stringify(user));
+        }
+      }
     }
     if(user){
       userNameEl.textContent = user.fullName || user.username || '';

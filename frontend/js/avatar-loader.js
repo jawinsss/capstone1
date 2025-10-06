@@ -7,7 +7,13 @@ class AvatarLoader {
 
     // Check if user is authenticated
     isAuthenticated() {
-        const token = localStorage.getItem('user_token') || localStorage.getItem('token');
+        // Use AuthContextManager if available
+        if (typeof window !== 'undefined' && window.authContextManager) {
+            return window.authContextManager.isAuthenticated();
+        }
+        
+        // Fallback to legacy logic
+        const token = localStorage.getItem('user_token') || localStorage.getItem('admin_token') || localStorage.getItem('token');
         return !!token;
     }
 

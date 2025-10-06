@@ -71,9 +71,12 @@ class App {
                 // Store user token and data separately
                 localStorage.setItem('user_token', response.data.accessToken);
                 localStorage.setItem('user_data', JSON.stringify(response.data.user));
-                // Also store in legacy keys for backward compatibility
-                localStorage.setItem('token', response.data.accessToken);
-                localStorage.setItem('user', JSON.stringify(response.data.user));
+                
+                // Update AuthContextManager if available
+                if (typeof window !== 'undefined' && window.authContextManager) {
+                    window.authContextManager.updateCurrentContext();
+                    window.authContextManager.dispatchAuthContextChanged();
+                }
                 
                 this.showNotification('Đăng nhập thành công!', 'success');
                 
