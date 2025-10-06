@@ -63,7 +63,12 @@ const userAPI = new UserAPI();
 function checkAuth() {
     const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
     if (!token) {
-        window.location.href = '../../index.html';
+        // Clear all authentication data and refresh
+        ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
+          localStorage.removeItem(k); 
+          sessionStorage.removeItem(k);
+        });
+        window.location.reload();
         return false;
     }
     return true;

@@ -407,9 +407,11 @@ function handleLogout() {
     try {
         log('User logging out');
         
-        // Clear user-specific data only
-        localStorage.removeItem('user_token');
-        localStorage.removeItem('user_data');
+        // Clear all authentication data
+        ['user_token','user_data','token','user','accessToken','refreshToken','admin_token','admin_data'].forEach(k=>{
+            localStorage.removeItem(k);
+            sessionStorage.removeItem(k);
+        });
         
         // Use auth context manager if available
         if (typeof window.authContextManager !== 'undefined') {
@@ -419,8 +421,8 @@ function handleLogout() {
         // Update UI
         updateHeaderUserInfo(null);
         
-        // Redirect to login page
-        window.location.href = '../../index.html';
+        // Refresh current page
+        window.location.reload();
         
     } catch (error) {
         log('Error during logout:', error);

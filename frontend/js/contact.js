@@ -212,12 +212,14 @@ document.addEventListener('DOMContentLoaded', () => {
     if(logoutBtn){
       logoutBtn.addEventListener('click', ()=>{
         try {
-          ['accessToken','refreshToken','token','user'].forEach(k=>{
+          // Clear all authentication data
+          ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
             localStorage.removeItem(k); 
             sessionStorage.removeItem(k);
           });
         } catch(_){}
-        location.reload();
+        // Refresh current page
+        window.location.reload();
       });
     }
 

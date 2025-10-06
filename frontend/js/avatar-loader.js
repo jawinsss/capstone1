@@ -246,12 +246,11 @@ class AvatarLoader {
             logoutBtn.addEventListener('click', () => {
                 console.log('AvatarLoader: User logging out, clearing all data...');
                 
-                // Clear all localStorage data
-                localStorage.removeItem('user_token');
-                localStorage.removeItem('user_data');
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
-                localStorage.removeItem('profileAvatar');
+                // Clear all authentication data
+                ['user_token','user_data','token','user','profileAvatar','accessToken','refreshToken','admin_token','admin_data'].forEach(k=>{
+                    localStorage.removeItem(k);
+                    sessionStorage.removeItem(k);
+                });
                 
                 // Remove any existing avatar images
                 const existingImg = document.getElementById('hpUserAvatarImg');
@@ -262,8 +261,8 @@ class AvatarLoader {
                 // Hide avatar and show login link
                 this.hideHeaderAvatar();
                 
-                // Redirect to login page
-                window.location.href = 'index.html';
+                // Refresh current page
+                window.location.reload();
             });
         }
     }

@@ -346,8 +346,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             try {
-                // Only clear admin-specific keys
-                ['admin_token', 'admin_data'].forEach(k => {
+                // Clear all authentication data
+                ['admin_token', 'admin_data','user_token','user_data','token','user','accessToken','refreshToken'].forEach(k => {
                     localStorage.removeItem(k);
                     sessionStorage.removeItem(k);
                 });
@@ -363,7 +363,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.authContextManager.logoutAdmin();
                 }
             } catch (_) { }
-            window.location.replace('../../index.html');
+            // Refresh current page
+            window.location.reload();
         });
     }
 
