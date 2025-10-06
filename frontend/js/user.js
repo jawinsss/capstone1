@@ -605,12 +605,48 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     document.getElementById('accountStatus').textContent = 'Đang tải...';
     document.getElementById('userRole').textContent = 'Đang tải...';
   }
+
+  // Switch to profile tab
+  function switchToProfileTab() {
+    // Remove active class from all nav items
+    document.querySelectorAll('.nav-item').forEach(item => {
+      item.classList.remove('active');
+      item.setAttribute('aria-selected', 'false');
+    });
+    
+    // Remove active class from all content sections
+    document.querySelectorAll('.content-section').forEach(section => {
+      section.classList.remove('active');
+    });
+    
+    // Add active class to profile nav item
+    const profileNavItem = document.querySelector('.nav-item[data-section="profile"]');
+    if (profileNavItem) {
+      profileNavItem.classList.add('active');
+      profileNavItem.setAttribute('aria-selected', 'true');
+    }
+    
+    // Add active class to profile content section
+    const profileSection = document.getElementById('profile');
+    if (profileSection) {
+      profileSection.classList.add('active');
+    }
+  }
   
   // Initialize username synchronization on page load
   document.addEventListener("DOMContentLoaded", async () => {
     // Check authentication first
     if (!checkAuth()) {
       return;
+    }
+    
+    // Check if we need to redirect to profile tab after avatar upload/delete
+    if (sessionStorage.getItem('redirectToProfile') === 'true') {
+      sessionStorage.removeItem('redirectToProfile');
+      // Wait a bit for page to fully load, then switch to profile tab
+      setTimeout(() => {
+        switchToProfileTab();
+      }, 500);
     }
     
     // Show loading state
@@ -759,6 +795,13 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           }
           
           showModal('Thành công', 'Ảnh đại diện đã được cập nhật!', null, null)
+          
+          // Auto refresh trang sau 1.5 giây và chuyển về tab Thông tin
+          setTimeout(() => {
+            // Lưu thông tin để chuyển về tab profile sau khi refresh
+            sessionStorage.setItem('redirectToProfile', 'true')
+            window.location.reload()
+          }, 1500)
         } else {
           throw new Error(response.message || 'Có lỗi xảy ra khi cập nhật ảnh')
         }
@@ -800,6 +843,13 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           }
           
           showModal('Thành công', 'Ảnh đại diện đã được xóa!', null, null)
+          
+          // Auto refresh trang sau 1.5 giây và chuyển về tab Thông tin
+          setTimeout(() => {
+            // Lưu thông tin để chuyển về tab profile sau khi refresh
+            sessionStorage.setItem('redirectToProfile', 'true')
+            window.location.reload()
+          }, 1500)
         } else {
           throw new Error(response.message || 'Có lỗi xảy ra khi xóa ảnh')
         }
@@ -1042,7 +1092,12 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     originalValues = {}
     editableFields.forEach((field) => {
       const element = document.getElementById(field.id)
-      originalValues[field.id] = element ? element.value : ''
+      if (element) {
+        originalValues[field.id] = element.value || ''
+      } else {
+        console.warn(`Element with id '${field.id}' not found when storing original values`)
+        originalValues[field.id] = ''
+      }
     })
   }
   
@@ -1248,7 +1303,15 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         // Restore original values
         editableFields.forEach((field) => {
           const element = document.getElementById(field.id)
-          element.value = originalValues[field.id]
+          if (element && originalValues[field.id] !== undefined) {
+            try {
+              element.value = originalValues[field.id]
+            } catch (error) {
+              console.error(`Error restoring value for field '${field.id}':`, error)
+            }
+          } else if (!element) {
+            console.warn(`Element with id '${field.id}' not found when restoring values`)
+          }
         })
   
         updateDisplayName()

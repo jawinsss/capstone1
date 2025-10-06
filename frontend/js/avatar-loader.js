@@ -14,30 +14,35 @@ class AvatarLoader {
     // Load user profile from API
     async loadUserProfile() {
         if (!this.isAuthenticated()) {
-            console.log('User not authenticated, skipping avatar load');
+            console.log('AvatarLoader: User not authenticated, skipping avatar load');
             return null;
         }
 
         if (this.isLoading) {
-            console.log('Avatar already loading, skipping...');
+            console.log('AvatarLoader: Avatar already loading, skipping...');
             return null;
         }
 
         try {
             this.isLoading = true;
-            console.log('Loading user profile from API...');
+            console.log('AvatarLoader: Loading user profile from API...');
             
             const response = await this.apiService.get('/users/profile');
             
             if (response.success && response.data) {
-                console.log('User profile loaded successfully:', response.data.fullName);
+                console.log('AvatarLoader: User profile loaded successfully:', {
+                    fullName: response.data.fullName,
+                    username: response.data.username,
+                    avt_img: response.data.avt_img ? 'Has image' : 'No image',
+                    avt_img_length: response.data.avt_img ? response.data.avt_img.length : 0
+                });
                 return response.data;
             } else {
-                console.log('Failed to load user profile:', response.message);
+                console.log('AvatarLoader: Failed to load user profile:', response.message);
                 return null;
             }
         } catch (error) {
-            console.error('Error loading user profile:', error);
+            console.error('AvatarLoader: Error loading user profile:', error);
             return null;
         } finally {
             this.isLoading = false;
@@ -110,16 +115,22 @@ class AvatarLoader {
 
     // Show avatar image
     showAvatarImage(avatarUrl, fullName) {
-        console.log('Showing avatar image:', avatarUrl.substring(0, 50) + '...');
+        console.log('AvatarLoader: Showing avatar image for user:', fullName);
+        console.log('AvatarLoader: Avatar URL length:', avatarUrl ? avatarUrl.length : 0);
+        console.log('AvatarLoader: Avatar URL preview:', avatarUrl ? avatarUrl.substring(0, 100) + '...' : 'null');
         
         const userAvatar = document.getElementById('hpUserAvatar');
         const userInitials = document.getElementById('hpUserInitials');
         
-        if (!userAvatar) return;
+        if (!userAvatar) {
+            console.log('AvatarLoader: User avatar element not found');
+            return;
+        }
 
         // Remove existing avatar image if any
         const existingImg = userAvatar.querySelector('#hpUserAvatarImg');
         if (existingImg) {
+            console.log('AvatarLoader: Removing existing avatar image');
             existingImg.remove();
         }
 
@@ -169,10 +180,17 @@ class AvatarLoader {
 
     // Show initials only
     showInitialsOnly() {
-        console.log('Showing initials only');
+        console.log('AvatarLoader: Showing initials only (no avatar image)');
         
         const userInitials = document.getElementById('hpUserInitials');
         if (userInitials) {
+            // Remove any existing avatar image
+            const existingImg = document.getElementById('hpUserAvatarImg');
+            if (existingImg) {
+                console.log('AvatarLoader: Removing existing avatar image for initials display');
+                existingImg.remove();
+            }
+            
             userInitials.style.display = 'flex';
             userInitials.style.zIndex = '1';
             userInitials.style.position = 'relative';
@@ -226,11 +244,20 @@ class AvatarLoader {
         const logoutBtn = document.getElementById('hpLogoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
+                console.log('AvatarLoader: User logging out, clearing all data...');
+                
+                // Clear all localStorage data
                 localStorage.removeItem('user_token');
                 localStorage.removeItem('user_data');
                 localStorage.removeItem('token');
                 localStorage.removeItem('user');
                 localStorage.removeItem('profileAvatar');
+                
+                // Remove any existing avatar images
+                const existingImg = document.getElementById('hpUserAvatarImg');
+                if (existingImg) {
+                    existingImg.remove();
+                }
                 
                 // Hide avatar and show login link
                 this.hideHeaderAvatar();
