@@ -89,4 +89,16 @@ export class UsersController {
   deactivate(@Param('id') id: string, @Req() req) {
     return this.usersService.deactivate(id, req.user);
   }
+
+  @Patch(':id/activate')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Kích hoạt người dùng theo ID (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Kích hoạt thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
+  activate(@Param('id') id: string, @Req() req) {
+    return this.usersService.activate(id, req.user);
+  }
 }

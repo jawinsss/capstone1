@@ -108,15 +108,35 @@ export class UsersService {
 
   async remove(id: string, currentUser: any) {
     // Check if user exists
-    await this.findOne(id);
+    const user = await this.findOne(id);
 
     // Only admins can delete users
     if (currentUser.role !== 'ADMIN') {
       throw new ForbiddenException('Only admins can delete users');
     }
 
-    return this.prisma.user.delete({
-      where: { id },
+    // Prevent admin from deleting themselves
+    if (currentUser.id === id) {
+      throw new ForbiddenException('Cannot delete your own account');
+    }
+
+    // Use transaction to ensure all related data is deleted
+    return this.prisma.$transaction(async (tx) => {
+      // Delete all related data first
+      await tx.review.deleteMany({ where: { userId: id } });
+      await tx.ticket.deleteMany({ where: { userId: id } });
+      
+      // Delete orders and related data
+      const orders = await tx.order.findMany({ where: { userId: id } });
+      for (const order of orders) {
+        await tx.orderItem.deleteMany({ where: { orderId: order.id } });
+        await tx.payment.deleteMany({ where: { orderId: order.id } });
+        await tx.returnRequest.deleteMany({ where: { orderId: order.id } });
+      }
+      await tx.order.deleteMany({ where: { userId: id } });
+
+      // Finally delete the user
+      return tx.user.delete({ where: { id } });
     });
   }
 
@@ -132,6 +152,21 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { isActive: false },
+    });
+  }
+
+  async activate(id: string, currentUser: any) {
+    // Check if user exists
+    await this.findOne(id);
+
+    // Only admins can activate users
+    if (currentUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can activate users');
+    }
+
+    return this.prisma.user.update({
+      where: { id },
+      data: { isActive: true },
     });
   }
 }

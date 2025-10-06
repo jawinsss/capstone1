@@ -1149,16 +1149,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 
                 delBtn.addEventListener('click', async () => {
-                    if(!confirm('Xóa sản phẩm này?')) return;
-                    const res = await window.apiService.delete(`/products/${p.id}`);
-                    if(res?.success){
-                        // Remove subCategory from localStorage
-                        removeProductSubCategory(p.id);
-                        showNotification('Đã xóa sản phẩm', 'success');
-                        await loadProducts();
-                    } else {
-                        alert(res?.message || 'Xóa sản phẩm thất bại');
-                    }
+                    deleteProduct(p.id);
                 });
                 container.appendChild(item);
             });
@@ -1220,10 +1211,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             const stock = stockInput ? Math.max(0, parseInt(stockInput.value || '0', 10)) : 0;
             const desc = descTextarea ? (descTextarea.value || '').trim() : '';
 
-            if (!name) return alert('Vui lòng nhập Tên sản phẩm');
-            if (!cat || /chọn/i.test(cat)) return alert('Vui lòng chọn Danh mục');
-            if (!desc) return alert('Vui lòng nhập Mô tả');
-            if (!price || Number.isNaN(price) || price < 0) return alert('Giá bán không hợp lệ');
+            if (!name) return showNotification('Vui lòng nhập Tên sản phẩm', 'error');
+            if (!cat || /chọn/i.test(cat)) return showNotification('Vui lòng chọn Danh mục', 'error');
+            if (!desc) return showNotification('Vui lòng nhập Mô tả', 'error');
+            if (!price || Number.isNaN(price) || price < 0) return showNotification('Giá bán không hợp lệ', 'error');
 
             async function filesToDataUrls(files) {
                 const toDataUrl = (file) => new Promise((resolve, reject) => {
@@ -1258,10 +1249,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                     saveProductSubCategory(res.data.id, subCat);
                 }
                 
-                alert('Đã tạo sản phẩm!');
+                showNotification('Đã tạo sản phẩm!', 'success');
                 await loadProducts();
             } catch (e) {
-                alert(e?.message || 'Có lỗi khi tạo sản phẩm');
+                showNotification(e?.message || 'Có lỗi khi tạo sản phẩm', 'error');
                 return;
             }
 
@@ -2055,11 +2046,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         const subCategory = document.getElementById('editSubCategory').value;
 
         // Validation
-        if (!name) return alert('Vui lòng nhập tên sản phẩm');
-        if (!price || price < 0) return alert('Giá bán không hợp lệ');
-        if (!stock || stock < 0) return alert('Số lượng không hợp lệ');
-        if (!description) return alert('Vui lòng nhập mô tả sản phẩm');
-        if (!categoryId) return alert('Vui lòng chọn danh mục');
+        if (!name) return showNotification('Vui lòng nhập tên sản phẩm', 'error');
+        if (!price || price < 0) return showNotification('Giá bán không hợp lệ', 'error');
+        if (!stock || stock < 0) return showNotification('Số lượng không hợp lệ', 'error');
+        if (!description) return showNotification('Vui lòng nhập mô tả sản phẩm', 'error');
+        if (!categoryId) return showNotification('Vui lòng chọn danh mục', 'error');
 
         try {
             const payload = {
@@ -2085,11 +2076,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                 showNotification('Đã cập nhật sản phẩm thành công!', 'success');
                 closeEditModal();
                 await loadProductsData();
+                
+                // Auto refresh the entire page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
-                alert(res?.message || 'Cập nhật sản phẩm thất bại');
+                showNotification(res?.message || 'Cập nhật sản phẩm thất bại', 'error');
             }
         } catch (e) {
-            alert('Có lỗi khi cập nhật sản phẩm: ' + (e.message || 'Lỗi không xác định'));
+            showNotification('Có lỗi khi cập nhật sản phẩm: ' + (e.message || 'Lỗi không xác định'), 'error');
         }
     }
 
@@ -2142,7 +2138,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         const quantity = quantityInput ? parseInt(quantityInput.value) || 0 : 0;
 
         if (!name) {
-            alert('Vui lòng nhập tên sản phẩm');
+            showNotification('Vui lòng nhập tên sản phẩm', 'error');
             nameInput.focus();
             return;
         }
@@ -2211,12 +2207,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Update product stats
                 updateProductStats();
+                
+                // Auto refresh the entire page after a short delay
+                setTimeout(() => {
+                    window.location.reload();
+                }, 1500);
             } else {
-                alert(res?.message || 'Thêm sản phẩm thất bại');
+                showNotification(res?.message || 'Thêm sản phẩm thất bại', 'error');
             }
         } catch (e) {
             console.error('Add product error:', e);
-            alert('Có lỗi khi thêm sản phẩm: ' + (e.message || 'Lỗi không xác định'));
+            showNotification('Có lỗi khi thêm sản phẩm: ' + (e.message || 'Lỗi không xác định'), 'error');
         }
     }
 
@@ -2261,9 +2262,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let html = '<div class="products-list">';
         products.forEach(product => {
             html += `
-                <div class="product-item">
+                <div class="product-item" data-product-id="${product.id}">
                     <div class="product-info">
-                        <h3>${product.name}</h3>
+                        <h3 class="product-name">${product.name}</h3>
                         <p>Giá: ${product.price ? product.price.toLocaleString('vi-VN') + ' VND' : 'Chưa có giá'}</p>
                         <p>Số lượng: ${product.quantity || 0}</p>
                         <p>Danh mục: ${product.category?.name || 'Chưa phân loại'}</p>
@@ -2300,25 +2301,47 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // ====== DELETE PRODUCT ======
     async function deleteProduct(productId) {
-        if (!confirm('Bạn có chắc chắn muốn xóa sản phẩm này?')) {
-            return;
-        }
-
-        try {
-            const res = await window.apiService.delete(`/products/${productId}`);
-            console.log('Delete product response:', res);
-            
-            if (res?.success) {
-                showNotification('Xóa sản phẩm thành công!', 'success');
-                // Auto refresh products list
-                await loadProductsData();
-                updateProductStats();
-            } else {
-                alert(res?.message || 'Xóa sản phẩm thất bại');
+        // Try to get product name from DOM first
+        let productName = 'sản phẩm này';
+        const productElement = document.querySelector(`[data-product-id="${productId}"]`);
+        if (productElement) {
+            const nameElement = productElement.querySelector('.product-name');
+            if (nameElement) {
+                productName = nameElement.textContent.trim();
             }
-        } catch (e) {
-            console.error('Delete product error:', e);
-            alert('Có lỗi khi xóa sản phẩm: ' + (e.message || 'Lỗi không xác định'));
+        }
+        
+        const confirmed = await showConfirmationModal({
+            type: 'danger',
+            icon: 'trash',
+            title: 'Xóa sản phẩm',
+            message: `Bạn có chắc chắn muốn xóa sản phẩm "${productName}"? Hành động này không thể hoàn tác!`,
+            confirmText: 'Xóa sản phẩm',
+            confirmType: 'danger'
+        });
+
+        if (confirmed) {
+            try {
+                const res = await window.apiService.delete(`/products/${productId}`);
+                console.log('Delete product response:', res);
+                
+                if (res?.success) {
+                    showNotification('Xóa sản phẩm thành công!');
+                    // Auto refresh products list
+                    await loadProductsData();
+                    updateProductStats();
+                    
+                    // Auto refresh the entire page after a short delay
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 1500);
+                } else {
+                    showNotification(res?.message || 'Xóa sản phẩm thất bại', 'error');
+                }
+            } catch (e) {
+                console.error('Delete product error:', e);
+                showNotification('Có lỗi khi xóa sản phẩm: ' + (e.message || 'Lỗi không xác định'), 'error');
+            }
         }
     }
 
@@ -2413,8 +2436,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button class="btn btn-sm" onclick="event.stopPropagation(); editUser('${user.id}')" title="Chỉnh sửa">
                         <i class="fa-solid fa-edit"></i>
                     </button>
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); toggleUserStatus('${user.id}')" title="${user.isActive ? 'Khóa' : 'Mở khóa'}">
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); window.toggleUserStatus('${user.id}')" title="${user.isActive ? 'Khóa' : 'Mở khóa'}">
                         <i class="fa-solid fa-${user.isActive ? 'lock' : 'unlock'}"></i>
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); window.deleteUser('${user.id}')" title="Xóa">
+                        <i class="fa-solid fa-trash"></i>
                     </button>
                 </div>
             </div>
@@ -2513,11 +2539,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     <button class="btn" onclick="editUser('${user.id}')">
                         <i class="fa-solid fa-edit"></i> Chỉnh sửa
                     </button>
-                    <button class="btn btn-danger" onclick="toggleUserStatus('${user.id}')">
+                    <button class="btn btn-danger" onclick="window.toggleUserStatus('${user.id}')">
                         <i class="fa-solid fa-${user.isActive ? 'lock' : 'unlock'}"></i>
                         ${user.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản'}
                     </button>
-                    <button class="btn btn-danger" onclick="deleteUser('${user.id}')">
+                    <button class="btn btn-danger" onclick="window.deleteUser('${user.id}')">
                         <i class="fa-solid fa-trash"></i> Xóa
                     </button>
                 </div>
@@ -2543,29 +2569,133 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (adminUsersEl) adminUsersEl.textContent = adminUsers;
     }
 
+    // Show confirmation modal
+    function showConfirmationModal(options) {
+        return new Promise((resolve) => {
+            const modal = document.createElement('div');
+            modal.className = 'confirmation-overlay show';
+            modal.innerHTML = `
+                <div class="confirmation-modal">
+                    <div class="confirmation-content">
+                        <div class="confirmation-icon ${options.type || 'warning'}">
+                            <i class="fa-solid fa-${options.icon || 'exclamation-triangle'}"></i>
+                        </div>
+                        <h3>${options.title || 'Xác nhận'}</h3>
+                        <p>${options.message}</p>
+                    </div>
+                    <div class="confirmation-actions">
+                        <button class="confirmation-btn confirmation-btn-cancel" onclick="this.closest('.confirmation-overlay').remove(); window.confirmationResolve(false);">
+                            Hủy
+                        </button>
+                        <button class="confirmation-btn confirmation-btn-confirm ${options.confirmType || 'warning'}" onclick="this.closest('.confirmation-overlay').remove(); window.confirmationResolve(true);">
+                            ${options.confirmText || 'Xác nhận'}
+                        </button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            
+            // Store resolve function globally so onclick can access it
+            window.confirmationResolve = resolve;
+            
+            // Auto remove after 5 seconds if no interaction
+            setTimeout(() => {
+                if (document.body.contains(modal)) {
+                    modal.remove();
+                    resolve(false);
+                }
+            }, 5000);
+        });
+    }
+
+    // Show notification
+    function showNotification(message, type = 'success') {
+        const notification = document.createElement('div');
+        notification.className = `notification ${type} show`;
+        notification.innerHTML = `
+            <div class="notification-icon">
+                <i class="fa-solid fa-${type === 'success' ? 'check' : type === 'error' ? 'times' : 'exclamation'}"></i>
+            </div>
+            <div class="notification-content">
+                <div class="notification-title">${type === 'success' ? 'Thành công' : type === 'error' ? 'Lỗi' : 'Thông báo'}</div>
+                <div class="notification-message">${message}</div>
+            </div>
+            <button class="notification-close" onclick="this.closest('.notification').remove()">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        `;
+        
+        const container = document.querySelector('.notification-container') || (() => {
+            const container = document.createElement('div');
+            container.className = 'notification-container';
+            document.body.appendChild(container);
+            return container;
+        })();
+        
+        container.appendChild(notification);
+        
+        // Auto remove after 3 seconds
+        setTimeout(() => {
+            if (notification.parentNode) {
+                notification.remove();
+            }
+        }, 3000);
+    }
+
     // Toggle user status (activate/deactivate)
     async function toggleUserStatus(userId) {
+        console.log('toggleUserStatus called with userId:', userId);
         const user = users.find(u => u.id === userId);
-        if (!user) return;
-
-        const action = user.isActive ? 'khóa' : 'mở khóa';
-        if (!confirm(`Bạn có chắc chắn muốn ${action} tài khoản này?`)) {
+        if (!user) {
+            console.log('User not found');
             return;
         }
 
-        try {
-            const res = await window.apiService.patch(`/users/${userId}/deactivate`);
-            console.log('Toggle user status response:', res);
-            
-            if (res?.success) {
-                showNotification(`${action.charAt(0).toUpperCase() + action.slice(1)} tài khoản thành công!`, 'success');
-                await loadUsers();
-            } else {
-                alert(res?.message || `${action.charAt(0).toUpperCase() + action.slice(1)} tài khoản thất bại`);
+        const action = user.isActive ? 'khóa' : 'mở khóa';
+        const actionText = user.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản';
+        console.log('Action:', action);
+        
+        const confirmed = await showConfirmationModal({
+            type: 'warning',
+            icon: user.isActive ? 'lock' : 'unlock',
+            title: actionText,
+            message: `Bạn có chắc chắn muốn ${action} tài khoản "${user.fullName || user.email}"?`,
+            confirmText: actionText,
+            confirmType: 'warning'
+        });
+        
+        if (confirmed) {
+            try {
+                console.log('Processing user status change...');
+                
+                if (user.isActive) {
+                    // Khóa tài khoản
+                    const res = await window.apiService.patch(`/users/${userId}/deactivate`);
+                    console.log('Deactivate user response:', res);
+                    
+                    if (res?.success) {
+                        showNotification('Khóa tài khoản thành công!');
+                        await loadUsers();
+                    } else {
+                        showNotification(res?.message || 'Khóa tài khoản thất bại', 'error');
+                    }
+                } else {
+                    // Mở khóa tài khoản
+                    const res = await window.apiService.patch(`/users/${userId}/activate`);
+                    console.log('Activate user response:', res);
+                    
+                    if (res?.success) {
+                        showNotification('Mở khóa tài khoản thành công!');
+                        await loadUsers();
+                    } else {
+                        showNotification(res?.message || 'Mở khóa tài khoản thất bại', 'error');
+                    }
+                }
+            } catch (error) {
+                console.error('Toggle user status error:', error);
+                showNotification(`Có lỗi khi ${action} tài khoản: ${error.message || 'Lỗi không xác định'}`, 'error');
             }
-        } catch (error) {
-            console.error('Toggle user status error:', error);
-            alert(`Có lỗi khi ${action} tài khoản: ${error.message || 'Lỗi không xác định'}`);
         }
     }
 
@@ -2574,44 +2704,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         const user = users.find(u => u.id === userId);
         if (!user) return;
 
-        // For now, just show an alert. You can implement a modal later
-        alert(`Chỉnh sửa thông tin người dùng: ${user.fullName || user.email}`);
+        // For now, just show a notification. You can implement a modal later
+        showNotification(`Chỉnh sửa thông tin người dùng: ${user.fullName || user.email}\nChức năng đang phát triển`, 'info');
     }
 
     // Delete user
     async function deleteUser(userId) {
+        console.log('deleteUser called with userId:', userId);
         const user = users.find(u => u.id === userId);
-        if (!user) return;
-
-        if (!confirm(`Bạn có chắc chắn muốn xóa tài khoản "${user.fullName || user.email}"? Hành động này không thể hoàn tác!`)) {
+        if (!user) {
+            console.log('User not found for deletion');
             return;
         }
 
-        try {
-            const res = await window.apiService.delete(`/users/${userId}`);
-            console.log('Delete user response:', res);
-            
-            if (res?.success) {
-                showNotification('Xóa tài khoản thành công!', 'success');
-                await loadUsers();
-                // Clear selection if deleted user was selected
-                if (selectedUser && selectedUser.id === userId) {
-                    selectedUser = null;
-                    document.getElementById('userDetails').innerHTML = `
-                        <div class="user-details-placeholder">
-                            <div class="placeholder-icon">
-                                <i class="fa-solid fa-user"></i>
+        const confirmed = await showConfirmationModal({
+            type: 'danger',
+            icon: 'trash',
+            title: 'Xóa tài khoản',
+            message: `Bạn có chắc chắn muốn xóa tài khoản "${user.fullName || user.email}"? Hành động này không thể hoàn tác!`,
+            confirmText: 'Xóa tài khoản',
+            confirmType: 'danger'
+        });
+
+        if (confirmed) {
+            try {
+                console.log('Processing user deletion...');
+                const res = await window.apiService.delete(`/users/${userId}`);
+                console.log('Delete user response:', res);
+                
+                if (res?.success) {
+                    showNotification('Xóa tài khoản thành công!');
+                    await loadUsers();
+                    // Clear selection if deleted user was selected
+                    if (selectedUser && selectedUser.id === userId) {
+                        selectedUser = null;
+                        document.getElementById('userDetails').innerHTML = `
+                            <div class="user-details-placeholder">
+                                <div class="placeholder-icon">
+                                    <i class="fa-solid fa-user"></i>
+                                </div>
+                                <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
                             </div>
-                            <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
-                        </div>
-                    `;
+                        `;
+                    }
+                } else {
+                    showNotification(res?.message || 'Xóa tài khoản thất bại', 'error');
                 }
-            } else {
-                alert(res?.message || 'Xóa tài khoản thất bại');
+            } catch (error) {
+                console.error('Delete user error:', error);
+                showNotification('Có lỗi khi xóa tài khoản: ' + (error.message || 'Lỗi không xác định'), 'error');
             }
-        } catch (error) {
-            console.error('Delete user error:', error);
-            alert('Có lỗi khi xóa tài khoản: ' + (error.message || 'Lỗi không xác định'));
         }
     }
 
