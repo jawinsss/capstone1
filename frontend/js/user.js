@@ -739,6 +739,19 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     // Load stored avatar from localStorage (nếu có)
     const storedAvatar = localStorage.getItem('profileAvatar')
     applyAvatarData(storedAvatar)
+
+    // Cart button click handler
+    const cartBtn = document.getElementById('hpCartBtn');
+    if (cartBtn) {
+      console.log('Cart button found, adding click listener');
+      cartBtn.addEventListener('click', (e)=>{
+        e.preventDefault();
+        console.log('Cart button clicked, navigating to cart');
+        window.location.href = '../homepage/cart.html';
+      });
+    } else {
+      console.log('Cart button not found!');
+    }
   
     // Wire up avatar input and buttons
     const avatarInput = document.getElementById('avatarInput')
@@ -980,6 +993,7 @@ document.querySelectorAll(".nav-item").forEach((item) => {
   
   // Initialize search dropdowns for provinces and wards
   document.addEventListener("DOMContentLoaded", () => {
+    const cartBtn = document.getElementById('hpCartBtn');
     const provinceContainer = document.getElementById("provinceSearchContainer")
     const wardContainer = document.getElementById("wardSearchContainer")
     const addressStreet = document.getElementById("addressStreet")
@@ -1745,40 +1759,6 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           'Thay đổi email khôi phục',
           'Bạn sẽ cần xác thực email mới.',
           null,
-          null
-      );
-  });
-  
-  document.getElementById('viewLoginHistory').addEventListener('click', function() {
-      showModal(
-          'Lịch sử đăng nhập',
-          'Bạn sẽ có thể xem chi tiết các lần đăng nhập và thiết bị được sử dụng.',
-          null,
-          null
-      );
-  });
-  
-  document.getElementById('manageDevices').addEventListener('click', function() {
-      showModal(
-          'Quản lý thiết bị',
-          'Bạn sẽ có thể xem và đăng xuất khỏi các thiết bị khác.',
-          null,
-          null
-      );
-  });
-  
-  document.getElementById('deleteAccount').addEventListener('click', function() {
-      showModal(
-          'Xác nhận xóa tài khoản',
-          'Bạn có chắc chắn muốn xóa vĩnh viễn tài khoản này? Hành động này không thể hoàn tác và toàn bộ dữ liệu sẽ bị mất.',
-          () => {
-              showModal(
-                  'Tài khoản đã được đánh dấu xóa',
-                  'Tài khoản của bạn sẽ được xóa trong vòng 30 ngày. Bạn có thể khôi phục bằng cách đăng nhập lại trong thời gian này.',
-                  null,
-                  null
-              );
-          },
           null
       );
   });

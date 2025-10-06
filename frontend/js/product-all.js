@@ -44,20 +44,25 @@ document.addEventListener('DOMContentLoaded', () => {
   async function loadCategories() {
     try {
       const res = await window.apiService.get('/categories');
+      console.log('Categories API response:', res);
       
       if (res?.success) {
         // Handle nested data structure: res.data.data
         const data = res.data?.data || res.data;
         categories = Array.isArray(data) ? data : [];
+        console.log('Categories data:', categories);
+        
         // Build category mappings
         categoryNameToId.clear();
         categoryIdToName.clear();
         categories.forEach(cat => {
           categoryNameToId.set(String(cat.name).trim().toLowerCase(), cat.id);
           categoryIdToName.set(cat.id, cat.name);
+          console.log('Category:', cat.name, 'ID:', cat.id, 'Children:', cat.children?.length || 0);
         });
         console.log('Product-all loaded categories with children:', categories.length);
       } else {
+        console.error('Categories API failed:', res?.message);
         categories = [];
       }
     } catch (error) {
@@ -112,6 +117,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryName = urlParams.get('name');
     const subcategory = urlParams.get('subcategory');
     
+    console.log('URL params - categoryId:', categoryId, 'categoryName:', categoryName, 'subcategory:', subcategory);
+    
     if (categoryId) {
       pvState.categoryId = categoryId;
       // Try to get category name from URL or from loaded categories
@@ -121,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         pvState.categoryName = categoryIdToName.get(categoryId);
       }
       
+      console.log('Set pvState - categoryId:', pvState.categoryId, 'categoryName:', pvState.categoryName);
       updatePageTitle();
       
       if (subcategory) {
@@ -129,6 +137,7 @@ document.addEventListener('DOMContentLoaded', () => {
           filterProductViewBySubCategory(categoryId, decodeURIComponent(subcategory));
         });
       } else {
+        console.log('Rendering product list for category:', categoryId);
         renderProductList();
       }
     } else {
@@ -254,6 +263,7 @@ document.addEventListener('DOMContentLoaded', () => {
               const categoryId = e.target.getAttribute('data-cat-id');
               const categoryName = e.target.getAttribute('data-cat');
               if(categoryId) {
+                console.log('Child category clicked:', categoryName, 'ID:', categoryId);
                 pvState.categoryId = categoryId;
                 pvState.categoryName = categoryName;
                 pvState.filteredItems = null; // Clear filtered items to use direct API call
@@ -270,6 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
                 e.target.classList.add('active');
                 
+                console.log('About to render product list with categoryId:', pvState.categoryId);
                 renderProductList();
               }
             });
@@ -300,9 +311,11 @@ document.addEventListener('DOMContentLoaded', () => {
     
     console.log('Found subcategory:', subCategory.name, 'ID:', subCategory.id, 'Parent ID:', subCategory.parentId);
     
-    // Use the subcategory ID instead of parent category ID
-    const qs = `?categoryId=${encodeURIComponent(subCategory.id)}&take=1000`;
-    console.log('API query:', `/products${qs}`);
+    // Use the PARENT category ID instead of subcategory ID
+    // Backend API will automatically include products from parent and all subcategories
+    const parentId = subCategory.parentId || categoryId;
+    const qs = `?categoryId=${encodeURIComponent(parentId)}&take=1000`;
+    console.log('API query with PARENT ID:', `/products${qs}`);
     
     window.apiService.get(`/products${qs}`).then(res => {
       if(!res?.success) {
@@ -314,10 +327,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = res.data?.data || res.data;
       const allItems = Array.isArray(data) ? data : [];
       
-      console.log(`Found ${allItems.length} products for subcategory: ${subCategoryName}`);
+      console.log(`Found ${allItems.length} products for parent category: ${parentId}`);
       
-      pvState.filteredItems = allItems; // Use all items directly since API already filters by subcategory
-      pvState.categoryId = subCategory.id; // Update to subcategory ID
+      // Filter products to only show those from the selected subcategory
+      console.log('All items from API:', allItems);
+      console.log('Looking for products with categoryId:', subCategory.id);
+      
+      const filteredItems = allItems.filter(item => {
+        console.log('Checking item:', item.name, 'categoryId:', item.categoryId, 'matches:', item.categoryId === subCategory.id);
+        return item.categoryId === subCategory.id;
+      });
+      console.log(`Filtered to ${filteredItems.length} products for subcategory: ${subCategoryName}`);
+      
+      pvState.filteredItems = filteredItems; // Use filtered items
+      pvState.categoryId = subCategory.id; // Keep subcategory ID for display
       pvState.categoryName = subCategoryName; // Update category name
       pvState.page = 1;
       
@@ -404,7 +427,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const params = new URLSearchParams();
     params.set('take', String(pvState.pageSize));
     params.set('skip', String((pvState.page-1)*pvState.pageSize));
-    if(pvState.categoryId) params.set('categoryId', pvState.categoryId);
+    if(pvState.categoryId) {
+      params.set('categoryId', pvState.categoryId);
+      console.log('Building query with categoryId:', pvState.categoryId);
+    }
     
     switch(pvState.sort){
       case 'oldest': params.set('orderBy', 'createdAt:asc'); break;
@@ -417,7 +443,9 @@ document.addEventListener('DOMContentLoaded', () => {
     
     params.set('minPrice', String(pvState.min));
     params.set('maxPrice', String(pvState.max));
-    return params.toString();
+    const queryString = params.toString();
+    console.log('Built product query:', queryString);
+    return queryString;
   }
 
   async function renderProductList(){
@@ -442,6 +470,7 @@ document.addEventListener('DOMContentLoaded', () => {
         total = allFilteredItems.length;
       } else {
         const qs = buildProductQuery();
+        console.log('Making API call to:', `/products?${qs}`);
         const res = await window.apiService.get(`/products?${qs}`);
         console.log('Product-all API response:', res);
         if (!res?.success) {

@@ -221,12 +221,15 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     }
 
-    // Load cart count
+    // Load cart count using CartUtils
     function updateCartCount() {
-      if(cartCount) {
+      if (window.CartUtils) {
+        window.CartUtils.updateCartCount();
+      } else if(cartCount) {
         try {
           const cart = JSON.parse(localStorage.getItem('cart') || '[]');
-          cartCount.textContent = cart.length;
+          const totalItems = cart.reduce((sum, item) => sum + (item.quantity || 0), 0);
+          cartCount.textContent = totalItems;
         } catch(_) {
           cartCount.textContent = '0';
         }
