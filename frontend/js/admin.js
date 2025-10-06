@@ -45,6 +45,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         let adminData = null;
         
         if (typeof window !== 'undefined' && window.authContextManager) {
+            // Force switch to admin context for admin pages
+            window.authContextManager.forceSwitchToAdmin();
+            
             const context = window.authContextManager.getCurrentContext();
             const userData = window.authContextManager.getCurrentUserData();
             
@@ -360,25 +363,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', () => {
             try {
-                // Clear all authentication data
-                ['admin_token', 'admin_data','user_token','user_data','token','user','accessToken','refreshToken'].forEach(k => {
-                    localStorage.removeItem(k);
-                    sessionStorage.removeItem(k);
-                });
-                
-                // Clear cookies
-                document.cookie.split(';').forEach(c => {
-                    const n = c.split('=')[0].trim();
-                    if (n) document.cookie = `${n}=; Max-Age=0; path=/`;
-                });
+                console.log('Admin: Admin logout clicked');
+                console.log('Admin: Before logout - user_token:', !!localStorage.getItem('user_token'));
+                console.log('Admin: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
                 
                 // Use auth context manager if available
                 if (typeof window.authContextManager !== 'undefined') {
+                    // Only logout admin, keep user context if exists
                     window.authContextManager.logoutAdmin();
+                } else {
+                    // Fallback: only clear admin data, keep user data
+                    localStorage.removeItem('admin_token');
+                    localStorage.removeItem('admin_data');
+                    // Keep legacy token cleanup for admin-specific tokens
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('refreshToken');
                 }
-            } catch (_) { }
-            // Refresh current page
-            window.location.reload();
+                
+                console.log('Admin: After logout - user_token:', !!localStorage.getItem('user_token'));
+                console.log('Admin: After logout - admin_token:', !!localStorage.getItem('admin_token'));
+                
+                // Clear admin-specific cookies only
+                document.cookie.split(';').forEach(c => {
+                    const n = c.split('=')[0].trim();
+                    if (n && (n.includes('admin') || n.includes('token'))) {
+                        document.cookie = `${n}=; Max-Age=0; path=/`;
+                    }
+                });
+            } catch (error) {
+                console.error('Logout error:', error);
+            }
+            // Redirect to login page instead of reload
+            window.location.href = '../../index.html';
         });
     }
 
@@ -1473,7 +1490,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             const res = await window.apiService.get('/users');
             if (res?.success) {
                 list.innerHTML = '';
-                (res.data || []).forEach(u => {
+                // Handle nested response structure: {success: true, data: {success: true, data: [...]}}
+                let users = res.data;
+                if (users && typeof users === 'object' && users.success && Array.isArray(users.data)) {
+                    users = users.data;
+                } else if (Array.isArray(users)) {
+                    // users is already an array
+                } else {
+                    users = [];
+                }
+                
+                users.forEach(u => {
                     const row = document.createElement('article');
                     row.className = 'list-item';
                     row.innerHTML = `
@@ -1811,24 +1838,56 @@ document.addEventListener('DOMContentLoaded', async () => {
         const view = document.querySelector('[data-view="users"]');
         if (!view || view.hidden) return;
         
-        const list = view.querySelector('.list');
+        const list = view.querySelector('#usersList');
         if (!list) return;
         
         try {
             const res = await window.apiService.get('/users');
             if (res?.success) {
                 list.innerHTML = '';
-                (res.data || []).forEach(u => {
-                    const row = document.createElement('article');
-                    row.className = 'list-item';
-                    row.innerHTML = `
-                        <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
-                        <div style="flex:1">
-                            <div class="list-title">${u.fullName || u.username} <span class="chip ${u.isActive ? 'green':'red'}">${u.isActive?'Hoạt động':'Đã khóa'}</span></div>
-                            <div class="list-sub">${u.email || ''} • Đăng ký: ${new Date(u.createdAt).toLocaleDateString('vi-VN')}</div>
+                // Handle nested response structure: {success: true, data: {success: true, data: [...]}}
+                let users = res.data;
+                if (users && typeof users === 'object' && users.success && Array.isArray(users.data)) {
+                    users = users.data;
+                } else if (Array.isArray(users)) {
+                    // users is already an array
+                } else {
+                    users = [];
+                }
+                
+                users.forEach(u => {
+                    const userItem = document.createElement('div');
+                    userItem.className = 'user-item';
+                    userItem.setAttribute('data-user-id', u.id);
+                    userItem.innerHTML = `
+                        <div class="user-avatar">
+                            ${u.avt_img ? `<img src="${u.avt_img}" alt="${u.fullName || u.username}">` : (u.fullName || u.username).charAt(0).toUpperCase()}
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">${u.fullName || u.username}</div>
+                            <div class="user-email">${u.email || ''}</div>
+                        </div>
+                        <div class="user-status">
+                            <div class="status-dot ${u.isActive ? 'active' : 'inactive'}"></div>
+                            <span>${u.isActive ? 'Hoạt động' : 'Đã khóa'}</span>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn btn-sm" onclick="editUser('${u.id}')" title="Chỉnh sửa">
+                                <i class="fa-solid fa-edit"></i>
+                            </button>
                         </div>`;
-                    list.appendChild(row);
+                    
+                    // Add click event to select user
+                    userItem.addEventListener('click', (e) => {
+                        // Don't trigger if clicking on action buttons
+                        if (e.target.closest('.user-actions')) return;
+                        selectUser(u.id);
+                    });
+                    list.appendChild(userItem);
                 });
+                
+                // Update user stats
+                updateUserStats();
             }
         } catch (e) {
             console.error('Load users data error:', e);
@@ -2411,58 +2470,81 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Render users list
-    function renderUsers() {
+    async function renderUsers() {
         const usersList = document.getElementById('usersList');
         if (!usersList) return;
 
-        const filteredUsers = getFilteredUsers();
-        
-        if (filteredUsers.length === 0) {
+        try {
+            const res = await window.apiService.get('/users');
+            if (res?.success) {
+                // Handle nested response structure: {success: true, data: {success: true, data: [...]}}
+                let allUsers = res.data;
+                if (allUsers && typeof allUsers === 'object' && allUsers.success && Array.isArray(allUsers.data)) {
+                    allUsers = allUsers.data;
+                } else if (Array.isArray(allUsers)) {
+                    // allUsers is already an array
+                } else {
+                    allUsers = [];
+                }
+                
+                const filteredUsers = getFilteredUsers(allUsers);
+                
+                if (filteredUsers.length === 0) {
+                    usersList.innerHTML = `
+                        <div class="empty-users">
+                            <i class="fa-solid fa-users"></i>
+                            <div>Không có người dùng nào</div>
+                        </div>
+                    `;
+                    return;
+                }
+
+                usersList.innerHTML = filteredUsers.map(user => `
+                    <div class="user-item" data-user-id="${user.id}" onclick="selectUser('${user.id}')">
+                        <div class="user-avatar">
+                            ${user.avt_img ? 
+                                `<img src="${user.avt_img}" alt="${user.fullName}" />` : 
+                                user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'
+                            }
+                        </div>
+                        <div class="user-info">
+                            <div class="user-name">
+                                ${user.fullName || 'Chưa có tên'}
+                                <span class="user-role ${user.role}">${user.role}</span>
+                            </div>
+                            <div class="user-email">${user.email}</div>
+                        </div>
+                        <div class="user-status">
+                            <div class="status-dot ${user.isActive ? 'active' : 'inactive'}"></div>
+                            <span>${user.isActive ? 'Hoạt động' : 'Đã khóa'}</span>
+                        </div>
+                        <div class="user-actions">
+                            <button class="btn btn-sm" onclick="event.stopPropagation(); editUser('${user.id}')" title="Chỉnh sửa">
+                                <i class="fa-solid fa-edit"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); window.toggleUserStatus('${user.id}')" title="${user.isActive ? 'Khóa' : 'Mở khóa'}">
+                                <i class="fa-solid fa-${user.isActive ? 'lock' : 'unlock'}"></i>
+                            </button>
+                            <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); window.deleteUser('${user.id}')" title="Xóa">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `).join('');
+            }
+        } catch (error) {
+            console.error('Error rendering users:', error);
             usersList.innerHTML = `
                 <div class="empty-users">
-                    <i class="fa-solid fa-users"></i>
-                    <div>Không có người dùng nào</div>
+                    <i class="fa-solid fa-exclamation-triangle"></i>
+                    <div>Có lỗi khi tải danh sách người dùng</div>
                 </div>
             `;
-            return;
         }
-
-        usersList.innerHTML = filteredUsers.map(user => `
-            <div class="user-item" data-user-id="${user.id}" onclick="selectUser('${user.id}')">
-                <div class="user-avatar">
-                    ${user.avt_img ? 
-                        `<img src="${user.avt_img}" alt="${user.fullName}" />` : 
-                        user.fullName ? user.fullName.charAt(0).toUpperCase() : 'U'
-                    }
-                </div>
-                <div class="user-info">
-                    <div class="user-name">
-                        ${user.fullName || 'Chưa có tên'}
-                        <span class="user-role ${user.role}">${user.role}</span>
-                    </div>
-                    <div class="user-email">${user.email}</div>
-                </div>
-                <div class="user-status">
-                    <div class="status-dot ${user.isActive ? 'active' : 'inactive'}"></div>
-                    <span>${user.isActive ? 'Hoạt động' : 'Đã khóa'}</span>
-                </div>
-                <div class="user-actions">
-                    <button class="btn btn-sm" onclick="event.stopPropagation(); editUser('${user.id}')" title="Chỉnh sửa">
-                        <i class="fa-solid fa-edit"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); window.toggleUserStatus('${user.id}')" title="${user.isActive ? 'Khóa' : 'Mở khóa'}">
-                        <i class="fa-solid fa-${user.isActive ? 'lock' : 'unlock'}"></i>
-                    </button>
-                    <button class="btn btn-sm btn-danger" onclick="event.stopPropagation(); window.deleteUser('${user.id}')" title="Xóa">
-                        <i class="fa-solid fa-trash"></i>
-                    </button>
-                </div>
-            </div>
-        `).join('');
     }
 
     // Get filtered users based on current tab
-    function getFilteredUsers() {
+    function getFilteredUsers(users = []) {
         switch (currentUserTab) {
             case 'active':
                 return users.filter(user => user.isActive);
@@ -2476,7 +2558,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Select user
-    function selectUser(userId) {
+    async function selectUser(userId) {
         // Remove previous selection
         document.querySelectorAll('.user-item').forEach(item => {
             item.classList.remove('selected');
@@ -2488,10 +2570,16 @@ document.addEventListener('DOMContentLoaded', async () => {
             userItem.classList.add('selected');
         }
 
-        // Find and display user details
-        selectedUser = users.find(user => user.id === userId);
-        if (selectedUser) {
-            renderUserDetails(selectedUser);
+        // Fetch user details from API
+        try {
+            const res = await window.apiService.get(`/users/${userId}`);
+            if (res?.success) {
+                renderUserDetails(res.data);
+            } else {
+                console.error('Error fetching user details:', res?.message);
+            }
+        } catch (error) {
+            console.error('Error fetching user details:', error);
         }
     }
 
@@ -2566,21 +2654,38 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Update user statistics
-    function updateUserStats() {
-        const totalUsers = users.length;
-        const activeUsers = users.filter(user => user.isActive).length;
-        const inactiveUsers = users.filter(user => !user.isActive).length;
-        const adminUsers = users.filter(user => user.role === 'ADMIN').length;
+    async function updateUserStats() {
+        try {
+            const res = await window.apiService.get('/users');
+            if (res?.success) {
+                // Handle nested response structure: {success: true, data: {success: true, data: [...]}}
+                let users = res.data;
+                if (users && typeof users === 'object' && users.success && Array.isArray(users.data)) {
+                    users = users.data;
+                } else if (Array.isArray(users)) {
+                    // users is already an array
+                } else {
+                    users = [];
+                }
+                
+                const totalUsers = users.length;
+                const activeUsers = users.filter(user => user.isActive).length;
+                const inactiveUsers = users.filter(user => !user.isActive).length;
+                const adminUsers = users.filter(user => user.role === 'ADMIN').length;
 
-        const totalUsersEl = document.getElementById('totalUsers');
-        const activeUsersEl = document.getElementById('activeUsers');
-        const inactiveUsersEl = document.getElementById('inactiveUsers');
-        const adminUsersEl = document.getElementById('adminUsers');
+                const totalUsersEl = document.getElementById('totalUsers');
+                const activeUsersEl = document.getElementById('activeUsers');
+                const inactiveUsersEl = document.getElementById('inactiveUsers');
+                const adminUsersEl = document.getElementById('adminUsers');
 
-        if (totalUsersEl) totalUsersEl.textContent = totalUsers;
-        if (activeUsersEl) activeUsersEl.textContent = activeUsers;
-        if (inactiveUsersEl) inactiveUsersEl.textContent = inactiveUsers;
-        if (adminUsersEl) adminUsersEl.textContent = adminUsers;
+                if (totalUsersEl) totalUsersEl.textContent = totalUsers;
+                if (activeUsersEl) activeUsersEl.textContent = activeUsers;
+                if (inactiveUsersEl) inactiveUsersEl.textContent = inactiveUsers;
+                if (adminUsersEl) adminUsersEl.textContent = adminUsers;
+            }
+        } catch (error) {
+            console.error('Error updating user stats:', error);
+        }
     }
 
     // Show confirmation modal
@@ -2660,114 +2765,138 @@ document.addEventListener('DOMContentLoaded', async () => {
     // Toggle user status (activate/deactivate)
     async function toggleUserStatus(userId) {
         console.log('toggleUserStatus called with userId:', userId);
-        const user = users.find(u => u.id === userId);
-        if (!user) {
-            console.log('User not found');
-            return;
-        }
-
-        const action = user.isActive ? 'khóa' : 'mở khóa';
-        const actionText = user.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản';
-        console.log('Action:', action);
         
-        const confirmed = await showConfirmationModal({
-            type: 'warning',
-            icon: user.isActive ? 'lock' : 'unlock',
-            title: actionText,
-            message: `Bạn có chắc chắn muốn ${action} tài khoản "${user.fullName || user.email}"?`,
-            confirmText: actionText,
-            confirmType: 'warning'
-        });
-        
-        if (confirmed) {
-            try {
-                console.log('Processing user status change...');
-                
-                if (user.isActive) {
-                    // Khóa tài khoản
-                    const res = await window.apiService.patch(`/users/${userId}/deactivate`);
-                    console.log('Deactivate user response:', res);
-                    
-                    if (res?.success) {
-                        showNotification('Khóa tài khoản thành công!');
-                        await loadUsers();
-                    } else {
-                        showNotification(res?.message || 'Khóa tài khoản thất bại', 'error');
-                    }
-                } else {
-                    // Mở khóa tài khoản
-                    const res = await window.apiService.patch(`/users/${userId}/activate`);
-                    console.log('Activate user response:', res);
-                    
-                    if (res?.success) {
-                        showNotification('Mở khóa tài khoản thành công!');
-                        await loadUsers();
-                    } else {
-                        showNotification(res?.message || 'Mở khóa tài khoản thất bại', 'error');
-                    }
-                }
-            } catch (error) {
-                console.error('Toggle user status error:', error);
-                showNotification(`Có lỗi khi ${action} tài khoản: ${error.message || 'Lỗi không xác định'}`, 'error');
+        try {
+            // Fetch user details first
+            const res = await window.apiService.get(`/users/${userId}`);
+            if (!res?.success) {
+                console.log('User not found');
+                return;
             }
+            
+            const user = res.data;
+            const action = user.isActive ? 'khóa' : 'mở khóa';
+            const actionText = user.isActive ? 'Khóa tài khoản' : 'Mở khóa tài khoản';
+            console.log('Action:', action);
+            
+            const confirmed = await showConfirmationModal({
+                type: 'warning',
+                icon: user.isActive ? 'lock' : 'unlock',
+                title: actionText,
+                message: `Bạn có chắc chắn muốn ${action} tài khoản "${user.fullName || user.email}"?`,
+                confirmText: actionText,
+                confirmType: 'warning'
+            });
+            
+            if (confirmed) {
+                try {
+                    console.log('Processing user status change...');
+                    
+                    if (user.isActive) {
+                        // Khóa tài khoản
+                        const res = await window.apiService.patch(`/users/${userId}/deactivate`);
+                        console.log('Deactivate user response:', res);
+                        
+                        if (res?.success) {
+                            showNotification('Khóa tài khoản thành công!');
+                            await loadUsersData();
+                        } else {
+                            showNotification(res?.message || 'Khóa tài khoản thất bại', 'error');
+                        }
+                    } else {
+                        // Mở khóa tài khoản
+                        const res = await window.apiService.patch(`/users/${userId}/activate`);
+                        console.log('Activate user response:', res);
+                        
+                        if (res?.success) {
+                            showNotification('Mở khóa tài khoản thành công!');
+                            await loadUsersData();
+                        } else {
+                            showNotification(res?.message || 'Mở khóa tài khoản thất bại', 'error');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Toggle user status error:', error);
+                    showNotification(`Có lỗi khi ${action} tài khoản: ${error.message || 'Lỗi không xác định'}`, 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            showNotification('Có lỗi khi lấy thông tin người dùng', 'error');
         }
     }
 
     // Edit user
-    function editUser(userId) {
-        const user = users.find(u => u.id === userId);
-        if (!user) return;
-
-        // For now, just show a notification. You can implement a modal later
-        showNotification(`Chỉnh sửa thông tin người dùng: ${user.fullName || user.email}\nChức năng đang phát triển`, 'info');
+    async function editUser(userId) {
+        try {
+            const res = await window.apiService.get(`/users/${userId}`);
+            if (res?.success) {
+                const user = res.data;
+                showNotification(`Chỉnh sửa thông tin người dùng: ${user.fullName || user.email}\nChức năng đang phát triển`, 'info');
+            } else {
+                showNotification('Không tìm thấy người dùng', 'error');
+            }
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            showNotification('Có lỗi khi lấy thông tin người dùng', 'error');
+        }
     }
 
     // Delete user
     async function deleteUser(userId) {
         console.log('deleteUser called with userId:', userId);
-        const user = users.find(u => u.id === userId);
-        if (!user) {
-            console.log('User not found for deletion');
-            return;
-        }
-
-        const confirmed = await showConfirmationModal({
-            type: 'danger',
-            icon: 'trash',
-            title: 'Xóa tài khoản',
-            message: `Bạn có chắc chắn muốn xóa tài khoản "${user.fullName || user.email}"? Hành động này không thể hoàn tác!`,
-            confirmText: 'Xóa tài khoản',
-            confirmType: 'danger'
-        });
-
-        if (confirmed) {
-            try {
-                console.log('Processing user deletion...');
-                const res = await window.apiService.delete(`/users/${userId}`);
-                console.log('Delete user response:', res);
-                
-                if (res?.success) {
-                    showNotification('Xóa tài khoản thành công!');
-                    await loadUsers();
-                    // Clear selection if deleted user was selected
-                    if (selectedUser && selectedUser.id === userId) {
-                        selectedUser = null;
-                        document.getElementById('userDetails').innerHTML = `
-                            <div class="user-details-placeholder">
-                                <div class="placeholder-icon">
-                                    <i class="fa-solid fa-user"></i>
-                                </div>
-                                <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
-                            </div>
-                        `;
-                    }
-                } else {
-                    showNotification(res?.message || 'Xóa tài khoản thất bại', 'error');
-                }
-            } catch (error) {
-                console.error('Delete user error:', error);
-                showNotification('Có lỗi khi xóa tài khoản: ' + (error.message || 'Lỗi không xác định'), 'error');
+        
+        try {
+            // Fetch user details first
+            const res = await window.apiService.get(`/users/${userId}`);
+            if (!res?.success) {
+                console.log('User not found for deletion');
+                return;
             }
+            
+            const user = res.data;
+
+            const confirmed = await showConfirmationModal({
+                type: 'danger',
+                icon: 'trash',
+                title: 'Xóa tài khoản',
+                message: `Bạn có chắc chắn muốn xóa tài khoản "${user.fullName || user.email}"? Hành động này không thể hoàn tác!`,
+                confirmText: 'Xóa tài khoản',
+                confirmType: 'danger'
+            });
+
+            if (confirmed) {
+                try {
+                    console.log('Processing user deletion...');
+                    const deleteRes = await window.apiService.delete(`/users/${userId}`);
+                    console.log('Delete user response:', deleteRes);
+                    
+                    if (deleteRes?.success) {
+                        showNotification('Xóa tài khoản thành công!');
+                        await loadUsersData();
+                        // Clear selection if deleted user was selected
+                        const userDetails = document.getElementById('userDetails');
+                        if (userDetails) {
+                            userDetails.innerHTML = `
+                                <div class="user-details-placeholder">
+                                    <div class="placeholder-icon">
+                                        <i class="fa-solid fa-user"></i>
+                                    </div>
+                                    <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
+                                </div>
+                            `;
+                        }
+                    } else {
+                        showNotification(deleteRes?.message || 'Xóa tài khoản thất bại', 'error');
+                    }
+                } catch (error) {
+                    console.error('Delete user error:', error);
+                    showNotification('Có lỗi khi xóa tài khoản: ' + (error.message || 'Lỗi không xác định'), 'error');
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching user details:', error);
+            showNotification('Có lỗi khi lấy thông tin người dùng', 'error');
         }
     }
 
@@ -2793,7 +2922,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 mutations.forEach((mutation) => {
                     if (mutation.type === 'attributes' && mutation.attributeName === 'hidden') {
                         if (!usersView.hidden) {
-                            loadUsers();
+                            loadUsersData();
                         }
                     }
                 });
@@ -2812,12 +2941,481 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Handle refresh button
         const refreshBtn = document.getElementById('refreshUsers');
         if (refreshBtn) {
-            refreshBtn.addEventListener('click', loadUsers);
+            refreshBtn.addEventListener('click', loadUsersData);
         }
     }
 
     // Initialize user management
     initUserManagement();
+
+    // ====== CREATE USER MODAL FUNCTIONS ======
+    
+    // Open create user modal
+    function openCreateUserModal() {
+        console.log('openCreateUserModal called');
+        // Always create fresh modal
+        const modal = createUserModalIfNotExists();
+        console.log('Modal element:', modal);
+        if (modal) {
+            modal.style.display = 'flex';
+            console.log('Modal display set to flex');
+            // Reset form
+            const form = document.getElementById('createUserForm');
+            if (form) {
+                form.reset();
+                console.log('Form reset');
+            }
+        } else {
+            console.error('Modal element not found!');
+        }
+    }
+
+    // Close create user modal
+    function closeCreateUserModal() {
+        const modal = document.getElementById('createUserModal');
+        if (modal) {
+            modal.style.display = 'none';
+            // Reset form
+            const form = document.getElementById('createUserForm');
+            if (form) {
+                form.reset();
+            }
+        }
+    }
+
+    // Validate create user form
+    function validateCreateUserForm() {
+        const fullName = document.getElementById('createUserFullName').value.trim();
+        const email = document.getElementById('createUserEmail').value.trim();
+        const phone = document.getElementById('createUserPhone').value.trim();
+        const username = document.getElementById('createUserUsername').value.trim();
+        const password = document.getElementById('createUserPassword').value;
+        const confirmPassword = document.getElementById('createUserConfirmPassword').value;
+        const role = document.getElementById('createUserRole').value;
+
+        // Required field validation
+        if (!fullName || !email || !phone || !username || !password || !confirmPassword || !role) {
+            showNotification('Vui lòng điền đầy đủ thông tin bắt buộc', 'error');
+            return false;
+        }
+
+        // Email validation
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email)) {
+            showNotification('Email không hợp lệ', 'error');
+            return false;
+        }
+
+        // Password validation
+        if (password.length < 6) {
+            showNotification('Mật khẩu phải có ít nhất 6 ký tự', 'error');
+            return false;
+        }
+
+        if (password !== confirmPassword) {
+            showNotification('Mật khẩu xác nhận không khớp', 'error');
+            return false;
+        }
+
+        // Username validation
+        if (username.length < 3) {
+            showNotification('Tên đăng nhập phải có ít nhất 3 ký tự', 'error');
+            return false;
+        }
+
+        // Phone validation (required)
+        const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/;
+        if (!phoneRegex.test(phone)) {
+            showNotification('Số điện thoại không hợp lệ', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Create user function
+    async function createUser() {
+        if (!validateCreateUserForm()) {
+            return;
+        }
+
+        try {
+            // Show loading
+            const saveBtn = document.getElementById('saveCreateUser');
+            if (!saveBtn) {
+                console.error('Save button not found!');
+                return;
+            }
+            const originalText = saveBtn.textContent;
+            saveBtn.textContent = 'Đang tạo...';
+            saveBtn.disabled = true;
+
+            // Get form data
+            const formData = {
+                fullName: document.getElementById('createUserFullName').value.trim(),
+                email: document.getElementById('createUserEmail').value.trim(),
+                phone: document.getElementById('createUserPhone').value.trim(),
+                username: document.getElementById('createUserUsername').value.trim(),
+                password: document.getElementById('createUserPassword').value,
+                gender: document.getElementById('createUserGender').value || undefined,
+                role: document.getElementById('createUserRole').value,
+            };
+
+            // Call API
+            console.log('Sending form data:', formData);
+            const response = await window.apiService.post('/users', formData);
+            console.log('API response:', response);
+
+            if (response?.success) {
+                showNotification('Tạo người dùng thành công!', 'success');
+                closeCreateUserModal();
+                
+                // Refresh users list if we're on users page
+                if (typeof loadUsersData === 'function') {
+                    await loadUsersData();
+                }
+                
+                // Refresh user stats
+                if (typeof updateUserStats === 'function') {
+                    updateUserStats();
+                }
+            } else {
+                console.error('API error:', response);
+                showNotification(response?.message || 'Tạo người dùng thất bại', 'error');
+            }
+        } catch (error) {
+            console.error('Error creating user:', error);
+            showNotification('Có lỗi khi tạo người dùng: ' + (error.message || 'Lỗi không xác định'), 'error');
+        } finally {
+            // Reset button
+            const saveBtn = document.getElementById('saveCreateUser');
+            if (saveBtn) {
+                saveBtn.textContent = 'Tạo người dùng';
+                saveBtn.disabled = false;
+            }
+        }
+    }
+
+    // Event listeners for create user modal
+    document.addEventListener('click', (e) => {
+        console.log('Click event:', e.target, 'ID:', e.target.id);
+        
+        // Check if clicked element is a create user button
+        const isCreateUserButton = e.target && (
+            e.target.id === 'createUserBtn' || 
+            e.target.id === 'btnNewUser' ||
+            e.target.textContent?.includes('Tạo người dùng') ||
+            e.target.textContent?.includes('Tạo người dùng mới') ||
+            e.target.closest('button[class*="btn"][id*="create"]') ||
+            e.target.closest('button[class*="btn"][id*="user"]')
+        );
+        
+        if (isCreateUserButton) {
+            console.log('Create user button clicked');
+            createUserModalIfNotExists();
+            openCreateUserModal();
+        }
+        // Note: Modal button event listeners are added directly to the modal elements
+        // when the modal is created, so we don't need to handle them here
+    });
+
+    // Create modal dynamically if not exists
+    function createUserModalIfNotExists() {
+        // Always remove old modal if exists
+        const oldModal = document.getElementById('createUserModal');
+        if (oldModal) {
+            console.log('Removing old modal...');
+            oldModal.remove();
+        }
+        
+        console.log('Creating modal dynamically...');
+        
+        // Add CSS for modal if not exists
+        if (!document.getElementById('createUserModalCSS')) {
+            const style = document.createElement('style');
+            style.id = 'createUserModalCSS';
+            style.textContent = `
+                    .modal {
+                        position: fixed;
+                        top: 0;
+                        left: 0;
+                        width: 100%;
+                        height: 100%;
+                        background-color: rgba(0, 0, 0, 0.5);
+                        z-index: 1000;
+                        display: flex;
+                        justify-content: center;
+                        align-items: center;
+                    }
+                    .modal-content {
+                        background: white;
+                        border-radius: 12px;
+                        width: 90%;
+                        max-width: 600px;
+                        max-height: 90vh;
+                        overflow-y: auto;
+                        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                    }
+                    .modal-header {
+                        display: flex;
+                        justify-content: space-between;
+                        align-items: center;
+                        padding: 20px 24px;
+                        border-bottom: 1px solid #e5e7eb;
+                    }
+                    .modal-header h3 {
+                        margin: 0;
+                        font-size: 1.25rem;
+                        font-weight: 600;
+                        color: #111827;
+                    }
+                    .modal-close {
+                        background: none;
+                        border: none;
+                        font-size: 1.5rem;
+                        cursor: pointer;
+                        color: #6b7280;
+                        padding: 0;
+                        width: 32px;
+                        height: 32px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-radius: 6px;
+                    }
+                    .modal-close:hover {
+                        background-color: #f3f4f6;
+                        color: #374151;
+                    }
+                    .modal-body {
+                        padding: 24px;
+                    }
+                    .form-grid {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 16px;
+                        margin-bottom: 16px;
+                    }
+                    .form-field {
+                        margin-bottom: 16px;
+                    }
+                    .form-field {
+                        display: flex;
+                        flex-direction: column;
+                    }
+                    .form-field label {
+                        font-weight: 500;
+                        color: #374151;
+                        margin-bottom: 6px;
+                        font-size: 0.875rem;
+                    }
+                    .form-field input,
+                    .form-field select,
+                    .form-field textarea {
+                        padding: 8px 12px;
+                        border: 1px solid #d1d5db;
+                        border-radius: 6px;
+                        font-size: 0.875rem;
+                        transition: border-color 0.2s;
+                    }
+                    .form-field input:focus,
+                    .form-field select:focus,
+                    .form-field textarea:focus {
+                        outline: none;
+                        border-color: #3b82f6;
+                        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+                    }
+                    .modal-footer {
+                        display: flex;
+                        justify-content: flex-end;
+                        gap: 12px;
+                        padding: 20px 24px;
+                        border-top: 1px solid #e5e7eb;
+                    }
+                    .modal-footer .btn {
+                        padding: 8px 16px;
+                        border-radius: 6px;
+                        font-size: 0.875rem;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.2s;
+                    }
+                    .modal-footer .btn:not([style*="background"]) {
+                        background: #f3f4f6;
+                        color: #374151;
+                        border: 1px solid #d1d5db;
+                    }
+                    .modal-footer .btn:not([style*="background"]):hover {
+                        background: #e5e7eb;
+                    }
+                `;
+            document.head.appendChild(style);
+        }
+        
+        const modal = document.createElement('div');
+        modal.id = 'createUserModal';
+        modal.className = 'modal';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Tạo người dùng mới</h3>
+                        <button class="modal-close" id="closeCreateUserModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="createUserForm">
+                            <div class="form-field">
+                                <label>Họ và tên *</label>
+                                <input type="text" id="createUserFullName" class="input" placeholder="Họ và tên của bạn..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Email *</label>
+                                <input type="email" id="createUserEmail" class="input" placeholder="Nhập email của bạn..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Số điện thoại *</label>
+                                <input type="tel" id="createUserPhone" class="input" placeholder="Nhập số điện thoại..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Tên đăng nhập *</label>
+                                <input type="text" id="createUserUsername" class="input" placeholder="Nhập tài khoản đăng nhập..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Mật khẩu *</label>
+                                <input type="password" id="createUserPassword" class="input" placeholder="Nhập mật khẩu..." required minlength="6">
+                            </div>
+                            <div class="form-field">
+                                <label>Xác nhận mật khẩu *</label>
+                                <input type="password" id="createUserConfirmPassword" class="input" placeholder="Xác nhận mật khẩu..." required minlength="6">
+                            </div>
+                            <div class="form-field">
+                                <label>Giới tính</label>
+                                <select id="createUserGender" class="select">
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Vai trò *</label>
+                                <select id="createUserRole" class="select" required>
+                                    <option value="USER">Người dùng</option>
+                                    <option value="ADMIN">Quản trị viên</option>
+                                </select>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" id="cancelCreateUser">Hủy</button>
+                        <button type="button" class="btn" id="saveCreateUser" style="background:#22c55e;color:#fff;border-color:#16a34a">Tạo người dùng</button>
+                    </div>
+                </div>
+        `;
+        document.body.appendChild(modal);
+        console.log('Modal created and added to DOM');
+        
+        // Add event listeners to the newly created modal
+        const closeBtn = modal.querySelector('#closeCreateUserModal');
+        const cancelBtn = modal.querySelector('#cancelCreateUser');
+        const saveBtn = modal.querySelector('#saveCreateUser');
+        
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeCreateUserModal);
+            console.log('Close button event listener added');
+        }
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeCreateUserModal);
+            console.log('Cancel button event listener added');
+        }
+        if (saveBtn) {
+            saveBtn.addEventListener('click', createUser);
+            console.log('Save button event listener added');
+        }
+        
+        return modal;
+    }
+
+    // Wait for DOM to be ready before setting up event listeners
+    function setupCreateUserButton() {
+        // Try multiple selectors to find the button
+        const selectors = ['#createUserBtn', '#btnNewUser', 'button[class*="btn"][id*="create"]', 'button[class*="btn"][id*="user"]'];
+        let button = null;
+        
+        for (const selector of selectors) {
+            button = document.querySelector(selector);
+            if (button) {
+                console.log('Create user button found with selector:', selector, 'ID:', button.id);
+                break;
+            }
+        }
+        
+        if (button) {
+            console.log('Adding event listener to button:', button.id);
+            button.addEventListener('click', (e) => {
+                console.log('Direct event listener triggered for:', button.id);
+                e.preventDefault();
+                createUserModalIfNotExists();
+                openCreateUserModal();
+            });
+            return true;
+        } else {
+            console.error('Create user button not found! Tried selectors:', selectors);
+            return false;
+        }
+    }
+
+    // Try to setup button immediately
+    if (!setupCreateUserButton()) {
+        // If not found, wait for DOM to be ready
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('DOM loaded, trying to setup create user button again');
+            setupCreateUserButton();
+        });
+        
+        // Also try after a delay as fallback
+        setTimeout(() => {
+            console.log('Timeout reached, trying to setup create user button again');
+            setupCreateUserButton();
+        }, 2000);
+    }
+
+    // Close modal when clicking outside
+    document.addEventListener('click', (e) => {
+        if (e.target && e.target.id === 'createUserModal') {
+            closeCreateUserModal();
+        }
+    });
+
+    // Add global event listener for modal close when clicking outside
+    document.addEventListener('click', (e) => {
+        const modal = document.getElementById('createUserModal');
+        if (modal && modal.style.display === 'flex' && e.target === modal) {
+            closeCreateUserModal();
+        }
+    });
+
+    // Initialize modal on page load
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log('DOM loaded, initializing create user modal');
+        createUserModalIfNotExists();
+    });
+    
+    // Also try immediately
+    createUserModalIfNotExists();
+    
+    // Try again after a delay to ensure everything is loaded
+    setTimeout(() => {
+        console.log('Delayed initialization of create user modal');
+        createUserModalIfNotExists();
+    }, 1000);
+    
+    // Make sure modal is available globally
+    window.createUserModalIfNotExists = createUserModalIfNotExists;
+    window.openCreateUserModal = openCreateUserModal;
+    window.closeCreateUserModal = closeCreateUserModal;
+    window.createUser = createUser;
+    window.setupCreateUserButton = setupCreateUserButton;
 
     // Make functions global
     window.addProduct = addProduct;

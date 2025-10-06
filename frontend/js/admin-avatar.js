@@ -13,8 +13,12 @@ class AdminAvatarManager {
         
         // Listen for auth context changes
         window.addEventListener('authContextChanged', (e) => {
+            console.log('AdminAvatar: Auth context changed to:', e.detail.context);
             if (e.detail.context === 'admin') {
                 this.loadAdminData();
+            } else {
+                // Clear admin UI when context is not admin
+                this.clearAdminUI();
             }
         });
     }
@@ -22,6 +26,14 @@ class AdminAvatarManager {
     // Load admin data from localStorage or API
     async loadAdminData() {
         try {
+            // Check if admin token exists first
+            const adminToken = localStorage.getItem('admin_token');
+            if (!adminToken) {
+                console.log('AdminAvatar: No admin token found, clearing UI');
+                this.clearAdminUI();
+                return;
+            }
+
             // Try to get from localStorage first
             const adminData = localStorage.getItem('admin_data');
             if (adminData) {
@@ -31,17 +43,20 @@ class AdminAvatarManager {
             }
 
             // If not in localStorage, try to get from API
-            const adminToken = localStorage.getItem('admin_token');
-            if (adminToken && typeof window.apiService !== 'undefined') {
+            if (typeof window.apiService !== 'undefined') {
                 const response = await window.apiService.get('/users/profile');
                 if (response.success) {
                     this.adminData = response.data;
                     localStorage.setItem('admin_data', JSON.stringify(this.adminData));
                     this.updateAdminUI(this.adminData);
+                } else {
+                    console.log('AdminAvatar: Failed to load admin data from API');
+                    this.clearAdminUI();
                 }
             }
         } catch (error) {
             console.error('Error loading admin data:', error);
+            this.clearAdminUI();
         }
     }
 
@@ -67,6 +82,37 @@ class AdminAvatarManager {
 
         } catch (error) {
             console.error('Error updating admin UI:', error);
+        }
+    }
+
+    // Clear admin UI when context is not admin
+    clearAdminUI() {
+        try {
+            console.log('AdminAvatar: Clearing admin UI');
+            
+            // Clear admin full name
+            const adminFullName = document.getElementById('adminFullName');
+            if (adminFullName) {
+                adminFullName.textContent = 'Admin';
+            }
+
+            // Clear admin role
+            const adminRole = document.getElementById('adminRole');
+            if (adminRole) {
+                adminRole.textContent = 'Quản trị hệ thống';
+            }
+
+            // Clear admin avatar
+            const adminInitials = document.getElementById('adminInitials');
+            if (adminInitials) {
+                adminInitials.textContent = 'A';
+            }
+
+            // Clear admin data
+            this.adminData = null;
+
+        } catch (error) {
+            console.error('Error clearing admin UI:', error);
         }
     }
 

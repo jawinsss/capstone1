@@ -1,10 +1,68 @@
-import { Injectable, NotFoundException, ForbiddenException } from '@nestjs/common';
+import { Injectable, NotFoundException, ForbiddenException, ConflictException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
+import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
   constructor(private prisma: PrismaService) {}
+
+  async create(createUserDto: CreateUserDto, currentUser: any) {
+    // Only admins can create users
+    if (currentUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can create users');
+    }
+
+    // Check if user already exists
+    const existingUser = await this.prisma.user.findFirst({
+      where: {
+        OR: [
+          { email: createUserDto.email },
+          { username: createUserDto.username }
+        ]
+      }
+    });
+
+    if (existingUser) {
+      throw new ConflictException('User with this email or username already exists');
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(createUserDto.password, 10);
+
+    // Create user
+    const user = await this.prisma.user.create({
+      data: {
+        email: createUserDto.email,
+        username: createUserDto.username,
+        password: hashedPassword,
+        fullName: createUserDto.fullName,
+        phone: createUserDto.phone,
+        gender: createUserDto.gender,
+        role: createUserDto.role || 'USER',
+        isActive: true,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        avt_img: true,
+        gender: true,
+        role: true,
+        isActive: true,
+        createdAt: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: user,
+      message: 'User created successfully'
+    };
+  }
 
   async findAll() {
     const users = await this.prisma.user.findMany({

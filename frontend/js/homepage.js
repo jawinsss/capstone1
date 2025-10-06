@@ -75,12 +75,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Use AuthContextManager if available
     if (typeof window !== 'undefined' && window.authContextManager) {
+      // Force switch to user context for user pages
+      window.authContextManager.forceSwitchToUser();
+      
       user = window.authContextManager.getCurrentUserData();
       token = window.authContextManager.getCurrentToken();
     } else {
-      // Fallback to legacy logic
-      try { user = JSON.parse(localStorage.getItem('user_data') || localStorage.getItem('admin_data') || localStorage.getItem('user') || 'null'); } catch(_) {}
-      token = localStorage.getItem('user_token') || localStorage.getItem('admin_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
+      // Fallback to legacy logic - only use user data for user pages
+      try { user = JSON.parse(localStorage.getItem('user_data') || localStorage.getItem('user') || 'null'); } catch(_) {}
+      token = localStorage.getItem('user_token') || localStorage.getItem('token') || localStorage.getItem('accessToken');
     }
     
     if(!user && token){
@@ -117,17 +120,27 @@ document.addEventListener('DOMContentLoaded', () => {
   if(logoutBtn){
     logoutBtn.addEventListener('click', ()=>{
       try {
-        // Clear all authentication data
-        ['user_token','user_data','token','accessToken','refreshToken','user','admin_token','admin_data'].forEach(k=>{
-          localStorage.removeItem(k); 
-          sessionStorage.removeItem(k);
-        });
+        console.log('Homepage: User logout clicked');
+        console.log('Homepage: Before logout - user_token:', !!localStorage.getItem('user_token'));
+        console.log('Homepage: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
         
         // Use auth context manager if available
         if (typeof window.authContextManager !== 'undefined') {
+          // Only logout user, keep admin context if exists
           window.authContextManager.logoutUser();
+        } else {
+          // Fallback: only clear user data, keep admin data
+          ['user_token','user_data','token','accessToken','refreshToken','user'].forEach(k=>{
+            localStorage.removeItem(k); 
+            sessionStorage.removeItem(k);
+          });
         }
-      } catch(_){}
+        
+        console.log('Homepage: After logout - user_token:', !!localStorage.getItem('user_token'));
+        console.log('Homepage: After logout - admin_token:', !!localStorage.getItem('admin_token'));
+      } catch(error){
+        console.error('Logout error:', error);
+      }
       // Refresh current page
       window.location.reload();
     });

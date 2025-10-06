@@ -10,6 +10,8 @@ const CONFIG = {
         USERS: {
             PROFILE: '/users/profile',
             UPDATE: '/users/profile',
+            CREATE: '/users',
+            LIST: '/users',
         },
         PRODUCTS: {
             LIST: '/products',
