@@ -3,6 +3,7 @@ import { ApiTags, ApiOperation, ApiResponse, ApiBearerAuth } from '@nestjs/swagg
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { EditUserAdminDto } from './dto/edit-user-admin.dto';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -113,5 +114,29 @@ export class UsersController {
   @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
   activate(@Param('id') id: string, @Req() req) {
     return this.usersService.activate(id, req.user);
+  }
+
+  @Patch(':id/edit')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Chỉnh sửa thông tin người dùng (Admin only) - Không bao gồm địa chỉ và username' })
+  @ApiResponse({ status: 200, description: 'Chỉnh sửa thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
+  editUser(@Param('id') id: string, @Body() editUserAdminDto: EditUserAdminDto, @Req() req) {
+    return this.usersService.editUser(id, editUserAdminDto, req.user);
+  }
+
+  @Patch(':id/reset-password')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Reset mật khẩu người dùng về mặc định là 1 (Admin only)' })
+  @ApiResponse({ status: 200, description: 'Reset mật khẩu thành công' })
+  @ApiResponse({ status: 403, description: 'Không có quyền truy cập' })
+  @ApiResponse({ status: 404, description: 'Không tìm thấy người dùng' })
+  resetPassword(@Param('id') id: string, @Req() req) {
+    return this.usersService.resetPassword(id, req.user);
   }
 }

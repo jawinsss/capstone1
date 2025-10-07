@@ -2,6 +2,7 @@ import { Injectable, NotFoundException, ForbiddenException, ConflictException, B
 import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
+import { EditUserAdminDto } from './dto/edit-user-admin.dto';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -226,5 +227,92 @@ export class UsersService {
       where: { id },
       data: { isActive: true },
     });
+  }
+
+  async editUser(id: string, editUserAdminDto: EditUserAdminDto, currentUser: any) {
+    // Check if user exists
+    const existingUser = await this.findOne(id);
+
+    // Only admins can edit users
+    if (currentUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can edit users');
+    }
+
+    // Check if email is being changed and if it already exists
+    if (editUserAdminDto.email && editUserAdminDto.email !== existingUser.email) {
+      const emailExists = await this.prisma.user.findFirst({
+        where: { 
+          email: editUserAdminDto.email,
+          id: { not: id }
+        }
+      });
+
+      if (emailExists) {
+        throw new ConflictException('Email already exists');
+      }
+    }
+
+    // Update user with only allowed fields (no address or username)
+    const updatedUser = await this.prisma.user.update({
+      where: { id },
+      data: {
+        fullName: editUserAdminDto.fullName,
+        email: editUserAdminDto.email,
+        phone: editUserAdminDto.phone,
+        gender: editUserAdminDto.gender,
+        role: editUserAdminDto.role,
+        avt_img: editUserAdminDto.avt_img,
+        isActive: editUserAdminDto.isActive,
+      },
+      select: {
+        id: true,
+        username: true,
+        email: true,
+        fullName: true,
+        phone: true,
+        avt_img: true,
+        gender: true,
+        role: true,
+        isActive: true,
+        province: true,
+        provinceName: true,
+        district: true,
+        ward: true,
+        wardName: true,
+        street: true,
+        fullAddress: true,
+        updatedAt: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: updatedUser,
+      message: 'User updated successfully'
+    };
+  }
+
+  async resetPassword(id: string, currentUser: any) {
+    // Check if user exists
+    await this.findOne(id);
+
+    // Only admins can reset passwords
+    if (currentUser.role !== 'ADMIN') {
+      throw new ForbiddenException('Only admins can reset passwords');
+    }
+
+    // Hash the default password "1"
+    const hashedPassword = await bcrypt.hash('1', 10);
+
+    // Update password
+    await this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
+    });
+
+    return {
+      success: true,
+      message: 'Password reset successfully to default value'
+    };
   }
 }

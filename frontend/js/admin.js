@@ -1,4 +1,18 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // ====== HELPER FUNCTIONS ======
+    
+    // Email validation
+    function isValidEmail(email) {
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        return emailRegex.test(email);
+    }
+
+    // Phone validation (Vietnamese phone numbers)
+    function isValidPhone(phone) {
+        const phoneRegex = /^(\+84|84|0)[1-9][0-9]{8,9}$/;
+        return phoneRegex.test(phone.replace(/\s/g, ''));
+    }
+
     // ====== GLOBAL VARIABLES ======
     let isLoadingCategories = false;
     let isSubmittingCategory = false;
@@ -2832,7 +2846,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const res = await window.apiService.get(`/users/${userId}`);
             if (res?.success) {
                 const user = res.data;
-                showNotification(`Chỉnh sửa thông tin người dùng: ${user.fullName || user.email}\nChức năng đang phát triển`, 'info');
+                openEditUserModal(user);
             } else {
                 showNotification('Không tìm thấy người dùng', 'error');
             }
@@ -2967,6 +2981,147 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         } else {
             console.error('Modal element not found!');
+        }
+    }
+
+    // ====== EDIT USER MODAL FUNCTIONS ======
+    
+    // Open edit user modal
+    function openEditUserModal(user) {
+        console.log('openEditUserModal called with user:', user);
+        const modal = createEditUserModalIfNotExists();
+        if (modal) {
+            // Populate form with user data
+            populateEditUserForm(user);
+            modal.style.display = 'flex';
+        } else {
+            console.error('Edit user modal element not found!');
+        }
+    }
+
+    // Close edit user modal
+    function closeEditUserModal() {
+        const modal = document.getElementById('editUserModal');
+        if (modal) {
+            modal.style.display = 'none';
+            // Reset form
+            const form = document.getElementById('editUserForm');
+            if (form) {
+                form.reset();
+            }
+        }
+    }
+
+    // Populate edit user form with user data
+    function populateEditUserForm(user) {
+        document.getElementById('editUserFullName').value = user.fullName || '';
+        document.getElementById('editUserEmail').value = user.email || '';
+        document.getElementById('editUserPhone').value = user.phone || '';
+        document.getElementById('editUserGender').value = user.gender || '';
+        document.getElementById('editUserRole').value = user.role || 'USER';
+        document.getElementById('editUserAvatar').value = user.avt_img || '';
+        document.getElementById('editUserIsActive').checked = user.isActive !== false;
+        
+        // Store user ID for later use
+        document.getElementById('editUserForm').setAttribute('data-user-id', user.id);
+    }
+
+    // Validate edit user form
+    function validateEditUserForm() {
+        const fullName = document.getElementById('editUserFullName').value.trim();
+        const email = document.getElementById('editUserEmail').value.trim();
+        const phone = document.getElementById('editUserPhone').value.trim();
+        const gender = document.getElementById('editUserGender').value;
+
+        if (!fullName) {
+            showNotification('Vui lòng nhập họ tên', 'error');
+            return false;
+        }
+
+        if (!email) {
+            showNotification('Vui lòng nhập email', 'error');
+            return false;
+        }
+
+        if (!isValidEmail(email)) {
+            showNotification('Email không hợp lệ', 'error');
+            return false;
+        }
+
+        if (!phone) {
+            showNotification('Vui lòng nhập số điện thoại', 'error');
+            return false;
+        }
+
+        if (!isValidPhone(phone)) {
+            showNotification('Số điện thoại không hợp lệ', 'error');
+            return false;
+        }
+
+        if (!gender) {
+            showNotification('Vui lòng chọn giới tính', 'error');
+            return false;
+        }
+
+        return true;
+    }
+
+    // Save edited user
+    async function saveEditedUser() {
+        if (!validateEditUserForm()) {
+            return;
+        }
+
+        const userId = document.getElementById('editUserForm').getAttribute('data-user-id');
+        if (!userId) {
+            showNotification('Không tìm thấy ID người dùng', 'error');
+            return;
+        }
+
+        const userData = {
+            fullName: document.getElementById('editUserFullName').value.trim(),
+            email: document.getElementById('editUserEmail').value.trim(),
+            phone: document.getElementById('editUserPhone').value.trim(),
+            gender: document.getElementById('editUserGender').value,
+            role: document.getElementById('editUserRole').value,
+            avt_img: document.getElementById('editUserAvatar').value.trim(),
+            isActive: document.getElementById('editUserIsActive').checked
+        };
+
+        try {
+            showNotification('Đang cập nhật thông tin người dùng...', 'info');
+            
+            const response = await window.apiService.patch(`/users/${userId}/edit`, userData);
+            
+            if (response.success) {
+                showNotification('Cập nhật thông tin người dùng thành công!', 'success');
+                closeEditUserModal();
+                // Refresh user list
+                loadUsers();
+            } else {
+                showNotification(response.message || 'Có lỗi khi cập nhật thông tin người dùng', 'error');
+            }
+        } catch (error) {
+            console.error('Error updating user:', error);
+            showNotification('Có lỗi khi cập nhật thông tin người dùng', 'error');
+        }
+    }
+
+    // Reset user password
+    async function resetUserPassword(userId) {
+        try {
+            showNotification('Đang reset mật khẩu...', 'info');
+            
+            const response = await window.apiService.patch(`/users/${userId}/reset-password`);
+            
+            if (response.success) {
+                showNotification('Reset mật khẩu thành công! Mật khẩu mới là: 1', 'success');
+            } else {
+                showNotification(response.message || 'Có lỗi khi reset mật khẩu', 'error');
+            }
+        } catch (error) {
+            console.error('Error resetting password:', error);
+            showNotification('Có lỗi khi reset mật khẩu', 'error');
         }
     }
 
@@ -3336,6 +3491,118 @@ document.addEventListener('DOMContentLoaded', async () => {
         return modal;
     }
 
+    // Create edit user modal dynamically if not exists
+    function createEditUserModalIfNotExists() {
+        // Always remove old modal if exists
+        const oldModal = document.getElementById('editUserModal');
+        if (oldModal) {
+            console.log('Removing old edit user modal...');
+            oldModal.remove();
+        }
+        
+        console.log('Creating edit user modal dynamically...');
+        
+        const modal = document.createElement('div');
+        modal.id = 'editUserModal';
+        modal.className = 'modal';
+        modal.style.display = 'none';
+        modal.innerHTML = `
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h3>Chỉnh sửa thông tin người dùng</h3>
+                        <button class="modal-close" id="closeEditUserModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editUserForm">
+                            <div class="form-field">
+                                <label>Họ và tên *</label>
+                                <input type="text" id="editUserFullName" class="input" placeholder="Họ và tên của bạn..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Email *</label>
+                                <input type="email" id="editUserEmail" class="input" placeholder="Nhập email của bạn..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Số điện thoại *</label>
+                                <input type="tel" id="editUserPhone" class="input" placeholder="Nhập số điện thoại..." required>
+                            </div>
+                            <div class="form-field">
+                                <label>Giới tính *</label>
+                                <select id="editUserGender" class="select" required>
+                                    <option value="">Chọn giới tính</option>
+                                    <option value="Nam">Nam</option>
+                                    <option value="Nữ">Nữ</option>
+                                    <option value="Khác">Khác</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Vai trò *</label>
+                                <select id="editUserRole" class="select" required>
+                                    <option value="USER">Người dùng</option>
+                                    <option value="ADMIN">Quản trị viên</option>
+                                </select>
+                            </div>
+                            <div class="form-field">
+                                <label>Avatar URL</label>
+                                <input type="url" id="editUserAvatar" class="input" placeholder="URL hình ảnh avatar...">
+                            </div>
+                            <div class="form-field">
+                                <label>
+                                    <input type="checkbox" id="editUserIsActive" style="margin-right: 8px;">
+                                    Tài khoản hoạt động
+                                </label>
+                            </div>
+                            <div class="form-field">
+                                <label style="color: #6b7280; font-size: 0.875rem;">
+                                    <strong>Lưu ý:</strong> Không thể chỉnh sửa tên đăng nhập và địa chỉ. 
+                                    Sử dụng nút "Reset mật khẩu" để đặt lại mật khẩu về mặc định.
+                                </label>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn" id="resetPasswordBtn" style="background:#f59e0b;color:#fff;border-color:#d97706">Reset mật khẩu</button>
+                        <button type="button" class="btn" id="cancelEditUser">Hủy</button>
+                        <button type="button" class="btn" id="saveEditUser" style="background:#22c55e;color:#fff;border-color:#16a34a">Lưu thay đổi</button>
+                    </div>
+                </div>
+        `;
+        document.body.appendChild(modal);
+
+        // Add event listeners
+        const closeBtn = document.getElementById('closeEditUserModal');
+        const cancelBtn = document.getElementById('cancelEditUser');
+        const saveBtn = document.getElementById('saveEditUser');
+        const resetBtn = document.getElementById('resetPasswordBtn');
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', closeEditUserModal);
+        }
+        
+        if (cancelBtn) {
+            cancelBtn.addEventListener('click', closeEditUserModal);
+        }
+        
+        if (saveBtn) {
+            saveBtn.addEventListener('click', saveEditedUser);
+        }
+
+        if (resetBtn) {
+            resetBtn.addEventListener('click', () => {
+                const userId = document.getElementById('editUserForm').getAttribute('data-user-id');
+                if (userId) {
+                    if (confirm('Bạn có chắc chắn muốn reset mật khẩu của người dùng này về mặc định (1) không?')) {
+                        resetUserPassword(userId);
+                    }
+                } else {
+                    showNotification('Không tìm thấy ID người dùng', 'error');
+                }
+            });
+        }
+        
+        return modal;
+    }
+
     // Wait for DOM to be ready before setting up event listeners
     function setupCreateUserButton() {
         // Try multiple selectors to find the button
@@ -3416,6 +3683,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.closeCreateUserModal = closeCreateUserModal;
     window.createUser = createUser;
     window.setupCreateUserButton = setupCreateUserButton;
+
+    // Make edit user functions global
+    window.createEditUserModalIfNotExists = createEditUserModalIfNotExists;
+    window.openEditUserModal = openEditUserModal;
+    window.closeEditUserModal = closeEditUserModal;
+    window.saveEditedUser = saveEditedUser;
+    window.resetUserPassword = resetUserPassword;
 
     // Make functions global
     window.addProduct = addProduct;
