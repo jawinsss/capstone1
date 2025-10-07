@@ -1,9 +1,13 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class OrdersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   list() {
     return this.prisma.order.findMany({
@@ -12,10 +16,43 @@ export class OrdersService {
     });
   }
 
-  async updateStatus(id: string, status: 'PENDING'|'CONFIRMED'|'SHIPPING'|'COMPLETED'|'CANCELLED') {
-    const exists = await this.prisma.order.findUnique({ where: { id }, select: { id: true } });
-    if (!exists) throw new NotFoundException('Order not found');
-    return this.prisma.order.update({ where: { id }, data: { status } });
+  async updateStatus(id: string, status: 'PENDING'|'CONFIRMED'|'SHIPPING'|'COMPLETED'|'CANCELLED', userId?: string) {
+    const order = await this.prisma.order.findUnique({ 
+      where: { id }, 
+      select: { id: true, status: true, userId: true } 
+    });
+    if (!order) throw new NotFoundException('Order not found');
+    
+    const updatedOrder = await this.prisma.order.update({ 
+      where: { id }, 
+      data: { status },
+      include: { user: true }
+    });
+
+    // Create audit log for order status update if userId is provided
+    if (userId) {
+      try {
+        await this.auditService.createAuditLog({
+          userId: userId,
+          action: 'UPDATE',
+          resource: 'ORDER',
+          resourceId: order.id,
+          details: {
+            orderId: order.id,
+            oldStatus: order.status,
+            newStatus: status,
+            updatedBy: userId,
+            orderOwner: order.userId
+          },
+          ipAddress: null, // Will be set by controller if available
+          userAgent: null, // Will be set by controller if available
+        });
+      } catch (error) {
+        console.error('Failed to create audit log for order status update:', error);
+      }
+    }
+
+    return updatedOrder;
   }
 
   async getUserOrders(userId: string) {

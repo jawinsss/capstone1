@@ -15,6 +15,7 @@ import { ReviewsModule } from './reviews/reviews.module';
 import { ContactModule } from './contact/contact.module';
 import { LocationsModule } from './locations/locations.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { AuditModule } from './audit/audit.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { NotificationsModule } from './notifications/notifications.module';
     ContactModule,
     LocationsModule,
     NotificationsModule,
+    AuditModule,
   ],
   controllers: [HealthController],
 })

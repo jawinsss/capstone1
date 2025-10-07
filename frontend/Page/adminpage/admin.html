@@ -70,6 +70,9 @@
             <a class="nav-item" href="#banner" data-link="banner">
                 <i class="fa-solid fa-flag"></i><span>Banner quảng cáo</span>
             </a>
+            <a class="nav-item" href="#audit" data-link="audit">
+                <i class="fa-solid fa-clipboard-list"></i><span>Audit Log</span>
+            </a>
         </nav>
     </aside>
 
@@ -659,6 +662,126 @@
                     <div class="panel-title"><i class="fa-solid fa-gift"></i> Khuyến mại nhân dịp đại lễ 2/9</div>
                     <div class="list-sub">Giảm tới 29%</div>
                 </section>
+            </section>
+
+            <!-- =========== audit log ========= -->
+            <section id="view-audit" data-view="audit" hidden>
+                <h1>Audit Log</h1>
+                <p class="muted">Theo dõi và quản lý nhật ký hoạt động hệ thống</p>
+
+                <!-- Audit Stats -->
+                <section class="order-stats">
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tổng số log</div>
+                        <div class="order-stat-value" id="totalAuditLogs">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Hôm nay</div>
+                        <div class="order-stat-value" id="todayAuditLogs">0</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Hoạt động phổ biến</div>
+                        <div class="order-stat-value" id="topAction">-</div>
+                    </div>
+                    <div class="order-stat">
+                        <div class="order-stat-title">Tài nguyên phổ biến</div>
+                        <div class="order-stat-value" id="topResource">-</div>
+                    </div>
+                </section>
+
+                <!-- Filters -->
+                <section class="order-filter panel">
+                    <div class="panel-title">
+                        Bộ lọc <a class="link-reset" href="#" id="resetAuditFilters">Đặt lại</a>
+                    </div>
+                    <div class="filter-grid">
+                        <div class="filter-field">
+                            <label>Người dùng</label>
+                            <select class="select" id="auditUserFilter">
+                                <option value="">Tất cả người dùng</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Hành động</label>
+                            <select class="select" id="auditActionFilter">
+                                <option value="">Tất cả hành động</option>
+                                <option value="CREATE">Tạo mới</option>
+                                <option value="UPDATE">Cập nhật</option>
+                                <option value="DELETE">Xóa</option>
+                                <option value="LOGIN">Đăng nhập</option>
+                                <option value="LOGOUT">Đăng xuất</option>
+                                <option value="VIEW">Xem</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Tài nguyên</label>
+                            <select class="select" id="auditResourceFilter">
+                                <option value="">Tất cả tài nguyên</option>
+                                <option value="USER">Người dùng</option>
+                                <option value="PRODUCT">Sản phẩm</option>
+                                <option value="ORDER">Đơn hàng</option>
+                                <option value="CATEGORY">Danh mục</option>
+                                <option value="PAYMENT">Thanh toán</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label>Tìm kiếm</label>
+                            <input type="text" class="input" id="auditSearchInput" placeholder="Tìm kiếm...">
+                        </div>
+                    </div>
+                    <div class="filter-grid" style="margin-top: 12px;">
+                        <div class="filter-field">
+                            <label>Từ ngày</label>
+                            <input type="date" class="input" id="auditStartDate">
+                        </div>
+                        <div class="filter-field">
+                            <label>Đến ngày</label>
+                            <input type="date" class="input" id="auditEndDate">
+                        </div>
+                        <div class="filter-field">
+                            <label>Số lượng hiển thị</label>
+                            <select class="select" id="auditLimitSelect">
+                                <option value="20">20</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <button class="btn" id="applyAuditFilters" style="background: #3b82f6; color: white; border-color: #2563eb;">
+                                <i class="fa-solid fa-filter"></i> Áp dụng bộ lọc
+                            </button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Audit Logs List -->
+                <section class="panel">
+                    <div class="panel-title">
+                        Danh sách Audit Log
+                        <button class="btn" id="refreshAuditLogs" style="margin-left: auto;">
+                            <i class="fa-solid fa-refresh"></i> Làm mới
+                        </button>
+                    </div>
+                    <div class="audit-logs-container" id="auditLogsContainer">
+                        <!-- Audit logs will be loaded here -->
+                    </div>
+                    <div class="audit-pagination" id="auditPagination">
+                        <!-- Pagination will be loaded here -->
+                    </div>
+                </section>
+
+                <!-- Audit Log Details Modal -->
+                <div id="auditLogDetailsModal" class="modal" style="display: none;">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h3>Chi tiết Audit Log</h3>
+                            <button class="modal-close" id="closeAuditDetailsModal">&times;</button>
+                        </div>
+                        <div class="modal-body" id="auditLogDetailsContent">
+                            <!-- Details will be loaded here -->
+                        </div>
+                    </div>
+                </div>
             </section>
         </main>
     </div>

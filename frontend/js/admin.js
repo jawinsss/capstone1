@@ -18,6 +18,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     let isSubmittingCategory = false;
     let submitTimeout = null;
     
+    // Audit log variables
+    let currentAuditPage = 1;
+    let currentAuditLimit = 20;
+    let currentAuditFilters = {};
+    let auditLogs = [];
+    let auditStats = null;
+    
     // ====== CATEGORIES FROM API ======
     var categories = []; // Global categories array
 
@@ -296,6 +303,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (route === 'feedbacks') initFeedbacksView();
             if (route === 'reports') initReportsView();
             if (route === 'banner') initBannerView();
+            if (route === 'audit') initializeAuditLog();
             inited.add(route);
         }
 
@@ -3690,6 +3698,408 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.closeEditUserModal = closeEditUserModal;
     window.saveEditedUser = saveEditedUser;
     window.resetUserPassword = resetUserPassword;
+
+    // ====== AUDIT LOG FUNCTIONS ======
+
+    // Load audit logs from API
+    async function loadAuditLogs(page = 1, limit = 20, filters = {}) {
+        try {
+            showAuditLoading();
+            
+            const queryParams = new URLSearchParams({
+                page: page.toString(),
+                limit: limit.toString(),
+                ...filters
+            });
+
+            const response = await window.apiService.get(`/audit?${queryParams}`);
+            
+            if (response?.success && response.data) {
+                auditLogs = response.data.data || [];
+                const pagination = response.data.pagination || {};
+                
+                renderAuditLogs(auditLogs);
+                renderAuditPagination(pagination);
+                
+                currentAuditPage = page;
+                currentAuditLimit = limit;
+                currentAuditFilters = filters;
+            } else {
+                showAuditEmptyState('Không thể tải dữ liệu audit log');
+            }
+        } catch (error) {
+            console.error('Error loading audit logs:', error);
+            showAuditEmptyState('Lỗi khi tải dữ liệu audit log');
+        }
+    }
+
+    // Load audit stats
+    async function loadAuditStats() {
+        try {
+            const response = await window.apiService.get('/audit/stats');
+            
+            if (response?.success && response.data) {
+                auditStats = response.data;
+                renderAuditStats(auditStats);
+            }
+        } catch (error) {
+            console.error('Error loading audit stats:', error);
+        }
+    }
+
+    // Render audit logs
+    function renderAuditLogs(logs) {
+        const container = document.getElementById('auditLogsContainer');
+        if (!container) return;
+
+        if (!logs || logs.length === 0) {
+            showAuditEmptyState('Không có dữ liệu audit log');
+            return;
+        }
+
+        container.innerHTML = logs.map(log => `
+            <div class="audit-log-item" onclick="showAuditLogDetails('${log.id}')">
+                <div class="audit-log-icon ${getActionIconClass(log.action)}">
+                    <i class="fa-solid ${getActionIcon(log.action)}"></i>
+                </div>
+                <div class="audit-log-content">
+                    <div class="audit-log-header">
+                        <span class="audit-log-action">${getActionText(log.action)}</span>
+                        <span class="audit-log-resource">${log.resource}</span>
+                    </div>
+                    <div class="audit-log-user">
+                        <i class="fa-solid fa-user"></i> ${log.user?.fullName || log.user?.username || 'Unknown User'}
+                        ${log.user?.role ? `<span class="user-role ${log.user.role}">${log.user.role}</span>` : ''}
+                    </div>
+                    <div class="audit-log-details">
+                        ${log.details ? JSON.stringify(log.details).substring(0, 100) + '...' : 'Không có chi tiết'}
+                    </div>
+                </div>
+                <div class="audit-log-meta">
+                    <div class="audit-log-time">${formatDateTime(log.timestamp)}</div>
+                    ${log.ipAddress ? `<div class="audit-log-ip">${log.ipAddress}</div>` : ''}
+                </div>
+            </div>
+        `).join('');
+    }
+
+    // Render audit stats
+    function renderAuditStats(stats) {
+        document.getElementById('totalAuditLogs').textContent = stats.totalLogs || 0;
+        document.getElementById('todayAuditLogs').textContent = stats.todayLogs || 0;
+        document.getElementById('topAction').textContent = stats.actionStats?.[0]?.action || '-';
+        document.getElementById('topResource').textContent = stats.resourceStats?.[0]?.resource || '-';
+    }
+
+    // Render pagination
+    function renderAuditPagination(pagination) {
+        const container = document.getElementById('auditPagination');
+        if (!container) return;
+
+        const { page, totalPages, total } = pagination;
+        
+        if (totalPages <= 1) {
+            container.innerHTML = '';
+            return;
+        }
+
+        let paginationHTML = '';
+        
+        // Previous button
+        paginationHTML += `
+            <button class="pagination-btn" ${page <= 1 ? 'disabled' : ''} 
+                    onclick="changeAuditPage(${page - 1})">
+                <i class="fa-solid fa-chevron-left"></i>
+            </button>
+        `;
+
+        // Page numbers
+        const startPage = Math.max(1, page - 2);
+        const endPage = Math.min(totalPages, page + 2);
+
+        for (let i = startPage; i <= endPage; i++) {
+            paginationHTML += `
+                <button class="pagination-btn ${i === page ? 'active' : ''}" 
+                        onclick="changeAuditPage(${i})">
+                    ${i}
+                </button>
+            `;
+        }
+
+        // Next button
+        paginationHTML += `
+            <button class="pagination-btn" ${page >= totalPages ? 'disabled' : ''} 
+                    onclick="changeAuditPage(${page + 1})">
+                <i class="fa-solid fa-chevron-right"></i>
+            </button>
+        `;
+
+        // Info
+        paginationHTML += `
+            <div class="pagination-info">
+                Trang ${page} / ${totalPages} (${total} mục)
+            </div>
+        `;
+
+        container.innerHTML = paginationHTML;
+    }
+
+    // Show audit log details modal
+    async function showAuditLogDetails(logId) {
+        try {
+            const response = await window.apiService.get(`/audit/${logId}`);
+            
+            if (response?.success && response.data) {
+                const log = response.data;
+                const modal = document.getElementById('auditLogDetailsModal');
+                const content = document.getElementById('auditLogDetailsContent');
+                
+                content.innerHTML = `
+                    <div class="audit-log-details-content">
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">Hành động</div>
+                            <div class="audit-detail-value">${getActionText(log.action)}</div>
+                        </div>
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">Tài nguyên</div>
+                            <div class="audit-detail-value">${log.resource}</div>
+                        </div>
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">ID Tài nguyên</div>
+                            <div class="audit-detail-value">${log.resourceId || 'N/A'}</div>
+                        </div>
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">Người thực hiện</div>
+                            <div class="audit-detail-value">
+                                ${log.user?.fullName || log.user?.username || 'Unknown User'}
+                                ${log.user?.email ? `(${log.user.email})` : ''}
+                                ${log.user?.role ? ` - ${log.user.role}` : ''}
+                            </div>
+                        </div>
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">Thời gian</div>
+                            <div class="audit-detail-value">${formatDateTime(log.timestamp)}</div>
+                        </div>
+                        ${log.ipAddress ? `
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">IP Address</div>
+                            <div class="audit-detail-value">${log.ipAddress}</div>
+                        </div>
+                        ` : ''}
+                        ${log.userAgent ? `
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">User Agent</div>
+                            <div class="audit-detail-value">${log.userAgent}</div>
+                        </div>
+                        ` : ''}
+                        ${log.details ? `
+                        <div class="audit-detail-group">
+                            <div class="audit-detail-label">Chi tiết</div>
+                            <div class="audit-detail-value json">${JSON.stringify(log.details, null, 2)}</div>
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+                
+                modal.style.display = 'flex';
+            }
+        } catch (error) {
+            console.error('Error loading audit log details:', error);
+            showNotification('Lỗi khi tải chi tiết audit log', 'error');
+        }
+    }
+
+    // Helper functions
+    function getActionIcon(action) {
+        const icons = {
+            'CREATE': 'fa-plus',
+            'UPDATE': 'fa-edit',
+            'DELETE': 'fa-trash',
+            'LOGIN': 'fa-sign-in-alt',
+            'LOGOUT': 'fa-sign-out-alt',
+            'VIEW': 'fa-eye'
+        };
+        return icons[action] || 'fa-circle';
+    }
+
+    function getActionIconClass(action) {
+        const classes = {
+            'CREATE': 'create',
+            'UPDATE': 'update',
+            'DELETE': 'delete',
+            'LOGIN': 'login',
+            'LOGOUT': 'logout',
+            'VIEW': 'view'
+        };
+        return classes[action] || 'view';
+    }
+
+    function getActionText(action) {
+        const texts = {
+            'CREATE': 'Tạo mới',
+            'UPDATE': 'Cập nhật',
+            'DELETE': 'Xóa',
+            'LOGIN': 'Đăng nhập',
+            'LOGOUT': 'Đăng xuất',
+            'VIEW': 'Xem'
+        };
+        return texts[action] || action;
+    }
+
+    function formatDateTime(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleString('vi-VN', {
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit'
+        });
+    }
+
+    function showAuditLoading() {
+        const container = document.getElementById('auditLogsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="audit-loading">
+                    <div class="audit-spinner"></div>
+                </div>
+            `;
+        }
+    }
+
+    function showAuditEmptyState(message) {
+        const container = document.getElementById('auditLogsContainer');
+        if (container) {
+            container.innerHTML = `
+                <div class="audit-empty-state">
+                    <i class="fa-solid fa-clipboard-list"></i>
+                    <div>${message}</div>
+                </div>
+            `;
+        }
+    }
+
+    // Event handlers
+    function changeAuditPage(page) {
+        if (page < 1) return;
+        loadAuditLogs(page, currentAuditLimit, currentAuditFilters);
+    }
+
+    function applyAuditFilters() {
+        const filters = {
+            userId: document.getElementById('auditUserFilter')?.value || '',
+            action: document.getElementById('auditActionFilter')?.value || '',
+            resource: document.getElementById('auditResourceFilter')?.value || '',
+            search: document.getElementById('auditSearchInput')?.value || '',
+            startDate: document.getElementById('auditStartDate')?.value || '',
+            endDate: document.getElementById('auditEndDate')?.value || ''
+        };
+
+        // Remove empty filters
+        Object.keys(filters).forEach(key => {
+            if (!filters[key]) delete filters[key];
+        });
+
+        loadAuditLogs(1, currentAuditLimit, filters);
+    }
+
+    function resetAuditFilters() {
+        document.getElementById('auditUserFilter').value = '';
+        document.getElementById('auditActionFilter').value = '';
+        document.getElementById('auditResourceFilter').value = '';
+        document.getElementById('auditSearchInput').value = '';
+        document.getElementById('auditStartDate').value = '';
+        document.getElementById('auditEndDate').value = '';
+        loadAuditLogs(1, currentAuditLimit, {});
+    }
+
+    // Setup audit log event listeners
+    function setupAuditLogEventListeners() {
+        // Apply filters button
+        const applyBtn = document.getElementById('applyAuditFilters');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', applyAuditFilters);
+        }
+
+        // Reset filters button
+        const resetBtn = document.getElementById('resetAuditFilters');
+        if (resetBtn) {
+            resetBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                resetAuditFilters();
+            });
+        }
+
+        // Refresh button
+        const refreshBtn = document.getElementById('refreshAuditLogs');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                loadAuditLogs(currentAuditPage, currentAuditLimit, currentAuditFilters);
+                loadAuditStats();
+            });
+        }
+
+        // Limit select
+        const limitSelect = document.getElementById('auditLimitSelect');
+        if (limitSelect) {
+            limitSelect.addEventListener('change', (e) => {
+                currentAuditLimit = parseInt(e.target.value);
+                loadAuditLogs(1, currentAuditLimit, currentAuditFilters);
+            });
+        }
+
+        // Close details modal
+        const closeModalBtn = document.getElementById('closeAuditDetailsModal');
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', () => {
+                document.getElementById('auditLogDetailsModal').style.display = 'none';
+            });
+        }
+
+        // Close modal when clicking outside
+        const modal = document.getElementById('auditLogDetailsModal');
+        if (modal) {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.style.display = 'none';
+                }
+            });
+        }
+    }
+
+    // Load users for filter dropdown
+    async function loadUsersForAuditFilter() {
+        try {
+            const response = await window.apiService.get('/users');
+            if (response?.success && response.data) {
+                const users = response.data.data || response.data || [];
+                const select = document.getElementById('auditUserFilter');
+                if (select) {
+                    select.innerHTML = '<option value="">Tất cả người dùng</option>' +
+                        users.map(user => `<option value="${user.id}">${user.fullName || user.username} (${user.role})</option>`).join('');
+                }
+            }
+        } catch (error) {
+            console.error('Error loading users for audit filter:', error);
+        }
+    }
+
+    // Initialize audit log when audit view is shown
+    function initializeAuditLog() {
+        loadAuditStats();
+        loadAuditLogs(1, currentAuditLimit, {});
+        loadUsersForAuditFilter();
+        setupAuditLogEventListeners();
+    }
+
+    // Make audit log functions global
+    window.showAuditLogDetails = showAuditLogDetails;
+    window.changeAuditPage = changeAuditPage;
+    window.applyAuditFilters = applyAuditFilters;
+    window.resetAuditFilters = resetAuditFilters;
+    window.initializeAuditLog = initializeAuditLog;
 
     // Make functions global
     window.addProduct = addProduct;

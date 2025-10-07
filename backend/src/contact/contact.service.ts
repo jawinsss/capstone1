@@ -2,12 +2,16 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import * as nodemailer from 'nodemailer';
 import { ContactDto } from './dto/contact.dto';
+import { AuditService } from '../audit/audit.service';
 
 @Injectable()
 export class ContactService {
   private readonly logger = new Logger(ContactService.name);
 
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private auditService: AuditService,
+  ) {}
 
   async sendContactMessage(contactDto: ContactDto) {
     const { name, email, subject, message } = contactDto;
@@ -82,6 +86,29 @@ ${message}
       });
 
       this.logger.log(`Contact message sent successfully from ${email}`);
+      
+      // Create audit log for contact form submission
+      try {
+        await this.auditService.createAuditLog({
+          userId: null, // Contact form can be submitted by anonymous users
+          action: 'CREATE',
+          resource: 'CONTACT',
+          resourceId: `contact-${Date.now()}`, // Generate unique ID
+          details: {
+            contactName: name,
+            contactEmail: email,
+            subject: subject,
+            messageLength: message.length,
+            submissionTime: new Date().toISOString(),
+            isAnonymous: true
+          },
+          ipAddress: null, // Will be set by controller if available
+          userAgent: null, // Will be set by controller if available
+        });
+      } catch (error) {
+        console.error('Failed to create audit log for contact form submission:', error);
+      }
+      
       return { ok: true, message: 'Tin nhắn đã được gửi thành công' };
     } catch (error) {
       this.logger.error('Error sending contact message:', error);

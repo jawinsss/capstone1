@@ -3,11 +3,15 @@ import { PrismaService } from '../prisma/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { CreateUserDto } from './dto/create-user.dto';
 import { EditUserAdminDto } from './dto/edit-user-admin.dto';
+import { AuditService } from '../audit/audit.service';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
 export class UsersService {
-  constructor(private prisma: PrismaService) {}
+  constructor(
+    private prisma: PrismaService,
+    private auditService: AuditService,
+  ) {}
 
   async create(createUserDto: CreateUserDto, currentUser: any) {
     // Only admins can create users
@@ -57,6 +61,32 @@ export class UsersService {
         createdAt: true,
       },
     });
+
+    // Create audit log for user creation
+    try {
+      await this.auditService.createAuditLog({
+        userId: currentUser.id,
+        action: 'CREATE',
+        resource: 'USER',
+        resourceId: user.id,
+        details: {
+          createdUser: {
+            username: user.username,
+            email: user.email,
+            fullName: user.fullName,
+            role: user.role
+          },
+          createdBy: {
+            username: currentUser.username,
+            role: currentUser.role
+          }
+        },
+        ipAddress: null, // Will be set by controller if available
+        userAgent: null, // Will be set by controller if available
+      });
+    } catch (error) {
+      console.error('Failed to create audit log for user creation:', error);
+    }
 
     return {
       success: true,
@@ -140,7 +170,7 @@ export class UsersService {
       throw new ForbiddenException('You can only update your own profile');
     }
 
-    return this.prisma.user.update({
+    const updatedUser = await this.prisma.user.update({
       where: { id },
       data: updateUserDto,
       select: {
@@ -163,6 +193,35 @@ export class UsersService {
         updatedAt: true,
       },
     });
+
+    // Create audit log for user profile update
+    try {
+      await this.auditService.createAuditLog({
+        userId: currentUser.id,
+        action: 'UPDATE',
+        resource: 'USER',
+        resourceId: updatedUser.id,
+        details: {
+          updatedUser: {
+            username: updatedUser.username,
+            email: updatedUser.email,
+            fullName: updatedUser.fullName
+          },
+          updatedFields: Object.keys(updateUserDto),
+          updatedBy: {
+            username: currentUser.username,
+            role: currentUser.role
+          },
+          isSelfUpdate: currentUser.id === id
+        },
+        ipAddress: null, // Will be set by controller if available
+        userAgent: null, // Will be set by controller if available
+      });
+    } catch (error) {
+      console.error('Failed to create audit log for user profile update:', error);
+    }
+
+    return updatedUser;
   }
 
   async remove(id: string, currentUser: any) {

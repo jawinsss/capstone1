@@ -1,5 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
+import { AuditService } from '../audit/audit.service';
 import { Prisma } from '@prisma/client';
 
 export interface CreateProductDto {
@@ -31,7 +32,10 @@ export interface ApiResponse<T = any> {
 
 @Injectable()
 export class ProductsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+  ) {}
 
   async findAll(params?: any) {
     const take = Math.min(Math.max(Number(params?.take) || 12, 1), 100);
@@ -86,7 +90,7 @@ export class ProductsService {
     };
   }
 
-  async findOne(id: string) {
+  async findOne(id: string, userId?: string) {
     try {
       const product = await this.prisma.product.findUnique({
         where: { id },
@@ -98,6 +102,28 @@ export class ProductsService {
           success: false,
           message: 'Product not found'
         };
+      }
+
+      // Create audit log for product view if userId is provided
+      if (userId) {
+        try {
+          await this.auditService.createAuditLog({
+            userId: userId,
+            action: 'VIEW',
+            resource: 'PRODUCT',
+            resourceId: product.id,
+            details: {
+              productName: product.name,
+              productPrice: product.price,
+              category: product.category?.name,
+              viewTime: new Date().toISOString()
+            },
+            ipAddress: null, // Will be set by controller if available
+            userAgent: null, // Will be set by controller if available
+          });
+        } catch (error) {
+          console.error('Failed to create audit log for product view:', error);
+        }
       }
       
       return {
@@ -113,7 +139,7 @@ export class ProductsService {
     }
   }
 
-  async create(dto: CreateProductDto) {
+  async create(dto: CreateProductDto, userId?: string) {
     try {
       // Validate required fields
       if (!dto.name || !dto.categoryId) {
@@ -151,6 +177,29 @@ export class ProductsService {
         include: { images: true, category: true },
       });
 
+      // Create audit log for product creation if userId is provided
+      if (userId) {
+        try {
+          await this.auditService.createAuditLog({
+            userId: userId,
+            action: 'CREATE',
+            resource: 'PRODUCT',
+            resourceId: product.id,
+            details: {
+              productName: product.name,
+              productPrice: product.price,
+              category: product.categoryId,
+              stock: product.stock,
+              createdBy: userId
+            },
+            ipAddress: null, // Will be set by controller if available
+            userAgent: null, // Will be set by controller if available
+          });
+        } catch (error) {
+          console.error('Failed to create audit log for product creation:', error);
+        }
+      }
+
       return {
         success: true,
         data: product
@@ -164,7 +213,7 @@ export class ProductsService {
     }
   }
 
-  async update(id: string, dto: UpdateProductDto) {
+  async update(id: string, dto: UpdateProductDto, userId?: string) {
     try {
       const exists = await this.ensureExists(id);
       if (!exists.success) {
@@ -191,6 +240,30 @@ export class ProductsService {
         },
         include: { images: true, category: true },
       });
+
+      // Create audit log for product update if userId is provided
+      if (userId) {
+        try {
+          await this.auditService.createAuditLog({
+            userId: userId,
+            action: 'UPDATE',
+            resource: 'PRODUCT',
+            resourceId: product.id,
+            details: {
+              productName: product.name,
+              productPrice: product.price,
+              category: product.categoryId,
+              stock: product.stock,
+              updatedFields: Object.keys(dto),
+              updatedBy: userId
+            },
+            ipAddress: null, // Will be set by controller if available
+            userAgent: null, // Will be set by controller if available
+          });
+        } catch (error) {
+          console.error('Failed to create audit log for product update:', error);
+        }
+      }
 
       return {
         success: true,

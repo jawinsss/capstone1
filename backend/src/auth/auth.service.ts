@@ -2,6 +2,7 @@ import { Injectable, UnauthorizedException, BadRequestException, ConflictExcepti
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto, RegisterDto, AuthResponseDto } from './dto/auth.dto';
+import { AuditService } from '../audit/audit.service';
 import * as bcrypt from 'bcryptjs';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class AuthService {
   constructor(
     private prisma: PrismaService,
     private jwtService: JwtService,
+    private auditService: AuditService,
   ) {}
 
   async register(registerDto: RegisterDto): Promise<AuthResponseDto> {
@@ -49,6 +51,27 @@ export class AuthService {
     // Generate JWT token
     const payload = { username: user.username, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
+
+    // Create audit log for user registration
+    try {
+      await this.auditService.createAuditLog({
+        userId: user.id,
+        action: 'CREATE',
+        resource: 'USER',
+        resourceId: user.id,
+        details: {
+          registrationMethod: 'email',
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role
+        },
+        ipAddress: null, // Will be set by controller if available
+        userAgent: null, // Will be set by controller if available
+      });
+    } catch (error) {
+      console.error('Failed to create audit log for registration:', error);
+    }
 
     return {
       accessToken,
@@ -93,6 +116,27 @@ export class AuthService {
     const payload = { username: user.username, sub: user.id, role: user.role };
     const accessToken = this.jwtService.sign(payload);
 
+    // Create audit log for user login
+    try {
+      await this.auditService.createAuditLog({
+        userId: user.id,
+        action: 'LOGIN',
+        resource: 'USER',
+        resourceId: user.id,
+        details: {
+          loginMethod: 'email',
+          username: user.username,
+          email: user.email,
+          role: user.role,
+          isAdmin: loginDto.isAdmin || false
+        },
+        ipAddress: null, // Will be set by controller if available
+        userAgent: null, // Will be set by controller if available
+      });
+    } catch (error) {
+      console.error('Failed to create audit log for login:', error);
+    }
+
     return {
       accessToken,
       user: {
@@ -103,6 +147,28 @@ export class AuthService {
         role: user.role,
       },
     };
+  }
+
+  async logout(userId: string): Promise<{ message: string }> {
+    // Create audit log for user logout
+    try {
+      await this.auditService.createAuditLog({
+        userId: userId,
+        action: 'LOGOUT',
+        resource: 'USER',
+        resourceId: userId,
+        details: {
+          logoutTime: new Date().toISOString(),
+          reason: 'User initiated logout'
+        },
+        ipAddress: null, // Will be set by controller if available
+        userAgent: null, // Will be set by controller if available
+      });
+    } catch (error) {
+      console.error('Failed to create audit log for logout:', error);
+    }
+
+    return { message: 'Logout successful' };
   }
 
   async validateUser(userId: string) {

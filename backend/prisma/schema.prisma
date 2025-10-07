@@ -37,6 +37,7 @@ model User {
   orders    Order[]
   tickets   Ticket[]
   reviews   Review[]
+  auditLogs AuditLog[]
 
   @@map("users")
 }
@@ -213,4 +214,20 @@ model Review {
 enum ReviewStatus {
   PUBLISHED
   HIDDEN
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  userId     String
+  action     String   // CREATE, UPDATE, DELETE, LOGIN, LOGOUT, etc.
+  resource   String   // USER, PRODUCT, ORDER, etc.
+  resourceId String?  // ID of the affected resource
+  details    Json?    // Additional details about the action
+  ipAddress  String?
+  userAgent  String?
+  timestamp  DateTime @default(now())
+
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@map("audit_logs")
 }
