@@ -27,7 +27,7 @@ const HEADER_AVATAR_CONFIG = {
     CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
     
     // Debug mode
-    DEBUG: false
+    DEBUG: true
 };
 
 // ========================================
@@ -303,20 +303,25 @@ async function loadUserProfile() {
             return null;
         }
         
-        // Try to get cached data first
-        const cachedUser = getCachedUserData();
-        if (cachedUser) {
-            log('Using cached user data');
-            return cachedUser;
-        }
+        // Always load fresh data from API to prevent showing cached avatar from previous user
+        log('Loading fresh user data from API to prevent avatar cache issues');
         
         // Load from API
         log('Loading user profile from API');
         const response = await makeApiRequest(HEADER_AVATAR_CONFIG.PROFILE_ENDPOINT);
         
         if (response && response.success && response.data) {
+            // Clear any cached avatar data first
+            localStorage.removeItem('profileAvatar');
+            
             // Cache the user data
             cacheUserData(response.data);
+            
+            // Update localStorage with fresh avatar data if available
+            if (response.data.avt_img) {
+                localStorage.setItem('profileAvatar', response.data.avt_img);
+            }
+            
             return response.data;
         } else {
             log('API response invalid:', response);
@@ -361,10 +366,12 @@ function updateHeaderUserInfo(user) {
             safeTextContent(elements.userInitials, initials);
             safeTextContent(elements.userName, user.fullName);
             
-            // Update avatar image if available
-            if (user.avt_img) {
+            // Update avatar image if available - prioritize database data
+            if (user.avt_img && user.avt_img.trim() !== '') {
+                log('Showing avatar image from database for user:', user.fullName);
                 createAvatarImage(user.avt_img, user.fullName);
             } else {
+                log('No avatar in database, showing initials for user:', user.fullName);
                 // Ensure initials are visible if no avatar image
                 const initialsElement = safeQuerySelector(HEADER_AVATAR_CONFIG.SELECTORS.userInitials);
                 if (initialsElement) {
@@ -433,6 +440,15 @@ function handleLogout() {
             });
         }
         
+        // Clear any cached avatar data to prevent showing old avatar
+        localStorage.removeItem('profileAvatar');
+        
+        // Remove any existing avatar images from DOM
+        const existingImg = document.getElementById('hpUserAvatarImg');
+        if (existingImg) {
+            existingImg.remove();
+        }
+        
         log('HeaderAvatar: After logout - user_token:', !!localStorage.getItem('user_token'));
         log('HeaderAvatar: After logout - admin_token:', !!localStorage.getItem('admin_token'));
         
@@ -469,10 +485,13 @@ async function checkAuthAndUpdateHeader() {
         log('Checking authentication status');
         
         if (isAuthenticated()) {
+            log('User is authenticated, loading profile...');
             // User is logged in, load profile
             const user = await loadUserProfile();
+            log('User profile loaded:', user ? 'Success' : 'Failed');
             updateHeaderUserInfo(user);
         } else {
+            log('User is not authenticated, showing logged out state');
             // User is not logged in
             updateHeaderUserInfo(null);
         }
@@ -561,6 +580,7 @@ async function forceRefreshAvatar() {
 // ========================================
 
 // Initialize when script loads
+console.log('HeaderAvatar: Script loaded, initializing...');
 initializeHeaderAvatar();
 
 // ========================================

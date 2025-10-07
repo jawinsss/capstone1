@@ -137,8 +137,10 @@ async function updateProfileUI(user) {
         if (addressInput) addressInput.value = user.fullAddress;
     }
     
-    // Update avatar from database
-    if (user.avt_img) {
+    // Update avatar from database - clear cache first to prevent showing old avatar
+    localStorage.removeItem('profileAvatar');
+    
+    if (user.avt_img && user.avt_img.trim() !== '') {
         // Store in localStorage for consistency
         localStorage.setItem('profileAvatar', user.avt_img);
         // Apply avatar data
@@ -149,6 +151,16 @@ async function updateProfileUI(user) {
         const removeAvatarBtn = document.getElementById('removeAvatarBtn');
         if (removeAvatarBtn) {
             removeAvatarBtn.style.display = 'inline-block';
+        }
+    } else {
+        // No avatar in database, ensure initials are shown
+        if (typeof applyAvatarData === 'function') {
+            applyAvatarData(null);
+        }
+        // Hide remove button
+        const removeAvatarBtn = document.getElementById('removeAvatarBtn');
+        if (removeAvatarBtn) {
+            removeAvatarBtn.style.display = 'none';
         }
     }
     
@@ -757,9 +769,15 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       }
     }
   
-    // Load stored avatar from localStorage (nếu có)
+    // Load stored avatar from localStorage (nếu có) - but prioritize database data
+    // Note: This will be overridden by fresh data from API in loadUserProfile()
     const storedAvatar = localStorage.getItem('profileAvatar')
-    applyAvatarData(storedAvatar)
+    if (storedAvatar) {
+        applyAvatarData(storedAvatar)
+    } else {
+        // No stored avatar, show initials
+        applyAvatarData(null)
+    }
 
     // Cart button click handler
     const cartBtn = document.getElementById('hpCartBtn');

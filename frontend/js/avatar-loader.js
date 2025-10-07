@@ -42,6 +42,15 @@ class AvatarLoader {
                     avt_img: response.data.avt_img ? 'Has image' : 'No image',
                     avt_img_length: response.data.avt_img ? response.data.avt_img.length : 0
                 });
+                
+                // Clear any cached avatar data to prevent showing old avatar
+                localStorage.removeItem('profileAvatar');
+                
+                // Update localStorage with fresh data from API
+                if (response.data.avt_img) {
+                    localStorage.setItem('profileAvatar', response.data.avt_img);
+                }
+                
                 return response.data;
             } else {
                 console.log('AvatarLoader: Failed to load user profile:', response.message);
@@ -94,10 +103,12 @@ class AvatarLoader {
             userInitials.textContent = initials;
         }
 
-        // Update avatar image
+        // Update avatar image - prioritize database data over cache
         if (user.avt_img && user.avt_img.trim() !== '') {
+            console.log('AvatarLoader: Showing avatar image from database');
             this.showAvatarImage(user.avt_img, user.fullName);
         } else {
+            console.log('AvatarLoader: No avatar in database, showing initials');
             this.showInitialsOnly();
         }
 
@@ -266,6 +277,12 @@ class AvatarLoader {
                     });
                 }
                 
+                // Clear any cached avatar images to prevent showing old avatar
+                const existingImg = document.getElementById('hpUserAvatarImg');
+                if (existingImg) {
+                    existingImg.remove();
+                }
+                
                 console.log('AvatarLoader: After logout - user_token:', !!localStorage.getItem('user_token'));
                 console.log('AvatarLoader: After logout - admin_token:', !!localStorage.getItem('admin_token'));
                 
@@ -294,8 +311,14 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Wait a bit for API service to be ready
     setTimeout(() => {
-        avatarLoader.loadAndUpdateAvatar();
-        avatarLoader.setupLogoutButton();
+        // Only initialize if header-avatar.js is not available
+        if (typeof window.HeaderAvatar === 'undefined') {
+            console.log('AvatarLoader: HeaderAvatar not found, using AvatarLoader');
+            avatarLoader.loadAndUpdateAvatar();
+            avatarLoader.setupLogoutButton();
+        } else {
+            console.log('AvatarLoader: HeaderAvatar found, skipping AvatarLoader initialization');
+        }
     }, 100);
 });
 
