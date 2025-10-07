@@ -418,17 +418,23 @@ function updateHeaderUserInfo(user) {
 function handleLogout() {
     try {
         log('User logging out');
-        
-        // Clear all authentication data
-        ['user_token','user_data','token','user','accessToken','refreshToken','admin_token','admin_data'].forEach(k=>{
-            localStorage.removeItem(k);
-            sessionStorage.removeItem(k);
-        });
+        log('HeaderAvatar: Before logout - user_token:', !!localStorage.getItem('user_token'));
+        log('HeaderAvatar: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
         
         // Use auth context manager if available
         if (typeof window.authContextManager !== 'undefined') {
+            // Only logout user, keep admin context if exists
             window.authContextManager.logoutUser();
+        } else {
+            // Fallback: only clear user data, keep admin data
+            ['user_token','user_data','token','user','accessToken','refreshToken'].forEach(k=>{
+                localStorage.removeItem(k);
+                sessionStorage.removeItem(k);
+            });
         }
+        
+        log('HeaderAvatar: After logout - user_token:', !!localStorage.getItem('user_token'));
+        log('HeaderAvatar: After logout - admin_token:', !!localStorage.getItem('admin_token'));
         
         // Update UI
         updateHeaderUserInfo(null);

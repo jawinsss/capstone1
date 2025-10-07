@@ -67,8 +67,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 
                 // Update AuthContextManager if available
                 if (typeof window !== 'undefined' && window.authContextManager) {
-                    window.authContextManager.updateCurrentContext();
-                    window.authContextManager.dispatchAuthContextChanged();
+                    window.authContextManager.forceSwitchToAdmin();
                 }
                 
                 // Update admin avatar immediately if on admin page

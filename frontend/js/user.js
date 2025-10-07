@@ -74,10 +74,16 @@ function checkAuth() {
     
     if (!token) {
         // Clear all authentication data and refresh
-        ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
-          localStorage.removeItem(k); 
-          sessionStorage.removeItem(k);
-        });
+        // Use AuthContextManager if available
+        if (typeof window !== 'undefined' && window.authContextManager) {
+            window.authContextManager.clearAllContexts();
+        } else {
+            // Fallback: clear all authentication data
+            ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
+              localStorage.removeItem(k); 
+              sessionStorage.removeItem(k);
+            });
+        }
         window.location.reload();
         return false;
     }

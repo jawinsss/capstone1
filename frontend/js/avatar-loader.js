@@ -250,13 +250,24 @@ class AvatarLoader {
         const logoutBtn = document.getElementById('hpLogoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => {
-                console.log('AvatarLoader: User logging out, clearing all data...');
+                console.log('AvatarLoader: User logging out...');
+                console.log('AvatarLoader: Before logout - user_token:', !!localStorage.getItem('user_token'));
+                console.log('AvatarLoader: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
                 
-                // Clear all authentication data
-                ['user_token','user_data','token','user','profileAvatar','accessToken','refreshToken','admin_token','admin_data'].forEach(k=>{
-                    localStorage.removeItem(k);
-                    sessionStorage.removeItem(k);
-                });
+                // Use auth context manager if available
+                if (typeof window.authContextManager !== 'undefined') {
+                    // Only logout user, keep admin context if exists
+                    window.authContextManager.logoutUser();
+                } else {
+                    // Fallback: only clear user data, keep admin data
+                    ['user_token','user_data','token','user','profileAvatar','accessToken','refreshToken'].forEach(k=>{
+                        localStorage.removeItem(k);
+                        sessionStorage.removeItem(k);
+                    });
+                }
+                
+                console.log('AvatarLoader: After logout - user_token:', !!localStorage.getItem('user_token'));
+                console.log('AvatarLoader: After logout - admin_token:', !!localStorage.getItem('admin_token'));
                 
                 // Remove any existing avatar images
                 const existingImg = document.getElementById('hpUserAvatarImg');

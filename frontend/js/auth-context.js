@@ -15,8 +15,12 @@ class AuthContextManager {
         window.addEventListener('storage', (e) => {
             if (e.key === 'user_token' || e.key === 'admin_token' || 
                 e.key === 'user_data' || e.key === 'admin_data') {
-                this.updateCurrentContext();
-                this.dispatchAuthContextChanged();
+                // Only update context if it's a different tab/window
+                // Don't update if it's the same tab (to avoid conflicts)
+                if (e.storageArea === localStorage) {
+                    this.updateCurrentContext();
+                    this.dispatchAuthContextChanged();
+                }
             }
         });
     }
@@ -48,26 +52,27 @@ class AuthContextManager {
     updateCurrentContext() {
         const userToken = localStorage.getItem('user_token');
         const adminToken = localStorage.getItem('admin_token');
+        const currentPath = window.location.pathname;
 
-        if (userToken && adminToken) {
-            // Both contexts exist - determine priority based on current page
-            const currentPath = window.location.pathname;
-            if (currentPath.includes('admin') || currentPath.includes('adminpage')) {
+        // Determine context based on current page first, then available tokens
+        if (currentPath.includes('admin') || currentPath.includes('adminpage')) {
+            // Admin page - only use admin context if admin token exists
+            if (adminToken) {
                 this.currentContext = 'admin';
-                console.log('AuthContext: Switched to admin context (both tokens exist)');
+                console.log('AuthContext: Set to admin context (admin page with admin token)');
             } else {
-                this.currentContext = 'user';
-                console.log('AuthContext: Switched to user context (both tokens exist)');
+                this.currentContext = null;
+                console.log('AuthContext: No context (admin page but no admin token)');
             }
-        } else if (userToken) {
-            this.currentContext = 'user';
-            console.log('AuthContext: Set to user context (user token only)');
-        } else if (adminToken) {
-            this.currentContext = 'admin';
-            console.log('AuthContext: Set to admin context (admin token only)');
         } else {
-            this.currentContext = null;
-            console.log('AuthContext: No context (no tokens)');
+            // User page - only use user context if user token exists
+            if (userToken) {
+                this.currentContext = 'user';
+                console.log('AuthContext: Set to user context (user page with user token)');
+            } else {
+                this.currentContext = null;
+                console.log('AuthContext: No context (user page but no user token)');
+            }
         }
     }
 
@@ -102,7 +107,7 @@ class AuthContextManager {
             localStorage.removeItem('admin_token');
             localStorage.removeItem('admin_data');
         }
-        this.updateCurrentContext();
+        // Don't update current context automatically - let the caller decide
         this.dispatchAuthContextChanged();
     }
 
@@ -115,7 +120,7 @@ class AuthContextManager {
         // Also clear legacy keys
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        this.updateCurrentContext();
+        this.currentContext = null;
         this.dispatchAuthContextChanged();
     }
 
@@ -125,10 +130,22 @@ class AuthContextManager {
         console.log('AuthContext: Before logout - user_token:', !!localStorage.getItem('user_token'));
         console.log('AuthContext: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
         
-        this.clearContext('user');
+        // Clear user context without updating current context
+        localStorage.removeItem('user_token');
+        localStorage.removeItem('user_data');
+        
+        // Set context to null for user pages
+        const currentPath = window.location.pathname;
+        if (!currentPath.includes('admin') && !currentPath.includes('adminpage')) {
+            this.currentContext = null;
+            console.log('AuthContext: Set context to null (user page logout)');
+        }
         
         console.log('AuthContext: After logout - user_token:', !!localStorage.getItem('user_token'));
         console.log('AuthContext: After logout - admin_token:', !!localStorage.getItem('admin_token'));
+        
+        // Dispatch event to notify other components
+        this.dispatchAuthContextChanged();
     }
 
     // Logout admin (only clear admin context)
@@ -137,10 +154,22 @@ class AuthContextManager {
         console.log('AuthContext: Before logout - user_token:', !!localStorage.getItem('user_token'));
         console.log('AuthContext: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
         
-        this.clearContext('admin');
+        // Clear admin context without updating current context
+        localStorage.removeItem('admin_token');
+        localStorage.removeItem('admin_data');
+        
+        // Set context to null for admin pages
+        const currentPath = window.location.pathname;
+        if (currentPath.includes('admin') || currentPath.includes('adminpage')) {
+            this.currentContext = null;
+            console.log('AuthContext: Set context to null (admin page logout)');
+        }
         
         console.log('AuthContext: After logout - user_token:', !!localStorage.getItem('user_token'));
         console.log('AuthContext: After logout - admin_token:', !!localStorage.getItem('admin_token'));
+        
+        // Dispatch event to notify other components
+        this.dispatchAuthContextChanged();
     }
 
     // Dispatch auth context changed event

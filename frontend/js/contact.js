@@ -232,12 +232,27 @@ document.addEventListener('DOMContentLoaded', () => {
     if(logoutBtn){
       logoutBtn.addEventListener('click', ()=>{
         try {
-          // Clear all authentication data
-          ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
-            localStorage.removeItem(k); 
-            sessionStorage.removeItem(k);
-          });
-        } catch(_){}
+          console.log('Contact: User logout clicked');
+          console.log('Contact: Before logout - user_token:', !!localStorage.getItem('user_token'));
+          console.log('Contact: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
+          
+          // Use auth context manager if available
+          if (typeof window.authContextManager !== 'undefined') {
+            // Only logout user, keep admin context if exists
+            window.authContextManager.logoutUser();
+          } else {
+            // Fallback: only clear user data, keep admin data
+            ['user_token','user_data','token','accessToken','refreshToken','user'].forEach(k=>{
+              localStorage.removeItem(k); 
+              sessionStorage.removeItem(k);
+            });
+          }
+          
+          console.log('Contact: After logout - user_token:', !!localStorage.getItem('user_token'));
+          console.log('Contact: After logout - admin_token:', !!localStorage.getItem('admin_token'));
+        } catch(error){
+          console.error('Contact logout error:', error);
+        }
         // Refresh current page
         window.location.reload();
       });
