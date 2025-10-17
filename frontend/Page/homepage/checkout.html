@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="../../styles/homepage.css">
+    <link rel="stylesheet" href="../../styles/checkout.css">
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
@@ -16,6 +17,8 @@
     <script src="../../js/header-avatar.js" defer></script>
     <script src="../../js/avatar-loader.js" defer></script>
     <script src="../../js/cartUtils.js" defer></script>
+    <script src="../../js/payments.js" defer></script>
+    <script src="../../js/checkout.js" defer></script>
     <style>
       .ck-wrap{max-width:900px;margin:24px auto;padding:16px}
       .ck-card{border:1px solid #e5e7eb;border-radius:12px;padding:16px}
@@ -83,15 +86,219 @@
     </header>
 
     <main class="hp-main">
-      <div class="ck-wrap">
-    <a id="ckBack" class="hp-btn" href="#">← Quay lại</a>
-    <h1>Trang thanh toán (đang xây dựng)</h1>
-    <div class="ck-card">
-      <h3>Giỏ hàng của bạn</h3>
-      <div id="ckItems"></div>
-      <p style="color:#6b7280">Tính năng thanh toán sẽ được bổ sung sau.</p>
-    </div>
-      </div>
+      
+      <div class="hp-main-container">
+                <section class="address">
+                    <div class="delivery-address">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <h2>Địa chỉ nhận hàng</h2>
+                    </div>
+                    <div class="address-detail">
+                        <p id="userAddress">Đang tải...</p>
+                        <a href="#">Thay đổi</a>
+                    </div>
+                </section>
+                <div id="addressModal" class="hp-modal1" hidden>
+                    <div class="hp-modal-body1">
+                        <h3>Địa chỉ của tôi</h3>
+                        <div class="address-option">
+                            <!-- Address options will be dynamically loaded from API -->
+                        </div>
+                        
+                        <div class="add-address">
+                            <button id="addAddressBtn" class="hp-btn add-btn">+ Thêm địa chỉ mới</button>
+                            </div>
+                            <div style="margin-top:16px; text-align:right;">
+                            <button id="cancelAddressBtn" class="hp-btn reset">Hủy</button>
+                            <button id="confirmAddressBtn" class="hp-btn primary">Xác nhận</button>
+                        </div>
+                    </div>
+                    <div id="newAddressForm" class="address-form" hidden>
+                    <div class="hp-row">
+                        <input type="text" id="fullName" placeholder="Nhập họ và tên">
+                    </div>
+                    <div class="hp-row">
+                        <input type="text" id="phone" placeholder="Nhập số điện thoại">
+                    </div>
+                    <div class="hp-row">
+                        <select id="province">
+                            <option>Thành phố Hà Nội</option>
+                            <option>Thành phố Huế</option>
+                            <option>Tỉnh Lai Châu</option>
+                            <option>Tỉnh Điện Biên</option>
+                            <option>Tỉnh Sơn La</option>
+                            <option>Tỉnh Lạng Sơn</option>
+                            <option>Tỉnh Quảng Ninh</option>
+                            <option>Tỉnh Thanh Hoá</option>
+                            <option>Tỉnh Nghệ An</option>
+                            <option>Tỉnh Hà Tĩnh</option>
+                            <option>Tỉnh Cao Bằng</option>
+                            <option>Tỉnh Tuyên Quang</option>
+                            <option>Tỉnh Lào Cai</option>
+                            <option>Tỉnh Thái Nguyên</option>
+                            <option>Tỉnh Phú Thọ</option>
+                            <option>Tỉnh Bắc Ninh</option>
+                            <option>Tỉnh Hưng Yên</option>
+                            <option>Thành phố Hải Phòng</option>
+                            <option>Tỉnh Ninh Bình</option>
+                            <option>Tỉnh Quảng Trị</option>
+                            <option>Thành phố Đà Nẵng</option>
+                            <option>Tỉnh Quảng Ngãi</option>
+                            <option>Tỉnh Gia Lai</option>
+                            <option>Tỉnh Khánh Hoà</option>
+                            <option>Tỉnh Lâm Đồng</option>
+                            <option>Tỉnh Đắk Lắk</option>
+                            <option>Thành phố Hồ Chí Minh</option>
+                            <option>Tỉnh Đồng Nai</option>
+                            <option>Tỉnh Tây Ninh</option>
+                            <option>Thành phố Cần Thơ</option>
+                            <option>Tỉnh Vĩnh Long</option>
+                            <option>Tỉnh Đồng Tháp</option>
+                            <option>Tỉnh Cà Mau</option>
+                            <option>Tỉnh An Giang</option>
+                        </select>
+                    </div>
+                    <div class="hp-row">
+                        <select id="Ward">
+                            <option>Quận Hải Châu</option>
+                            <option>Quận Thanh Khê</option>
+                            <option>Quận Sơn Trà</option>
+                            <option>Quận Ngũ Hành Sơn</option>
+                            <option>Quận Liên Chiểu</option>
+                            <option>Huyện Hòa Vang</option>
+                            <option>Huyện Hoàng Sa</option>
+                        </select>
+                    </div>
+                    <div class="hp-row">
+                        <input type="text" id="detail" placeholder="Ví dụ: Số 12, Mạc Đĩnh Chi, Hải Châu">
+                    </div>
+                    <div style="margin-top:10px; text-align:right;">
+                        <button id="cancelNewAddress" class="hp-btn reset">Hủy</button>
+                        <button id="saveNewAddress" class="hp-btn primary">Lưu</button>
+                    </div>
+                </div>
+                </div>
+                
+                <div id="productsGrid" class="products-grid">
+                        <!-- The selected product will be loaded here via API -->
+                </div>
+
+                <section class="voucher-section">
+                    <div class="voucher">
+                        <i class="fa-solid fa-ticket"></i>
+                        <p>Voucher</p>
+                        <a href="#">Chọn Voucher</a>
+                    </div>
+                    <div class="voucher" >
+                        <i class="fa-solid fa-file-export"></i>
+                        <p>Xuất hóa đơn VAT</p>
+                        <label class="switch">
+                            <input type="checkbox" id="vatcheckbox">
+                            <span class="slider round"></span>
+                        </label>
+                        <a href="#">Xem trước hóa đơn</a>
+                    </div>
+                </section>
+                <div id="voucherModal" class="hp-modal1" hidden>
+                    <div class="hp-modal-body1">
+                        <h3>Chọn Voucher</h3>
+                        <div class="voucher-input">
+                            <input type="text" id="voucherCode" placeholder="Nhập mã Voucher">
+                            <button id="applyVoucherBtn" class="hp-btn primary">ÁP DỤNG</button>
+                        </div>
+
+                        <div class="voucher-list">
+                        <div class="voucher-option">
+                            <label>
+                            <input type="radio" name="voucher" value="Giảm 20.000đ đơn từ 100.000đ">
+                            Giảm 20.000đ đơn từ 100.000đ
+                            </label>
+                        </div>
+                        <div class="voucher-option">
+                            <label>
+                            <input type="radio" name="voucher" value="Freeship 15.000đ">
+                            Freeship 15.000đ
+                            </label>
+                        </div>
+                        </div>
+
+                        <div class="voucher-actions">
+                            <button id="cancelVoucherBtn" class="hp-btn reset">TRỞ LẠI</button>
+                            <button id="confirmVoucherBtn" class="hp-btn primary">OK</button>
+                        </div>
+                    </div>
+                </div>
+
+
+                <section class="payment-method1">
+                    <div class="top">
+                        <h2>Phương thức thanh toán</h2>
+                        <h3>Thanh toán khi nhận hàng</h3>
+                        <a href="#">Thay đổi</a>
+                    </div>
+                    <div class="body">
+                        <h3>Tổng tiền hàng</h3>
+                        <div class="product-total-all">...</div>
+                        <h3>Tổng tiền phí vận chuyển</h3>
+                        <div class="shipping-cost">...</div>
+                        <h3>Tổng thanh toán</h3>
+                        <div class="total-payment">...</div>
+                    </div>
+                    <div class="order">
+                        <h3>Nhấn "Đặt hàng" đồng nghĩa với việc bạn đồng ý tuân theo</h3>
+                        <a href="#" class="place-order-btn">Đặt hàng</a>
+                    </div>
+                </section>
+                <!-- Modal thông báo cập nhật địa chỉ -->
+                <div id="addressWarningModal" class="hp-modal1" hidden>
+                    <div class="hp-modal-body1">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        <h3>Vui lòng cập nhật địa chỉ giao hàng trước khi đặt hàng.</h3>
+                        <div class="modal-buttons">
+                            <button id="confirmAddressWarningBtn" class="hp-btn primary">Cập nhật địa chỉ</button>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal thông báo đặt hàng thành công -->
+                <div id="order-successfully" class="hp-modal1" hidden>
+                    <div class="hp-modal-body1">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <h3>Đặt hàng thành công.</h3>
+                        <div class="modal-buttons">
+                            <button id="successfully" class="hp-btn primary">xem hóa đơn</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="paymentModal" class="hp-modal1" hidden>
+                    <div class="hp-modal-body1">
+                        <h3>Chọn phương thức thanh toán</h3>
+                        <div class="address-option">
+                            <label>
+                                <input type="radio" name="payment" value="Thanh toán khi nhận hàng" checked>
+                                Thanh toán khi nhận hàng
+                            </label>
+                        </div>
+                        <div class="address-option">
+                            <label>
+                                <input type="radio" name="payment" value="Ví MoMo">
+                                Ví MoMo
+                            </label>
+                        </div>
+                        <div class="address-option">
+                            <label>
+                                <input type="radio" name="payment" value="Ví ZaloPay">
+                                Ví ZaloPay
+                            </label>
+                        </div>
+                        <div style="margin-top:16px; text-align:right;">
+                        <button id="cancelPaymentBtn" class="hp-btn reset">Hủy</button>
+                        <button id="confirmPaymentBtn" class="hp-btn primary">Xác nhận</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+      
     </main>
 
     <footer class="hp-footer">
@@ -162,7 +369,7 @@
             </div>
         </div>
     </footer>
-
+    
     <script>
         // User session management
         document.addEventListener('DOMContentLoaded', () => {
