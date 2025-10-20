@@ -16,6 +16,7 @@ import { ContactModule } from './contact/contact.module';
 import { LocationsModule } from './locations/locations.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuditModule } from './audit/audit.module';
+import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module';
 
 @Module({
   imports: [
@@ -37,6 +38,7 @@ import { AuditModule } from './audit/audit.module';
     LocationsModule,
     NotificationsModule,
     AuditModule,
+    PaymentGatewayModule,
   ],
   controllers: [HealthController],
 })
