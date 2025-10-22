@@ -164,44 +164,42 @@ class CartUtils {
         console.log('Cart initialized with count:', currentCount);
     }
 
-    // Validate cart against products from database
+    // Validate cart against products from database (optimized)
     static async validateCartWithDatabase() {
         try {
-            // Load current products from API
-            const response = await window.apiService.get('/products?take=1000');
-            if (!response?.success) {
-                console.error('Failed to load products for validation:', response);
-                return;
-            }
-
-            const data = response.data?.data || response.data;
-            const products = Array.isArray(data) ? data : [];
-            const validProductIds = new Set(products.map(p => p.id));
-            
             // Get current cart
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
             if (cart.length === 0) return;
             
-            console.log('Validating cart against database...');
-            console.log('Cart items before validation:', cart.length);
-            console.log('Available products:', products.length);
+            // Limit validation to prevent too many API calls
+            if (cart.length > 20) {
+                console.log('Cart has too many items, skipping validation');
+                return;
+            }
             
-            // Filter out invalid items
-            const validCart = cart.filter(item => {
-                const isValid = validProductIds.has(item.productId);
-                if (!isValid) {
-                    console.log(`Removing invalid cart item: ${item.productId}`);
-                }
-                return isValid;
-            });
+            // Validate using batch request (max 5 concurrent)
+            const batchSize = 5;
+            const validCart = [];
+            
+            for (let i = 0; i < cart.length; i += batchSize) {
+                const batch = cart.slice(i, i + batchSize);
+                const batchPromises = batch.map(async (item) => {
+                    try {
+                        const response = await window.apiService.get(`/products/${item.productId}`);
+                        return response?.success ? item : null;
+                    } catch (error) {
+                        return null;
+                    }
+                });
+                
+                const batchResults = await Promise.all(batchPromises);
+                validCart.push(...batchResults.filter(item => item !== null));
+            }
             
             const removedCount = cart.length - validCart.length;
             if (removedCount > 0) {
-                console.log(`Removed ${removedCount} invalid items from cart`);
                 localStorage.setItem('cart', JSON.stringify(validCart));
                 this.updateCartCount();
-            } else {
-                console.log('All cart items are valid');
             }
         } catch (error) {
             console.error('Error validating cart with database:', error);
@@ -210,12 +208,30 @@ class CartUtils {
 }
 
 // Auto-initialize cart count when DOM is loaded
-document.addEventListener('DOMContentLoaded', async () => {
-    // Only clean cart data, don't reset completely
+document.addEventListener('DOMContentLoaded', () => {
+    // Only update cart count, don't validate on cart page
     CartUtils.initCartCount();
     
-    // Validate cart against database
-    await CartUtils.validateCartWithDatabase();
+    // Skip validation on cart page (cart.js handles its own loading)
+    const isCartPage = window.location.pathname.includes('cart.html');
+    if (isCartPage) {
+        console.log('Cart page detected, skipping automatic validation');
+        return;
+    }
+    
+    // Validate cart in background (non-blocking, only once per session)
+    const lastValidation = sessionStorage.getItem('cart_last_validation');
+    const now = Date.now();
+    const VALIDATION_INTERVAL = 5 * 60 * 1000; // 5 minutes
+    
+    // Only validate if not validated in last 5 minutes
+    if (!lastValidation || (now - parseInt(lastValidation)) > VALIDATION_INTERVAL) {
+        setTimeout(() => {
+            CartUtils.validateCartWithDatabase().then(() => {
+                sessionStorage.setItem('cart_last_validation', now.toString());
+            });
+        }, 100); // Delay validation to not block page load
+    }
 });
 
 // Remove the automatic reset on script load

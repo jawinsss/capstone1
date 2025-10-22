@@ -8,7 +8,6 @@ import { ProductsModule } from './products/products.module';
 import { CategoriesModule } from './categories/categories.module';
 import { DashboardModule } from './dashboard/dashboard.module';
 import { OrdersModule } from './orders/orders.module';
-import { PaymentsModule } from './payments/payments.module';
 import { ReturnsModule } from './returns/returns.module';
 import { TicketsModule } from './tickets/tickets.module';
 import { ReviewsModule } from './reviews/reviews.module';
@@ -16,6 +15,7 @@ import { ContactModule } from './contact/contact.module';
 import { LocationsModule } from './locations/locations.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { AuditModule } from './audit/audit.module';
+import { PaymentsModule } from './payments/payments.module';
 import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module';
 
 @Module({
@@ -30,7 +30,6 @@ import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module'
     CategoriesModule,
     DashboardModule,
     OrdersModule,
-    PaymentsModule,
     ReturnsModule,
     TicketsModule,
     ReviewsModule,
@@ -38,6 +37,7 @@ import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module'
     LocationsModule,
     NotificationsModule,
     AuditModule,
+    PaymentsModule,
     PaymentGatewayModule,
   ],
   controllers: [HealthController],

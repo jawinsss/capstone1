@@ -350,9 +350,20 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div');
         card.className = 'hp-card';
         card.style.cursor = 'pointer';
-        const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
+        
+        // Handle both base64 images (from admin) and regular URLs (from seed)
+        const imageUrl = (p.images && p.images[0]?.url) || '';
+        let thumb;
+        if (!imageUrl) {
+          thumb = '/assets/Icon MatFlow.png';
+        } else if (imageUrl.startsWith('data:image')) {
+          thumb = imageUrl; // Base64 image from admin
+        } else {
+          thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
+        }
+        
         card.innerHTML = `
-          <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
+          <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
           <div class="name">${p.name}</div>
           <div class="price">${formatVND(p.price)}</div>
         `;
@@ -369,7 +380,11 @@ document.addEventListener('DOMContentLoaded', () => {
             const b = document.createElement('button');
             b.className = `pagination-number${i===pvState.page?' active':''}`;
             b.textContent = String(i);
-            b.addEventListener('click', ()=>{ pvState.page = i; renderProductList(); });
+            b.addEventListener('click', ()=>{ 
+              pvState.page = i; 
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+              renderProductList(); 
+            });
             pv.numbers.appendChild(b);
           }
         }
@@ -441,8 +456,20 @@ document.addEventListener('DOMContentLoaded', () => {
     pv.maxPrice.addEventListener('input', ()=>{ updatePrice(); throttleRender(); });
 
     // Pagination
-    pv.prev.addEventListener('click', ()=>{ if(pvState.page>1){ pvState.page--; renderProductList(); } });
-    pv.next.addEventListener('click', ()=>{ if(pvState.page<pvState.totalPages){ pvState.page++; renderProductList(); } });
+    pv.prev.addEventListener('click', ()=>{ 
+      if(pvState.page>1){ 
+        pvState.page--; 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        renderProductList(); 
+      } 
+    });
+    pv.next.addEventListener('click', ()=>{ 
+      if(pvState.page<pvState.totalPages){ 
+        pvState.page++; 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        renderProductList(); 
+      } 
+    });
 
     // Reset all filters
     pv.reset && pv.reset.addEventListener('click', ()=>{

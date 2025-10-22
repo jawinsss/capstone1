@@ -30,6 +30,9 @@
     "db:clear": "ts-node scripts/clear-sample-data.ts",
     "db:categories": "ts-node scripts/create-basic-categories.ts",
     "db:test-product": "ts-node scripts/test-product.ts",
+    "seed:categories": "ts-node scripts/seed-categories.ts",
+    "seed:products": "ts-node scripts/seed-products.ts",
+    "seed:all": "npm run seed:categories && npm run seed:products",
     "setup": "npm install && npm run prisma:generate && npm run build:clean"
   },
   "prisma": {

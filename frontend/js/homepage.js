@@ -120,10 +120,6 @@ document.addEventListener('DOMContentLoaded', () => {
   if(logoutBtn){
     logoutBtn.addEventListener('click', ()=>{
       try {
-        console.log('Homepage: User logout clicked');
-        console.log('Homepage: Before logout - user_token:', !!localStorage.getItem('user_token'));
-        console.log('Homepage: Before logout - admin_token:', !!localStorage.getItem('admin_token'));
-        
         // Use auth context manager if available
         if (typeof window.authContextManager !== 'undefined') {
           // Only logout user, keep admin context if exists
@@ -135,9 +131,6 @@ document.addEventListener('DOMContentLoaded', () => {
             sessionStorage.removeItem(k);
           });
         }
-        
-        console.log('Homepage: After logout - user_token:', !!localStorage.getItem('user_token'));
-        console.log('Homepage: After logout - admin_token:', !!localStorage.getItem('admin_token'));
       } catch(error){
         console.error('Logout error:', error);
       }
@@ -163,11 +156,6 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       // Load only parent categories from API
       const res = await window.apiService.get('/categories/main');
-      console.log('Categories API response:', res);
-      console.log('Response success:', res?.success);
-      console.log('Response data:', res?.data);
-      console.log('Data type:', typeof res?.data);
-      console.log('Is array:', Array.isArray(res?.data));
       
       if (res?.success) {
 
@@ -177,11 +165,8 @@ document.addEventListener('DOMContentLoaded', () => {
           data = data.data;
         }
         categories = Array.isArray(data) ? data : [];
-        console.log('Categories after processing:', categories);
-        console.log('Categories length:', categories.length);
       } else {
         categories = [];
-        console.log('Categories API failed');
       }
     } catch (error) {
       console.error('Error loading categories:', error);
@@ -192,7 +177,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (catMenu) {
       catMenu.innerHTML = '';
       if (!Array.isArray(categories)) {
-        console.error('Categories is not an array:', categories);
         categories = [];
       }
     }
@@ -310,7 +294,6 @@ document.addEventListener('DOMContentLoaded', () => {
     // Add categories
     categories.forEach(c => {
       const categoryId = categoryNameToId.get(c.name.toLowerCase()) || '';
-      console.log(`Category: ${c.name}, ID: ${categoryId}`); // Debug log
       
       // Check if categoryId is empty and try alternative names
       if (!categoryId) {
@@ -319,7 +302,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const altName = c.name.replace(/[-\s]/g, '').toLowerCase();
         const altCategoryId = categoryNameToId.get(altName);
         if (altCategoryId) {
-          console.log(`Found alternative ID for ${c.name}: ${altCategoryId}`);
         }
       }
       
@@ -375,7 +357,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.cursor = 'pointer';
       const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
       card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+        <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
         <div class="name">${p.name}</div>
         <div class="price">${formatVND(p.price)}</div>
       `;
@@ -385,8 +367,8 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadProductsWithSubCategory(categoryId, subCategoryName){
-    // Load all products from the main category first
-    const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=1000`;
+    // Load products from the main category (optimized to 100 max)
+    const qs = `?categoryId=${encodeURIComponent(categoryId)}&take=100`;
     const res = await window.apiService.get(`/products${qs}`);
     if(!res?.success) return;
     // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
@@ -416,7 +398,7 @@ document.addEventListener('DOMContentLoaded', () => {
       card.style.cursor = 'pointer';
       const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
       card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+        <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
         <div class="name">${p.name}</div>
         <div class="price">${formatVND(p.price)}</div>
       `;
@@ -451,7 +433,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function renderCategorySections(categories){
-    console.log('renderCategorySections called with:', categories);
     const container = document.getElementById('dynSections');
     if(!container) {
       console.warn('dynSections container not found - skipping category sections render');
@@ -460,7 +441,6 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // Prevent multiple simultaneous renders
     if(isRenderingSections) {
-      console.log('Already rendering sections, skipping');
       return;
     }
     isRenderingSections = true;
@@ -475,9 +455,6 @@ document.addEventListener('DOMContentLoaded', () => {
         categories = [];
       }
       
-      console.log('Categories for rendering:', categories);
-      console.log('Categories length:', categories.length);
-      
       // Track rendered categories to avoid duplicates
       const renderedCategories = new Set();
       
@@ -489,7 +466,6 @@ document.addEventListener('DOMContentLoaded', () => {
       container.appendChild(sec);
       const grid = sec.querySelector(`[data-grid-for="${c.id}"]`);
       const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(c.id)}&take=8`);
-      console.log(`Loading products for category ${c.name} (${c.id}):`, res);
       if(res?.success){
         // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
         let data = res.data;
@@ -498,17 +474,24 @@ document.addEventListener('DOMContentLoaded', () => {
           data = data.data;
         }
         const items = Array.isArray(data) ? data : [];
-        console.log(`Homepage.js - Found ${items.length} products for category ${c.name}`);
-        console.log('Homepage.js - Items after processing:', items);
-        console.log('Homepage.js - Items type:', typeof items);
-        console.log('Homepage.js - Items is array:', Array.isArray(items));
         items.forEach(p=>{
           const card = document.createElement('div');
           card.className = 'hp-card';
           card.style.cursor = 'pointer';
-          const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
+          
+          // Handle both base64 images (from admin) and regular URLs (from seed)
+          const imageUrl = (p.images && p.images[0]?.url) || '';
+          let thumb;
+          if (!imageUrl) {
+            thumb = '/assets/Icon MatFlow.png';
+          } else if (imageUrl.startsWith('data:image')) {
+            thumb = imageUrl; // Base64 image from admin
+          } else {
+            thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
+          }
+          
           card.innerHTML = `
-            <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
+            <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
             <div class="name">${p.name}</div>
             <div class="price">${formatVND(p.price)}</div>
           `;
@@ -573,22 +556,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Simple product display for testing
   async function loadSimpleProducts() {
-    console.log('Loading simple products...');
     const container = document.getElementById('dynSections');
     if (!container) {
-      console.warn('dynSections container not found - skipping simple products load');
       return;
     }
     
     container.innerHTML = '<div style="padding: 20px; text-align: center;">Đang tải sản phẩm...</div>';
     
     try {
-      const res = await window.apiService.get('/products?take=12');
-      console.log('Simple products response:', res);
-      console.log('Response success:', res?.success);
-      console.log('Response data:', res?.data);
-      console.log('Data type:', typeof res?.data);
-      console.log('Is array:', Array.isArray(res?.data));
+      // Use cached API call if available
+      const cachedCall = window.performanceUtils?.cachedAPICall || window.apiService.get.bind(window.apiService);
+      const res = await cachedCall('/products?take=12');
       
       if (res?.success) {
         // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
@@ -598,10 +576,6 @@ document.addEventListener('DOMContentLoaded', () => {
           data = data.data;
         }
         const items = Array.isArray(data) ? data : [];
-        console.log('Homepage.js - Items after processing:', items);
-        console.log('Homepage.js - Items length:', items.length);
-        console.log('Homepage.js - Items type:', typeof items);
-        console.log('Homepage.js - Items is array:', Array.isArray(items));
         
         if (items.length > 0) {
           container.innerHTML = `
@@ -619,33 +593,34 @@ document.addEventListener('DOMContentLoaded', () => {
             const card = document.createElement('div');
             card.className = 'hp-card';
             card.style.cursor = 'pointer';
-            const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
+            
+            // Handle both base64 images (from admin) and regular URLs (from seed)
+            const imageUrl = (p.images && p.images[0]?.url) || '';
+            let thumb;
+            if (!imageUrl) {
+              thumb = '/assets/Icon MatFlow.png';
+            } else if (imageUrl.startsWith('data:image')) {
+              thumb = imageUrl; // Base64 image from admin
+            } else {
+              thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
+            }
+            
             card.innerHTML = `
-              <img src="${thumb}" alt="${p.name}" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
+              <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
               <div class="name">${p.name}</div>
               <div class="price">${formatVND(p.price)}</div>
             `;
             card.addEventListener('click', () => openProduct(p));
             grid.appendChild(card);
           });
-          
-          console.log(`Displayed ${items.length} products`);
         } else {
           console.error('Simple products grid not found');
         }
         } else {
           container.innerHTML = '<div style="padding: 20px; text-align: center;">Không có sản phẩm nào</div>';
-          console.log('Homepage.js - No products found - success:', res?.success, 'data length:', res?.data?.length);
-          console.log('Homepage.js - Response data:', res?.data);
-          console.log('Homepage.js - Data type:', typeof res?.data);
-          console.log('Homepage.js - Is array:', Array.isArray(res?.data));
         }
       } else {
         container.innerHTML = '<div style="padding: 20px; text-align: center;">Không có sản phẩm nào</div>';
-        console.log('Homepage.js - No products found - success:', res?.success, 'data length:', res?.data?.length);
-        console.log('Homepage.js - Response data:', res?.data);
-        console.log('Homepage.js - Data type:', typeof res?.data);
-        console.log('Homepage.js - Is array:', Array.isArray(res?.data));
       }
     } catch (error) {
       console.error('Homepage.js - Error loading simple products:', error);
@@ -660,17 +635,8 @@ document.addEventListener('DOMContentLoaded', () => {
   
   // Debug: Test API directly
   setTimeout(async () => {
-    console.log('=== DEBUG: Testing API directly ===');
     try {
-      const catRes = await window.apiService.get('/categories');
-      console.log('Direct categories test:', catRes);
-      console.log('Direct categories data type:', typeof catRes?.data);
-      console.log('Direct categories is array:', Array.isArray(catRes?.data));
-      
-      const prodRes = await window.apiService.get('/products?take=5');
-      console.log('Direct products test:', prodRes);
-      console.log('Direct products data type:', typeof prodRes?.data);
-      console.log('Direct products is array:', Array.isArray(prodRes?.data));
+      // Test API calls removed for performance
     } catch (error) {
       console.error('Direct API test error:', error);
     }

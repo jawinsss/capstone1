@@ -1,5 +1,4 @@
-// Admin Avatar Manager
-// Handles admin avatar display and management
+
 
 class AdminAvatarManager {
     constructor() {

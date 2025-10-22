@@ -322,6 +322,10 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         const data = await res.json();
         if (data.payUrl) {
+          // Lưu cart items vào sessionStorage để bill.js sử dụng
+          const currentCart = localStorage.getItem('cart');
+          sessionStorage.setItem('orderCart', currentCart || '[]');
+          
           // Lưu thông tin MoMo response để sử dụng trong bill.js
           sessionStorage.setItem("momoCreatedTime", new Date().toISOString());
           sessionStorage.setItem("momoResponse", JSON.stringify({
@@ -330,6 +334,8 @@ document.addEventListener("DOMContentLoaded", () => {
             resultCode: data.resultCode,
             timestamp: data.timestamp
           }));
+          // Clear cart before redirecting to payment
+          localStorage.removeItem('cart');
           window.location.href = data.payUrl;
         } else {
           // Lưu thông tin lỗi để hiển thị trong bill
@@ -365,6 +371,12 @@ document.addEventListener("DOMContentLoaded", () => {
         });
         const data = await res.json();
         if (data.order_url) {
+          // Lưu cart items vào sessionStorage để bill.js sử dụng
+          const currentCart = localStorage.getItem('cart');
+          sessionStorage.setItem('orderCart', currentCart || '[]');
+          
+          // Clear cart before redirecting to payment
+          localStorage.removeItem('cart');
           window.location.href = data.order_url;
         } else {
           alert("Không tạo được đơn ZaloPay: " + JSON.stringify(data));
@@ -387,6 +399,16 @@ document.addEventListener("DOMContentLoaded", () => {
         if (viewBillBtn) {
           viewBillBtn.addEventListener("click", () => {
             orderModal.hidden = true;
+            // Lưu cart items vào sessionStorage để bill.js sử dụng
+            const currentCart = localStorage.getItem('cart');
+            sessionStorage.setItem('orderCart', currentCart || '[]');
+            
+            // Clear cart before redirecting to bill
+            localStorage.removeItem('cart');
+            // Update cart count
+            if (window.CartUtils) {
+              window.CartUtils.updateCartCount();
+            }
             // Chuyển đến bill.html
             window.location.href = "../homepage/bill.html";
           });
@@ -640,13 +662,35 @@ class CheckoutPage {
 
   async loadProducts() {
     try {
-      const res = await window.apiService.get("/products?take=1000");
-      if (res?.success) {
-        this.products = res.data?.data || res.data || [];
-      } else {
+      // Load products by ID (same as cart.js optimization)
+      const cartProductIds = this.cart.map(item => item.productId);
+      
+      if (cartProductIds.length === 0) {
         this.products = [];
+        return;
       }
-    } catch {
+      
+      // Load each product individually
+      const productPromises = cartProductIds.map(async (productId) => {
+        try {
+          const response = await window.apiService.get(`/products/${productId}`);
+          if (response?.success) {
+            const data = response.data?.data || response.data;
+            return data;
+          }
+          return null;
+        } catch (error) {
+          console.error(`Error loading product ${productId}:`, error);
+          return null;
+        }
+      });
+      
+      const loadedProducts = await Promise.all(productPromises);
+      this.products = loadedProducts.filter(p => p !== null);
+      
+      console.log(`Checkout: Loaded ${this.products.length} products for ${this.cart.length} cart items`);
+    } catch (error) {
+      console.error('Error loading products:', error);
       this.products = [];
     }
   }

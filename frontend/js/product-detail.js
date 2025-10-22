@@ -272,13 +272,25 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!categoryId) return;
 
     try {
-      const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(categoryId)}&take=4`);
+      // Load many products (50) to show all products in same category
+      const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(categoryId)}&take=50`);
       
-      if (!res?.success) return;
+      if (!res?.success) {
+        console.log('Failed to load related products');
+        return;
+      }
       
-      const products = Array.isArray(res.data) ? res.data : res.data?.items || [];
-      const relatedItems = products.filter(p => p.id !== currentProductId).slice(0, 4);
+      // Handle nested response structure
+      let data = res.data;
+      if (data && typeof data === 'object' && data.success && data.data) {
+        data = data.data;
+      }
       
+      const products = Array.isArray(data) ? data : [];
+      // Filter out current product - show ALL remaining products
+      const relatedItems = products.filter(p => p.id !== currentProductId);
+      
+      console.log(`Loaded ${relatedItems.length} related products for category ${categoryId}`);
       displayRelatedProducts(relatedItems);
       
     } catch (error) {
@@ -292,15 +304,45 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    relatedProducts.innerHTML = '';
+    // Create carousel structure
+    relatedProducts.innerHTML = `
+      <div class="related-carousel-container">
+        <button class="carousel-btn carousel-prev" id="relatedPrevBtn">
+          <i class="fa-solid fa-chevron-left"></i>
+        </button>
+        <div class="related-carousel-wrapper">
+          <div class="related-carousel-track" id="relatedCarouselTrack"></div>
+        </div>
+        <button class="carousel-btn carousel-next" id="relatedNextBtn">
+          <i class="fa-solid fa-chevron-right"></i>
+        </button>
+      </div>
+    `;
+
+    const carouselTrack = document.getElementById('relatedCarouselTrack');
+    const prevBtn = document.getElementById('relatedPrevBtn');
+    const nextBtn = document.getElementById('relatedNextBtn');
+
+    // Add products to carousel
     products.forEach(product => {
       const card = document.createElement('div');
       card.className = 'related-card';
       
-      const image = (product.images && product.images[0]?.url) || 'https://via.placeholder.com/250x200?text=MatFlow';
+      // Handle both base64 and regular URLs
+      const imageUrl = product.images?.[0]?.url || '';
+      let image;
+      if (!imageUrl) {
+        image = 'https://via.placeholder.com/250x200?text=MatFlow';
+      } else if (imageUrl.startsWith('data:image')) {
+        // Base64 image from admin
+        image = imageUrl;
+      } else {
+        // Regular URL from seed - use CONFIG.getAssetUrl if available
+        image = window.CONFIG ? CONFIG.getAssetUrl(imageUrl) : imageUrl;
+      }
       
       card.innerHTML = `
-        <img src="${image}" alt="${product.name}" onerror="this.src='https://via.placeholder.com/250x200?text=MatFlow'">
+        <img src="${image}" alt="${product.name}" loading="lazy" onerror="this.src='https://via.placeholder.com/250x200?text=MatFlow'">
         <div class="related-card-info">
           <div class="related-card-title">${product.name}</div>
           <div class="related-card-price">${formatVND(product.price)}</div>
@@ -311,8 +353,36 @@ document.addEventListener('DOMContentLoaded', () => {
         window.location.href = `product-detail.html?id=${product.id}`;
       });
       
-      relatedProducts.appendChild(card);
+      carouselTrack.appendChild(card);
     });
+
+    // Carousel scroll functionality
+    let scrollPosition = 0;
+    const cardWidth = 270; // 250px width + 20px gap
+    const visibleCards = 4;
+    const maxScroll = Math.max(0, (products.length - visibleCards) * cardWidth);
+
+    // Update button states
+    function updateButtons() {
+      prevBtn.disabled = scrollPosition <= 0;
+      nextBtn.disabled = scrollPosition >= maxScroll;
+      prevBtn.style.opacity = scrollPosition <= 0 ? '0.3' : '1';
+      nextBtn.style.opacity = scrollPosition >= maxScroll ? '0.3' : '1';
+    }
+
+    prevBtn.addEventListener('click', () => {
+      scrollPosition = Math.max(0, scrollPosition - cardWidth * 2); // Scroll 2 cards
+      carouselTrack.style.transform = `translateX(-${scrollPosition}px)`;
+      updateButtons();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      scrollPosition = Math.min(maxScroll, scrollPosition + cardWidth * 2); // Scroll 2 cards
+      carouselTrack.style.transform = `translateX(-${scrollPosition}px)`;
+      updateButtons();
+    });
+
+    updateButtons();
   }
 
   // ===== Event Listeners =====
@@ -372,3 +442,137 @@ document.addEventListener('DOMContentLoaded', () => {
   syncUserUI();
   loadProductDetail();
 });
+
+// ===== Add Carousel Styles =====
+const carouselStyles = document.createElement('style');
+carouselStyles.textContent = `
+  .related-carousel-container {
+    position: relative;
+    margin: 0 auto;
+    max-width: 1200px;
+  }
+
+  .carousel-btn {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    z-index: 10;
+    background: rgba(255, 255, 255, 0.95);
+    border: 2px solid #ddd;
+    border-radius: 50%;
+    width: 45px;
+    height: 45px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+
+  .carousel-btn:hover:not(:disabled) {
+    background: #00897b;
+    color: white;
+    border-color: #00897b;
+    box-shadow: 0 4px 12px rgba(0,137,123,0.3);
+  }
+
+  .carousel-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.3;
+  }
+
+  .carousel-btn i {
+    font-size: 18px;
+  }
+
+  .carousel-prev {
+    left: -20px;
+  }
+
+  .carousel-next {
+    right: -20px;
+  }
+
+  .related-carousel-wrapper {
+    overflow: hidden;
+    padding: 20px 10px;
+  }
+
+  .related-carousel-track {
+    display: flex;
+    gap: 20px;
+    transition: transform 0.4s ease;
+  }
+
+  .related-card {
+    min-width: 250px;
+    flex-shrink: 0;
+    background: white;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    cursor: pointer;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .related-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+  }
+
+  .related-card img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+    background: #f5f5f5;
+  }
+
+  .related-card-info {
+    padding: 15px;
+  }
+
+  .related-card-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #333;
+    margin-bottom: 8px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .related-card-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #e53935;
+  }
+
+  @media (max-width: 768px) {
+    .carousel-btn {
+      width: 35px;
+      height: 35px;
+    }
+    
+    .carousel-btn i {
+      font-size: 14px;
+    }
+    
+    .carousel-prev {
+      left: -15px;
+    }
+    
+    .carousel-next {
+      right: -15px;
+    }
+    
+    .related-card {
+      min-width: 180px;
+    }
+    
+    .related-card img {
+      height: 150px;
+    }
+  }
+`;
+document.head.appendChild(carouselStyles);

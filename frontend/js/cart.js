@@ -7,11 +7,15 @@ class CartManager {
     }
 
     async init() {
+        console.log('CartManager init started');
         await this.loadCartFromStorage();
+        console.log('Cart loaded:', this.cart);
         await this.loadProducts();
+        console.log('Products loaded:', this.products);
         this.renderCart();
         this.setupEventListeners();
         this.updateCartCount();
+        console.log('CartManager init completed');
     }
 
     // Load cart from localStorage using CartUtils
@@ -30,55 +34,51 @@ class CartManager {
         }
     }
 
-    // Load products from API
+    // Load products from API (optimized - only load cart items)
     async loadProducts() {
         try {
-            const response = await window.apiService.get('/products?take=1000');
-            if (response?.success) {
-                // Handle nested data structure: response.data.data
-                const data = response.data?.data || response.data;
-                this.products = Array.isArray(data) ? data : [];
-                
-                // Validate cart items against current products
-                this.validateCartItems();
-            } else {
-                console.error('Failed to load products:', response);
+            const cartProductIds = this.cart.map(item => item.productId);
+            
+            if (cartProductIds.length === 0) {
                 this.products = [];
+                return;
             }
+            
+            // Load products by fetching each product individually
+            // This is more efficient than loading all products
+            const productPromises = cartProductIds.map(async (productId) => {
+                try {
+                    const response = await window.apiService.get(`/products/${productId}`);
+                    if (response?.success) {
+                        // Handle nested response
+                        const data = response.data?.data || response.data;
+                        return data;
+                    }
+                    return null;
+                } catch (error) {
+                    console.error(`Error loading product ${productId}:`, error);
+                    return null;
+                }
+            });
+            
+            const loadedProducts = await Promise.all(productPromises);
+            this.products = loadedProducts.filter(p => p !== null);
+            
+            console.log(`Loaded ${this.products.length} products for ${this.cart.length} cart items`);
+            
         } catch (error) {
             console.error('Error loading products:', error);
             this.products = [];
         }
     }
 
-    // Validate cart items against current products from database
+    // Validate cart items - removed automatic validation
+    // Products are loaded on-demand, so we don't need to validate
+    // Items will only be removed if product API returns error
     validateCartItems() {
-        if (this.cart.length === 0) return;
-        
-        console.log('Validating cart items against database...');
-        console.log('Cart items before validation:', this.cart.length);
-        console.log('Available products:', this.products.length);
-        
-        const validProductIds = new Set(this.products.map(p => p.id));
-        const originalCartLength = this.cart.length;
-        
-        // Filter out items that no longer exist in database
-        this.cart = this.cart.filter(item => {
-            const isValid = validProductIds.has(item.productId);
-            if (!isValid) {
-                console.log(`Removing invalid cart item: ${item.productId}`);
-            }
-            return isValid;
-        });
-        
-        const removedCount = originalCartLength - this.cart.length;
-        if (removedCount > 0) {
-            console.log(`Removed ${removedCount} invalid items from cart`);
-            this.saveCartToStorage();
-            this.updateCartCount();
-        } else {
-            console.log('All cart items are valid');
-        }
+        // No longer needed - we load products by ID
+        // Invalid products will naturally fail to load
+        return;
     }
 
     // Get product details by ID
@@ -95,6 +95,13 @@ class CartManager {
         // Hide loading
         if (loadingEl) loadingEl.style.display = 'none';
 
+        console.log('Rendering cart:', {
+            cartItems: this.cart.length,
+            productsLoaded: this.products.length,
+            cart: this.cart,
+            products: this.products
+        });
+
         if (this.cart.length === 0) {
             // Show empty cart
             if (emptyCartEl) emptyCartEl.style.display = 'block';
@@ -108,17 +115,31 @@ class CartManager {
 
         // Render products
         if (productsGridEl) {
-            productsGridEl.innerHTML = this.cart.map(cartItem => {
+            const renderedProducts = this.cart.map(cartItem => {
                 const product = this.getProductById(cartItem.productId);
-                if (!product) return '';
+                if (!product) {
+                    console.warn(`Product not found for cart item:`, cartItem);
+                    return '';
+                }
 
-                const image = product.images?.[0]?.url || 'https://via.placeholder.com/280x200?text=MatFlow';
+                const imageUrl = product.images?.[0]?.url || '';
+                // Handle both base64 and regular URLs
+                let image;
+                if (!imageUrl) {
+                    image = 'https://via.placeholder.com/280x200?text=MatFlow';
+                } else if (imageUrl.startsWith('data:image')) {
+                    // Base64 image from admin
+                    image = imageUrl;
+                } else {
+                    // Regular URL from seed
+                    image = CONFIG.getAssetUrl(imageUrl);
+                }
                 const price = this.formatVND(product.price);
 
                 return `
                     <div class="product-card" data-product-id="${product.id}">
                         <div class="product-image">
-                            <img src="${image}" alt="${product.name}" 
+                            <img src="${image}" alt="${product.name}" loading="lazy"
                                  onerror="this.src='https://via.placeholder.com/280x200?text=MatFlow'">
                         </div>
                         <div class="product-info">
@@ -134,7 +155,14 @@ class CartManager {
                         </div>
                     </div>
                 `;
-            }).join('');
+            }).filter(html => html !== '').join('');
+
+            if (renderedProducts.length === 0 && this.cart.length > 0) {
+                console.error('No products could be rendered! Cart has items but products not loaded.');
+                productsGridEl.innerHTML = '<div style="padding:20px;text-align:center;">Đang tải sản phẩm...</div>';
+            } else {
+                productsGridEl.innerHTML = renderedProducts;
+            }
         }
 
         this.updateSummary();

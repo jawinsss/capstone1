@@ -2,6 +2,21 @@
 const CONFIG = {
     // API Configuration
     API_BASE_URL: 'http://localhost:3000',
+    
+    // Asset URL (for images, etc.)
+    ASSET_BASE_URL: 'http://localhost:3000',
+    
+    // Helper function to get full asset URL
+    getAssetUrl: function(path) {
+        if (!path) return '';
+        // If path already starts with http, return as-is
+        if (path.startsWith('http://') || path.startsWith('https://')) {
+            return path;
+        }
+        // Remove leading slash if present
+        const cleanPath = path.startsWith('/') ? path.substring(1) : path;
+        return `${this.ASSET_BASE_URL}/${cleanPath}`;
+    },
     API_ENDPOINTS: {
         AUTH: {
             LOGIN: '/auth/login',

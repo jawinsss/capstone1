@@ -1167,11 +1167,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         }
 
-        // Render products list
-        function renderProducts(products) {
+        // Infinite scroll state
+        let productsState = {
+            page: 1,
+            pageSize: 20,
+            isLoading: false,
+            hasMore: true,
+            totalProducts: 0,
+            container: null
+        };
+
+        // Render products list (append mode for infinite scroll)
+        function renderProducts(products, append = false) {
             if (!listPanel) return;
-            const container = document.createElement('div');
-            container.className = 'list';
             
             // Handle API response structure
             if (!Array.isArray(products)) {
@@ -1179,12 +1187,35 @@ document.addEventListener('DOMContentLoaded', async () => {
                 products = [];
             }
             
+            // Get or create container
+            if (!append || !productsState.container) {
+                productsState.container = document.createElement('div');
+                productsState.container.className = 'list';
+                productsState.container.id = 'productsListContainer';
+                productsState.container.style.maxHeight = '600px';
+                productsState.container.style.overflowY = 'auto';
+                productsState.container.style.overflowX = 'hidden';
+            }
+            
+            const container = productsState.container;
+            
             products.forEach(p => {
                 const item = document.createElement('article');
                 item.className = 'list-item';
-                const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
+                const imageUrl = (p.images && p.images[0]?.url) || '';
+                // Handle both base64 and regular URLs
+                let thumb;
+                if (!imageUrl) {
+                    thumb = '/assets/Icon MatFlow.png';
+                } else if (imageUrl.startsWith('data:image')) {
+                    // Base64 image
+                    thumb = imageUrl;
+                } else {
+                    // Regular URL - use CONFIG.getAssetUrl
+                    thumb = CONFIG.getAssetUrl(imageUrl);
+                }
                 item.innerHTML = `
-                    <img src="${thumb}" alt="${p.name}" class="avatar" style="width:40px;height:40px;object-fit:cover;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'"/>
+                    <img src="${thumb}" alt="${p.name}" loading="lazy" class="avatar" style="width:40px;height:40px;object-fit:cover;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'"/>
                     <div style="flex:1">
                         <div class="list-title">${p.name} <span class="chip ${p.isActive ? 'green' : 'red'}">${p.isActive ? 'Đang bán' : 'Ẩn'}</span></div>
                         <div class="list-sub">Giá: ${formatCurrency(p.price)} • Danh mục: ${p.category?.name || ''} • Kho: ${p.stock}</div>
@@ -1206,44 +1237,226 @@ document.addEventListener('DOMContentLoaded', async () => {
                 });
                 container.appendChild(item);
             });
-            listPanel.innerHTML = '';
-            const title = document.createElement('div');
-            title.className = 'panel-title';
-            title.textContent = 'Danh sách';
-            listPanel.appendChild(title);
-            listPanel.appendChild(container);
+            
+            // Loading indicator
+            let loadingIndicator = container.querySelector('#loadingIndicator');
+            if (!loadingIndicator) {
+                loadingIndicator = document.createElement('div');
+                loadingIndicator.id = 'loadingIndicator';
+                loadingIndicator.style.textAlign = 'center';
+                loadingIndicator.style.padding = '20px';
+                loadingIndicator.style.color = '#6b7280';
+                loadingIndicator.style.display = 'none';
+                loadingIndicator.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Đang tải thêm sản phẩm...';
+                container.appendChild(loadingIndicator);
+            }
+            
+            if (!append) {
+                listPanel.innerHTML = '';
+                const title = document.createElement('div');
+                title.className = 'panel-title';
+                title.textContent = `Danh sách (${productsState.totalProducts} sản phẩm)`;
+                listPanel.appendChild(title);
+                listPanel.appendChild(container);
+                
+                // Setup scroll listener
+                container.addEventListener('scroll', handleScroll);
+            } else {
+                // Update title
+                const title = listPanel.querySelector('.panel-title');
+                if (title) {
+                    title.textContent = `Danh sách (${productsState.totalProducts} sản phẩm)`;
+                }
+            }
         }
 
+        // Handle scroll event for infinite loading
+        function handleScroll(e) {
+            const container = e.target;
+            const scrollTop = container.scrollTop;
+            const scrollHeight = container.scrollHeight;
+            const clientHeight = container.clientHeight;
+            
+            // Load more when scrolled to 80% of the list
+            if (scrollTop + clientHeight >= scrollHeight * 0.8) {
+                if (!productsState.isLoading && productsState.hasMore) {
+                    loadMoreProducts();
+                }
+            }
+        }
+
+        // Load product statistics (realtime)
+        async function loadProductStats() {
+            try {
+                const stats = view.querySelectorAll('.order-stats .order-stat-value');
+                
+                // Load products (backend limits to 100, but meta.total is accurate)
+                const allRes = await window.apiService.get(`/products?take=100`);
+                console.log('📊 Product stats raw response:', allRes);
+                
+                if (allRes?.success) {
+                    let allData = allRes.data;
+                    let meta = allRes.meta;
+                    
+                    // Handle nested response structure
+                    if (allData && typeof allData === 'object' && allData.success) {
+                        // Unwrap nested structure
+                        meta = allData.meta || meta;
+                        allData = allData.data;
+                    }
+                    
+                    const allItems = Array.isArray(allData) ? allData : [];
+                    
+                    // Get accurate total from meta (this is the REAL count from database)
+                    const totalProducts = (meta && meta.total) ? meta.total : allItems.length;
+                    
+                    console.log('📊 Total from meta:', meta?.total, 'Items loaded:', allItems.length);
+                    
+                    // For accurate selling/outOfStock stats, we need to load more products
+                    // Since backend limits to 100, we'll make multiple requests if needed
+                    let allProductsForStats = [...allItems];
+                    
+                    // If there are more than 100 products, load them in batches
+                    if (totalProducts > 100) {
+                        const pages = Math.ceil(totalProducts / 100);
+                        const additionalRequests = [];
+                        
+                        for (let page = 2; page <= Math.min(pages, 10); page++) {
+                            additionalRequests.push(
+                                window.apiService.get(`/products?take=100&page=${page}`)
+                            );
+                        }
+                        
+                        const additionalResults = await Promise.all(additionalRequests);
+                        additionalResults.forEach(res => {
+                            if (res?.success) {
+                                let data = res.data;
+                                if (data && typeof data === 'object' && data.success && data.data) {
+                                    data = data.data;
+                                }
+                                if (Array.isArray(data)) {
+                                    allProductsForStats = allProductsForStats.concat(data);
+                                }
+                            }
+                        });
+                    }
+                    
+                    const selling = allProductsForStats.filter(p => p.isActive).length;
+                    const outOfStock = allProductsForStats.filter(p => Number(p.stock || 0) === 0).length;
+                    
+                    // Update stats display
+                    if (stats[0]) stats[0].textContent = String(totalProducts);
+                    if (stats[1]) stats[1].textContent = String(selling);
+                    if (stats[2]) stats[2].textContent = String(outOfStock);
+                    
+                    // Get sold count from orders
+                    try {
+                        const ordersRes = await window.apiService.get('/orders?take=10000');
+                        if (ordersRes?.success) {
+                            let ordersData = ordersRes.data;
+                            if (ordersData && typeof ordersData === 'object' && ordersData.success && ordersData.data) {
+                                ordersData = ordersData.data;
+                            }
+                            const orders = Array.isArray(ordersData) ? ordersData : [];
+                            
+                            // Calculate total items sold from completed orders
+                            let totalSold = 0;
+                            orders.forEach(order => {
+                                if (order.status === 'COMPLETED' && order.items) {
+                                    order.items.forEach(item => {
+                                        totalSold += item.quantity || 0;
+                                    });
+                                }
+                            });
+                            
+                            if (stats[3]) stats[3].textContent = totalSold.toLocaleString('vi-VN');
+                        }
+                    } catch (e) {
+                        console.error('Error loading sold stats:', e);
+                        // Fallback to 0 if orders API fails
+                        if (stats[3]) stats[3].textContent = '0';
+                    }
+                    
+                    console.log(`📊 Stats updated - Total: ${totalProducts}, Selling: ${selling}, Out of stock: ${outOfStock}`);
+                }
+            } catch (e) {
+                console.error('Load product stats error', e);
+            }
+        }
+
+        // Load initial products
         async function loadProducts() {
             try {
-                const res = await window.apiService.get('/products?take=1000');
+                productsState.page = 1;
+                productsState.hasMore = true;
+                
+                const res = await window.apiService.get(`/products?take=${productsState.pageSize}&page=1`);
                 console.log('Products API response:', res);
                 if (res?.success) {
-                    // Debug API response structure
-                    console.log('Products res.data type:', typeof res.data);
-                    console.log('Products res.data isArray:', Array.isArray(res.data));
-                    console.log('Products res.data keys:', Object.keys(res.data || {}));
-                    
-                    // Handle apiService wrapped response: {success: true, data: {success: true, data: [...]}}
+                    // Handle apiService wrapped response
                     let data = res.data;
                     if (data && typeof data === 'object' && data.success && data.data) {
-                        // Unwrap the nested response
                         data = data.data;
                     }
                     const items = Array.isArray(data) ? data : [];
-                    console.log('Products items:', items);
-                    renderProducts(items);
-                    // Update KPIs
-                    const stats = view.querySelectorAll('.order-stats .order-stat-value');
-                    const total = items.length;
-                    const selling = items.filter(p=>p.isActive).length;
-                    const outOfStock = items.filter(p=>Number(p.stock||0)===0).length;
-                    if (stats[0]) stats[0].textContent = String(total);
-                    if (stats[1]) stats[1].textContent = String(selling);
-                    if (stats[2]) stats[2].textContent = String(outOfStock);
+                    const meta = res.meta || {};
+                    productsState.totalProducts = meta.total || items.length;
+                    productsState.hasMore = items.length >= productsState.pageSize;
+                    
+                    console.log(`Loaded ${items.length} products, total: ${productsState.totalProducts}`);
+                    renderProducts(items, false);
+                    
+                    // Load stats in parallel
+                    loadProductStats();
                 }
             } catch (e) {
                 console.error('Load products error', e);
+            }
+        }
+
+        // Load more products (infinite scroll)
+        async function loadMoreProducts() {
+            if (productsState.isLoading || !productsState.hasMore) return;
+            
+            productsState.isLoading = true;
+            const loadingIndicator = document.getElementById('loadingIndicator');
+            if (loadingIndicator) {
+                loadingIndicator.style.display = 'block';
+            }
+            
+            try {
+                productsState.page++;
+                const res = await window.apiService.get(`/products?take=${productsState.pageSize}&page=${productsState.page}`);
+                
+                if (res?.success) {
+                    let data = res.data;
+                    if (data && typeof data === 'object' && data.success && data.data) {
+                        data = data.data;
+                    }
+                    const items = Array.isArray(data) ? data : [];
+                    
+                    console.log(`Loaded page ${productsState.page}: ${items.length} products`);
+                    
+                    if (items.length > 0) {
+                        renderProducts(items, true);
+                    }
+                    
+                    productsState.hasMore = items.length >= productsState.pageSize;
+                    
+                    if (!productsState.hasMore && loadingIndicator) {
+                        loadingIndicator.innerHTML = '<i class="fas fa-check"></i> Đã tải hết sản phẩm';
+                        setTimeout(() => {
+                            loadingIndicator.style.display = 'none';
+                        }, 2000);
+                    }
+                }
+            } catch (e) {
+                console.error('Load more products error', e);
+            } finally {
+                productsState.isLoading = false;
+                if (loadingIndicator && productsState.hasMore) {
+                    loadingIndicator.style.display = 'none';
+                }
             }
         }
 
@@ -1251,8 +1464,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         loadCategories();
         loadProducts();
         
-        // Override loadProductsData to use the same renderProducts function
+        // Expose functions globally for other parts of admin.js to use
         window.loadProductsData = loadProducts;
+        window.loadProductStats = loadProductStats;
 
         addBtn && addBtn.addEventListener('click', async () => {
             const name = nameInput ? (nameInput.value || '').trim() : '';
@@ -2172,6 +2386,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 closeEditModal();
                 await loadProductsData();
                 
+                // Update product stats (realtime)
+                await updateProductStats();
+                
                 // Auto refresh the entire page after a short delay
                 setTimeout(() => {
                     window.location.reload();
@@ -2300,8 +2517,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Auto refresh products list
                 await loadProductsData();
                 
-                // Update product stats
-                updateProductStats();
+                // Update product stats (realtime)
+                await updateProductStats();
                 
                 // Auto refresh the entire page after a short delay
                 setTimeout(() => {
@@ -2377,14 +2594,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // ====== UPDATE PRODUCT STATS ======
-    function updateProductStats() {
+    // Update product stats (call the loadProductStats from initProductsView)
+    async function updateProductStats() {
+        // Find the products view and trigger stats reload
         const productsView = document.querySelector('[data-view="products"]');
         if (!productsView) return;
-
-        const totalProducts = productsView.querySelectorAll('.product-item').length;
-        const totalProductsValue = productsView.querySelector('.order-stat-value');
-        if (totalProductsValue) {
-            totalProductsValue.textContent = totalProducts;
+        
+        // Call the realtime stats loader
+        if (window.loadProductStats && typeof window.loadProductStats === 'function') {
+            await window.loadProductStats();
         }
     }
 

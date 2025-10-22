@@ -61,6 +61,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Xác định trạng thái thanh toán
             let paymentStatus = "Thành công";
+            let isPaymentSuccess = true; // Track payment success
+            
             if (paymentMethod === "Ví MoMo") {
                 // Ưu tiên kiểm tra thông tin callback từ URL parameters
                 const momoResultCode = urlParams.get("resultCode");
@@ -75,24 +77,31 @@ document.addEventListener("DOMContentLoaded", async () => {
                     switch (resultCode) {
                         case 0:
                             paymentStatus = "Thành công";
+                            isPaymentSuccess = true;
                             break;
                         case 1006:
                             paymentStatus = decodedMessage || "Giao dịch bị từ chối bởi người dùng";
+                            isPaymentSuccess = false;
                             break;
                         case 1007:
                             paymentStatus = "Giao dịch đang được xử lý";
+                            isPaymentSuccess = false;
                             break;
                         case 1008:
                             paymentStatus = "Giao dịch thất bại";
+                            isPaymentSuccess = false;
                             break;
                         case 1009:
                             paymentStatus = "Giao dịch bị hủy";
+                            isPaymentSuccess = false;
                             break;
                         case 1010:
                             paymentStatus = "Giao dịch hết hạn";
+                            isPaymentSuccess = false;
                             break;
                         default:
                             paymentStatus = decodedMessage || `Lỗi không xác định (Code: ${resultCode})`;
+                            isPaymentSuccess = false;
                     }
                 } else {
                     // Không có callback, kiểm tra sessionStorage
@@ -137,20 +146,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             // Lấy danh sách sản phẩm từ giỏ hàng
             let products = [];
             try {
-                const cartData = localStorage.getItem("cart");
+                // Đọc từ sessionStorage (được lưu từ checkout.js) thay vì localStorage
+                const cartData = sessionStorage.getItem("orderCart") || localStorage.getItem("cart");
                 if (cartData) {
                     const cart = JSON.parse(cartData);
                     
-                    // Lấy thông tin sản phẩm từ API
+                    // Lấy thông tin sản phẩm từ API (optimized - load by ID)
                     try {
-                        const response = await window.apiService.get("/products?take=1000");
-                        if (response?.success) {
-                            const allProducts = response.data?.data || response.data || [];
-                            
-                            // Kết hợp thông tin giỏ hàng với thông tin sản phẩm
-                            products = cart.map(cartItem => {
-                                const product = allProducts.find(p => p.id === cartItem.productId);
-                                if (product) {
+                        const productPromises = cart.map(async (cartItem) => {
+                            try {
+                                const response = await window.apiService.get(`/products/${cartItem.productId}`);
+                                if (response?.success) {
+                                    const product = response.data?.data || response.data;
                                     return {
                                         name: product.name,
                                         type: product.description || "Không có mô tả",
@@ -159,8 +166,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     };
                                 }
                                 return null;
-                            }).filter(item => item !== null);
-                        }
+                            } catch (error) {
+                                console.error(`Error loading product ${cartItem.productId}:`, error);
+                                return null;
+                            }
+                        });
+                        
+                        const loadedProducts = await Promise.all(productPromises);
+                        products = loadedProducts.filter(item => item !== null);
                     } catch (error) {
                         console.error("Lỗi khi lấy thông tin sản phẩm:", error);
                     }
@@ -184,6 +197,18 @@ document.addEventListener("DOMContentLoaded", async () => {
             const paymentStatusElement = document.getElementById("paymentStatus");
             if (paymentStatusElement) {
                 paymentStatusElement.textContent = paymentStatus;
+            }
+
+            // Clear cart if payment is successful
+            if (isPaymentSuccess) {
+                console.log('Payment successful - clearing cart');
+                localStorage.removeItem('cart');
+                // Update cart count if CartUtils is available
+                if (window.CartUtils) {
+                    window.CartUtils.updateCartCount();
+                }
+            } else {
+                console.log('Payment not successful - keeping cart');
             }
 
             // Hiển thị danh sách sản phẩm

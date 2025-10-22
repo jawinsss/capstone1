@@ -280,6 +280,7 @@ class SmartSearch {
                         <div class="search-result-item" data-product-id="${product.id}">
                             <img src="${product.images?.[0]?.url || 'https://via.placeholder.com/60x60?text=MatFlow'}" 
                                  alt="${product.name}" 
+                                 loading="lazy"
                                  style="width:60px;height:60px;object-fit:contain;background:#fff;border-radius:8px">
                             <div class="search-result-info">
                                 <h4>${this.highlightMatch(product.name, query)}</h4>

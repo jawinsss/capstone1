@@ -33,6 +33,7 @@ document.addEventListener('DOMContentLoaded', () => {
     totalPages: 1,
     filteredItems: null,
     isRendering: false,
+    pendingSubcategory: null,
   };
 
   // Load categories from API
@@ -174,21 +175,16 @@ document.addEventListener('DOMContentLoaded', () => {
       console.log('Set pvState - categoryId:', pvState.categoryId, 'categoryName:', pvState.categoryName);
       updatePageTitle();
       
+      // Note: Don't call renderProductList() here, it will be called after initProductView()
       if (subcategory) {
-        // Load categories first, then filter by subcategory
-        loadProductCategories().then(() => {
-          filterProductViewBySubCategory(categoryId, decodeURIComponent(subcategory));
-        });
-      } else {
-        console.log('Rendering product list for category:', categoryId);
-        renderProductList();
+        // Store subcategory to filter later
+        pvState.pendingSubcategory = decodeURIComponent(subcategory);
       }
     } else {
       // No category specified, show all products
       pvState.categoryId = null;
       pvState.categoryName = '';
       updatePageTitle();
-      renderProductList();
     }
   }
 
@@ -220,17 +216,70 @@ document.addEventListener('DOMContentLoaded', () => {
     
     // If we have a specific category selected, show its subcategories
     if(pvState.categoryId && pvState.categoryName) {
-      const selectedCategory = categories.find(c => 
-        c.name.toLowerCase() === pvState.categoryName.toLowerCase()
-      );
+      console.log('Loading subcategories for:', pvState.categoryName, 'ID:', pvState.categoryId);
+      console.log('Available categories:', categories);
+      
+      // Find the selected category by ID (more reliable than name)
+      let selectedCategory = categories.find(c => c.id === pvState.categoryId);
+      
+      // If not found by ID, try by name
+      if (!selectedCategory) {
+        selectedCategory = categories.find(c => 
+          c.name.toLowerCase() === pvState.categoryName.toLowerCase()
+        );
+      }
+      
+      console.log('Selected category:', selectedCategory);
+      
+      // Add "All products in this category" option
+      const allLi = document.createElement('li');
+      allLi.className = 'cat-item';
+      allLi.innerHTML = `<a href="#" data-cat-all="true" class="active" style="font-weight: bold; color: #00897b;">
+        <i class="fa-solid fa-list"></i> Tất cả ${pvState.categoryName}
+      </a>`;
+      allLi.querySelector('a').addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Clicked "Tất cả" - resetting to parent category');
+        
+        // Find the parent category
+        const currentCategory = categories.find(c => c.id === pvState.categoryId);
+        console.log('Current category:', currentCategory);
+        
+        // If current is a subcategory, switch to parent
+        if (currentCategory?.parentId) {
+          const parentCategory = categories.find(c => c.id === currentCategory.parentId);
+          if (parentCategory) {
+            console.log('Switching to parent category:', parentCategory.name, parentCategory.id);
+            pvState.categoryId = parentCategory.id;
+            pvState.categoryName = parentCategory.name;
+            updatePageTitle();
+          }
+        }
+        
+        document.querySelectorAll('.cat-item a').forEach(link => link.classList.remove('active'));
+        e.target.classList.add('active');
+        pvState.filteredItems = null;
+        pvState.page = 1;
+        renderProductList();
+      });
+      pv.catMenu.appendChild(allLi);
       
       if(selectedCategory && selectedCategory.children && selectedCategory.children.length > 0) {
+        // Add separator
+        const separator = document.createElement('li');
+        separator.style.borderTop = '1px solid #e5e7eb';
+        separator.style.margin = '8px 0';
+        pv.catMenu.appendChild(separator);
+        
         // Show subcategories of the selected main category
-        console.log('Showing subcategories for:', selectedCategory.name, selectedCategory.children);
+        console.log('Showing', selectedCategory.children.length, 'subcategories for:', selectedCategory.name);
         selectedCategory.children.forEach(subCategory => {
           const li = document.createElement('li');
           li.className = 'cat-item';
-          li.innerHTML = `<a href="#" data-subcategory="${subCategory.name}">${subCategory.name}</a>`;
+          li.innerHTML = `<a href="#" data-subcategory="${subCategory.name}" data-subcategory-id="${subCategory.id}">
+            <i class="fa-solid fa-angle-right" style="font-size: 0.8em; margin-right: 5px;"></i>
+            ${subCategory.name}
+          </a>`;
           
           // Click on subcategory
           li.querySelector('a').addEventListener('click', (e)=>{
@@ -248,9 +297,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       } else {
         // No subcategories found, show message
+        console.log('No subcategories found for:', selectedCategory);
         const li = document.createElement('li');
         li.className = 'cat-item';
-        li.innerHTML = `<span style="color: #666; font-style: italic;">Không có danh mục con</span>`;
+        li.innerHTML = `<span style="color: #666; font-style: italic; padding: 10px;">
+          <i class="fa-solid fa-info-circle"></i> Không có danh mục con
+        </span>`;
         pv.catMenu.appendChild(li);
       }
     } else {
@@ -263,7 +315,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const mainLi = document.createElement('li');
         mainLi.className = 'cat-item main-category';
         const categoryId = categoryNameToId.get(mainCategory.name.toLowerCase()) || '';
-        mainLi.innerHTML = `<a href="#" data-cat="${mainCategory.name}" data-cat-id="${categoryId}" style="font-weight: bold; color: #2563eb;">${mainCategory.name}</a>`;
+        mainLi.innerHTML = `<a href="#" data-cat="${mainCategory.name}" data-cat-id="${categoryId}" style="font-weight: bold; color: #2563eb;">
+          <i class="fa-solid fa-folder"></i> ${mainCategory.name}
+        </a>`;
         
         // Click on main category
         mainLi.querySelector('a').addEventListener('click', (e)=>{
@@ -298,7 +352,10 @@ document.addEventListener('DOMContentLoaded', () => {
           mainCategory.children.forEach(child => {
             const childLi = document.createElement('li');
             childLi.className = 'cat-item subcategory';
-            childLi.innerHTML = `<a href="#" data-cat="${child.name}" data-cat-id="${child.id}" style="font-size: 0.9em; color: #666;">${child.name}</a>`;
+            childLi.innerHTML = `<a href="#" data-cat="${child.name}" data-cat-id="${child.id}" style="font-size: 0.9em; color: #666;">
+              <i class="fa-solid fa-angle-right" style="font-size: 0.8em; margin-right: 3px;"></i>
+              ${child.name}
+            </a>`;
             
             // Click on child category
             childLi.querySelector('a').addEventListener('click', (e)=>{
@@ -372,15 +429,36 @@ document.addEventListener('DOMContentLoaded', () => {
       
       console.log(`Found ${allItems.length} products for parent category: ${parentId}`);
       
-      // Filter products to only show those from the selected subcategory
-      console.log('All items from API:', allItems);
-      console.log('Looking for products with categoryId:', subCategory.id);
+      // Check if products have category information
+      if (allItems.length > 0) {
+        console.log('Sample product structure:', allItems[0]);
+        console.log('Sample product category:', allItems[0].category);
+      }
+      
+      // Filter products by product name containing subcategory name
+      // Since products might be assigned to parent category, we filter by name pattern
+      console.log('Filtering products for subcategory:', subCategoryName);
       
       const filteredItems = allItems.filter(item => {
-        console.log('Checking item:', item.name, 'categoryId:', item.categoryId, 'matches:', item.categoryId === subCategory.id);
-        return item.categoryId === subCategory.id;
+        // Try multiple filter strategies:
+        // 1. Check if product categoryId matches subcategory ID
+        const matchesCategoryId = item.categoryId === subCategory.id;
+        
+        // 2. Check if product category object matches
+        const matchesCategoryObject = item.category?.id === subCategory.id;
+        
+        // 3. Check if product name contains subcategory name (fallback)
+        const nameContainsSubcategory = item.name.toLowerCase().includes(subCategoryName.toLowerCase());
+        
+        const matches = matchesCategoryId || matchesCategoryObject || nameContainsSubcategory;
+        
+        if (matches) {
+          console.log('✅ Match:', item.name, '| categoryId:', item.categoryId, '| category.id:', item.category?.id, '| name match:', nameContainsSubcategory);
+        }
+        
+        return matches;
       });
-      console.log(`Filtered to ${filteredItems.length} products for subcategory: ${subCategoryName}`);
+      console.log(`✅ Filtered to ${filteredItems.length} products for subcategory: ${subCategoryName}`);
       
       pvState.filteredItems = filteredItems; // Use filtered items
       pvState.categoryId = subCategory.id; // Keep subcategory ID for display
@@ -473,6 +551,21 @@ document.addEventListener('DOMContentLoaded', () => {
     if(pvState.categoryId) {
       params.set('categoryId', pvState.categoryId);
       console.log('Building query with categoryId:', pvState.categoryId);
+      
+      // Find category info for debugging
+      const categoryInfo = categories.find(c => c.id === pvState.categoryId);
+      if (categoryInfo) {
+        console.log('Category info:', {
+          id: categoryInfo.id,
+          name: categoryInfo.name,
+          parentId: categoryInfo.parentId,
+          hasChildren: categoryInfo.children?.length > 0,
+          childrenCount: categoryInfo.children?.length || 0
+        });
+        if (categoryInfo.children?.length > 0) {
+          console.log('Subcategory IDs:', categoryInfo.children.map(c => ({id: c.id, name: c.name})));
+        }
+      }
     }
     
     switch(pvState.sort){
@@ -492,10 +585,28 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function renderProductList(){
-    if(!productGrid) return;
+    if(!productGrid) {
+      console.error('productGrid element not found!');
+      return;
+    }
     
-    if(pvState.isRendering) return;
+    if(pvState.isRendering) {
+      console.log('Already rendering, skipping...');
+      return;
+    }
     pvState.isRendering = true;
+    
+    console.log('=== renderProductList START ===');
+    console.log('pvState:', {
+      categoryId: pvState.categoryId,
+      categoryName: pvState.categoryName,
+      page: pvState.page,
+      pageSize: pvState.pageSize,
+      sort: pvState.sort,
+      min: pvState.min,
+      max: pvState.max,
+      filteredItems: pvState.filteredItems ? 'YES' : 'NO'
+    });
     
     if(pv.loading) pv.loading.removeAttribute('hidden');
     if(pv.empty) pv.empty.setAttribute('hidden','');
@@ -505,7 +616,15 @@ document.addEventListener('DOMContentLoaded', () => {
     
     try {
       if(pvState.filteredItems !== null) {
-        const allFilteredItems = pvState.filteredItems;
+        console.log('Using filteredItems, length:', pvState.filteredItems.length);
+        
+        // Apply price filter to filteredItems
+        let allFilteredItems = pvState.filteredItems.filter(item => {
+          const price = item.price || 0;
+          return price >= pvState.min && price <= pvState.max;
+        });
+        console.log(`After price filter (${pvState.min}-${pvState.max}): ${allFilteredItems.length} items`);
+        
         const startIndex = (pvState.page - 1) * pvState.pageSize;
         const endIndex = startIndex + pvState.pageSize;
         items = allFilteredItems.slice(startIndex, endIndex);
@@ -513,24 +632,65 @@ document.addEventListener('DOMContentLoaded', () => {
         total = allFilteredItems.length;
       } else {
         const qs = buildProductQuery();
-        console.log('Making API call to:', `/products?${qs}`);
+        const apiUrl = `/products?${qs}`;
+        console.log('Making API call to:', apiUrl);
+        console.log('Full URL:', `${window.CONFIG?.API_BASE_URL || 'http://localhost:3000'}${apiUrl}`);
+        
         const res = await window.apiService.get(`/products?${qs}`);
         console.log('Product-all API response:', res);
+        console.log('Response structure:', {
+          success: res?.success,
+          hasData: !!res?.data,
+          hasMeta: !!res?.meta,
+          dataType: typeof res?.data,
+          dataIsArray: Array.isArray(res?.data),
+          dataHasData: res?.data?.data !== undefined
+        });
+        
         if (!res?.success) {
-          console.error('Failed to load products:', res?.message);
+          console.error('Failed to load products:', res?.message || 'Unknown error');
+          console.error('Full response:', res);
           items = [];
           meta = { total: 0 };
           total = 0;
         } else {
-          // Handle nested data structure: res.data.data
-          const data = res.data?.data || res.data;
+          console.log('📦 Raw res.data:', res.data);
+          console.log('📦 Raw res.meta:', res.meta);
+          
+          // Try multiple response structures
+          let data;
+          if (res.data?.data) {
+            // Nested structure: {success, data: {data: [...], meta: {...}}, meta: {...}}
+            console.log('Using nested data structure: res.data.data');
+            data = res.data.data;
+            meta = res.data.meta || res.meta || { total: 0 };
+          } else if (Array.isArray(res.data)) {
+            // Direct array: {success, data: [...], meta: {...}}
+            console.log('Using direct array structure: res.data');
+            data = res.data;
+            meta = res.meta || { total: data.length };
+          } else if (res.data && typeof res.data === 'object') {
+            // Object with data property: {success, data: {items: [...], total: X}}
+            console.log('Using object structure, checking properties...');
+            console.log('res.data keys:', Object.keys(res.data));
+            data = res.data.items || res.data.products || res.data.data || [];
+            meta = res.data.meta || res.meta || { total: res.data.total || 0 };
+          } else {
+            console.error('Unknown response structure!');
+            data = [];
+            meta = { total: 0 };
+          }
+          
           items = Array.isArray(data) ? data : [];
-          meta = res.meta || { total: items.length };
           total = Number(meta?.total || items.length || 0);
-          console.log(`Product-all.js - Loaded ${items.length} products, total: ${total}, meta:`, meta);
-          console.log('Product-all.js - Items after processing:', items);
-          console.log('Product-all.js - Items type:', typeof items);
-          console.log('Product-all.js - Items is array:', Array.isArray(items));
+          console.log(`✅ Loaded ${items.length} products, total in DB: ${total}`);
+          console.log('Meta info:', meta);
+          if (items.length > 0) {
+            console.log('First product:', items[0]);
+            console.log('First product price:', items[0].price);
+          } else if (total > 0) {
+            console.warn('⚠️ Total > 0 but items.length = 0. Possible pagination/structure issue.');
+          }
         }
       }
       
@@ -556,9 +716,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const card = document.createElement('div');
         card.className = 'hp-card';
         card.style.cursor = 'pointer';
-        const thumb = (p.images && p.images[0]?.url) || 'assets/Icon MatFlow.png';
+        
+        // Handle both base64 images (from admin) and regular URLs (from seed)
+        const imageUrl = (p.images && p.images[0]?.url) || '';
+        let thumb;
+        if (!imageUrl) {
+          thumb = '/assets/Icon MatFlow.png';
+        } else if (imageUrl.startsWith('data:image')) {
+          // Base64 image from admin - use directly
+          thumb = imageUrl;
+        } else {
+          // Regular URL from seed - use CONFIG.getAssetUrl
+          thumb = CONFIG.getAssetUrl(imageUrl);
+        }
+        
         card.innerHTML = `
-          <img src="${thumb}" alt="${p.name}" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='assets/Icon MatFlow.png'">
+          <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
           <div class="name">${p.name}</div>
           <div class="price">${formatVND(p.price)}</div>
         `;
@@ -566,15 +739,79 @@ document.addEventListener('DOMContentLoaded', () => {
         productGrid.appendChild(card);
       });
       
+      // Smart pagination with ellipsis
       if(pv.numbers){
         pv.numbers.innerHTML = '';
         if(pvState.totalPages > 1) {
-          for(let i=1;i<=pvState.totalPages;i++){
+          const currentPage = pvState.page;
+          const totalPages = pvState.totalPages;
+          const maxVisible = 7; // Maximum number of page buttons to show
+          
+          // Helper function to create page button
+          const createPageBtn = (pageNum, isActive = false) => {
             const b = document.createElement('button');
-            b.className = `pagination-number${i===pvState.page?' active':''}`;
-            b.textContent = String(i);
-            b.addEventListener('click', ()=>{ pvState.page = i; renderProductList(); });
-            pv.numbers.appendChild(b);
+            b.className = `pagination-number${isActive ? ' active' : ''}`;
+            b.textContent = String(pageNum);
+            b.addEventListener('click', ()=>{ 
+              pvState.page = pageNum;
+              window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
+              renderProductList(); 
+            });
+            return b;
+          };
+          
+          // Helper function to create ellipsis
+          const createEllipsis = () => {
+            const span = document.createElement('span');
+            span.className = 'pagination-ellipsis';
+            span.textContent = '...';
+            span.style.cssText = 'padding: 0 8px; color: #666;';
+            return span;
+          };
+          
+          if (totalPages <= maxVisible) {
+            // Show all pages if total is less than max visible
+            for(let i = 1; i <= totalPages; i++) {
+              pv.numbers.appendChild(createPageBtn(i, i === currentPage));
+            }
+          } else {
+            // Smart pagination with ellipsis
+            // Always show first page
+            pv.numbers.appendChild(createPageBtn(1, currentPage === 1));
+            
+            let startPage, endPage;
+            
+            if (currentPage <= 3) {
+              // Near the beginning
+              startPage = 2;
+              endPage = 5;
+            } else if (currentPage >= totalPages - 2) {
+              // Near the end
+              startPage = totalPages - 4;
+              endPage = totalPages - 1;
+            } else {
+              // In the middle
+              startPage = currentPage - 1;
+              endPage = currentPage + 1;
+            }
+            
+            // Add ellipsis after first page if needed
+            if (startPage > 2) {
+              pv.numbers.appendChild(createEllipsis());
+            }
+            
+            // Add middle pages
+            for(let i = startPage; i <= endPage; i++) {
+              pv.numbers.appendChild(createPageBtn(i, i === currentPage));
+            }
+            
+            // Add ellipsis before last page if needed
+            if (endPage < totalPages - 1) {
+              pv.numbers.appendChild(createEllipsis());
+            }
+            
+            // Always show last page
+            pv.numbers.appendChild(createPageBtn(totalPages, currentPage === totalPages));
           }
         }
       }
@@ -642,8 +879,20 @@ document.addEventListener('DOMContentLoaded', () => {
     pv.maxPrice.addEventListener('input', ()=>{ updatePrice(); throttleRender(); });
 
     // Pagination
-    pv.prev.addEventListener('click', ()=>{ if(pvState.page>1){ pvState.page--; renderProductList(); } });
-    pv.next.addEventListener('click', ()=>{ if(pvState.page<pvState.totalPages){ pvState.page++; renderProductList(); } });
+    pv.prev.addEventListener('click', ()=>{ 
+      if(pvState.page>1){ 
+        pvState.page--; 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        renderProductList(); 
+      } 
+    });
+    pv.next.addEventListener('click', ()=>{ 
+      if(pvState.page<pvState.totalPages){ 
+        pvState.page++; 
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+        renderProductList(); 
+      } 
+    });
 
     // Reset all filters
     pv.reset && pv.reset.addEventListener('click', ()=>{
@@ -673,15 +922,41 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }, 15000);
 
-  // Initialize everything
-  loadCategories().then(() => {
+  // Initialize everything in proper sequence
+  async function initAll() {
+    // 1. Load categories first
+    await loadCategories();
+    console.log('Categories loaded:', categories.length);
+    
+    // 2. Handle URL params (now categories are loaded) - only sets state, doesn't render yet
+    handleURLParams();
+    
+    // 3. Initialize product view (sets up DOM elements)
     initProductView();
-    renderProductList(); // Load products after initialization
+    
+    // 4. Load category menu (now categories are available)
+    await loadProductCategories();
+    
+    // 5. If there's a pending subcategory filter, apply it now
+    if (pvState.pendingSubcategory) {
+      console.log('Applying pending subcategory filter:', pvState.pendingSubcategory);
+      filterProductViewBySubCategory(pvState.categoryId, pvState.pendingSubcategory);
+      pvState.pendingSubcategory = null;
+    } else {
+      // 6. Render products (now everything is initialized)
+      console.log('Initial render with categoryId:', pvState.categoryId);
+      await renderProductList();
+    }
+    
+    // 7. Load dropdown menu
+    await loadProductsDropdown();
+    
+    // 8. Sync user UI
+    syncUserUI();
+  }
+  
+  // Start initialization
+  initAll().catch(error => {
+    console.error('Initialization error:', error);
   });
-  syncUserUI();
-  handleURLParams();
-  // Load categories after URL params are processed
-  loadProductCategories();
-  // Load dropdown menu
-  loadProductsDropdown();
 });
