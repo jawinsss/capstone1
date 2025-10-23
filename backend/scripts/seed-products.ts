@@ -7,7 +7,7 @@ const prisma = new PrismaClient();
 // Mapping folder names to category slugs
 const folderToCategoryMap: Record<string, string> = {
   'bao-ho-lao-dong': 'bao-ho-lao-dong',
-  'dung-cu': 'vat-tu-phu-xay-dung', // Dung cu will go to vat tu phu
+  'vat-tu-phu-xay-dung': 'vat-tu-phu-xay-dung', // Dung cu will go to vat tu phu
   'hoa-chat': 'hoa-chat',
   'linh-kien-lap-ghep': 'linh-kien-lap-ghep',
   'may-moc-thiet-bi': 'may-moc-thiet-bi',
@@ -17,7 +17,6 @@ const folderToCategoryMap: Record<string, string> = {
   'sieu-thi-son': 'sieu-thi-son',
   'vat-tu-ha-tang': 'vat-tu-ha-tang',
   'vat-tu-kim-khi': 'vat-tu-kim-khi',
-  'vat-tu-phu': 'vat-tu-phu-xay-dung',
 };
 
 // Product templates based on categories
