@@ -344,6 +344,91 @@ document.addEventListener("DOMContentLoaded", () => {
       addressWarningModal.hidden = false;
       return;
     }
+    
+    // Get user info if logged in
+    let userEmail = `guest-${Date.now()}@example.com`;
+    let userFullName = 'Khách hàng';
+    let userPhone = '';
+    
+    try {
+      const userData = JSON.parse(localStorage.getItem('user_data') || 'null');
+      if (userData) {
+        userEmail = userData.email || userEmail;
+        userFullName = userData.fullName || userFullName;
+        userPhone = userData.phone || userPhone;
+      }
+    } catch (e) {
+      console.log('No user data found, using guest info');
+    }
+    
+    // Parse address to get customer info
+    if (storedAddress && storedAddress.includes(' - ')) {
+      const addressParts = storedAddress.split(' - ');
+      if (addressParts[0]) {
+        userFullName = addressParts[0];
+      }
+    }
+    
+    // Prepare order data
+    const orderData = {
+      customer: {
+        fullName: userFullName,
+        email: userEmail,
+        phone: userPhone,
+        address: storedAddress || ''
+      },
+      items: cart.map(item => ({
+        productId: item.productId,
+        quantity: item.quantity
+      })),
+      payment: {
+        method: sessionStorage.getItem("userPayment") || 'COD'
+      }
+    };
+    
+    // Create order in backend (this will decrease stock)
+    console.log('Creating order with data:', orderData);
+    let createdOrder;
+    try {
+      const orderResponse = await window.apiService.post('/orders', orderData);
+      console.log('Order creation response:', orderResponse);
+      
+      // Handle both success response formats
+      // Response can be: {success: true, data: order} OR direct order object
+      if (orderResponse?.success && orderResponse.data) {
+        createdOrder = orderResponse.data;
+      } else if (orderResponse?.id) {
+        createdOrder = orderResponse;
+      } else {
+        console.error('Invalid order response:', orderResponse);
+        alert('Có lỗi khi tạo đơn hàng. Vui lòng thử lại!');
+        return;
+      }
+      
+      console.log('Order created successfully:', createdOrder);
+      console.log('Order ID:', createdOrder.id);
+      console.log('Order Code:', createdOrder.code);
+      
+      // Store order info for bill page
+      sessionStorage.setItem('lastOrderId', createdOrder.id);
+      sessionStorage.setItem('lastOrderCode', createdOrder.code);
+      sessionStorage.setItem('lastOrderData', JSON.stringify(createdOrder));
+      
+      console.log('✅ Order created and stock decreased!');
+      
+    } catch (error) {
+      console.error('Error creating order:', error);
+      
+      // Check if error is about stock
+      if (error.message && error.message.includes('tồn kho')) {
+        alert('Không thể đặt hàng:\n\n' + error.message + '\n\nVui lòng cập nhật giỏ hàng!');
+        window.location.href = 'cart.html';
+      } else {
+        alert('Có lỗi khi tạo đơn hàng: ' + (error.message || 'Vui lòng thử lại!'));
+      }
+      return;
+    }
+    
     const payment = sessionStorage.getItem("userPayment");
 
     if (payment === "Ví MoMo") {

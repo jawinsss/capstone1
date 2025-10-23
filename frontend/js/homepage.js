@@ -337,6 +337,49 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // Helper function to create product card with stock status
+  function createProductCard(p) {
+    const card = document.createElement('div');
+    card.className = 'hp-card';
+    
+    // Check stock status
+    const isOutOfStock = (p.stock || 0) <= 0;
+    const isLowStock = p.stock > 0 && p.stock < 10;
+    
+    if (isOutOfStock) {
+      card.classList.add('out-of-stock');
+      card.style.cursor = 'not-allowed';
+    } else {
+      card.style.cursor = 'pointer';
+    }
+    
+    const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
+    
+    // Stock badge
+    const stockBadge = isOutOfStock 
+      ? '<div class="stock-badge out-of-stock-badge">Hết hàng</div>' 
+      : (isLowStock ? '<div class="stock-badge low-stock-badge">Sắp hết</div>' : '');
+    
+    card.innerHTML = `
+      ${stockBadge}
+      <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
+      <div class="name">${p.name}</div>
+      <div class="price">${formatVND(p.price)}</div>
+      ${isOutOfStock ? '<div class="stock-status-home">Liên hệ để đặt hàng</div>' : ''}
+    `;
+    
+    if (!isOutOfStock) {
+      card.addEventListener('click', () => openProduct(p));
+    } else {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Sản phẩm này hiện đã hết hàng. Vui lòng liên hệ để được tư vấn sản phẩm tương tự!');
+      });
+    }
+    
+    return card;
+  }
+
   async function loadProducts(categoryId){
     const qs = categoryId ? `?categoryId=${encodeURIComponent(categoryId)}&take=16` : `?take=16`;
     const res = await window.apiService.get(`/products${qs}`);
@@ -352,16 +395,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if(!productGrid) return;
     productGrid.innerHTML = '';
     items.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'hp-card';
-      card.style.cursor = 'pointer';
-      const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
-      card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
-        <div class="name">${p.name}</div>
-        <div class="price">${formatVND(p.price)}</div>
-      `;
-      card.addEventListener('click',()=>openProduct(p));
+      const card = createProductCard(p);
       productGrid.appendChild(card);
     });
   }
@@ -393,16 +427,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const itemsToShow = filteredItems.length > 0 ? filteredItems : allItems;
     
     itemsToShow.forEach(p => {
-      const card = document.createElement('div');
-      card.className = 'hp-card';
-      card.style.cursor = 'pointer';
-      const thumb = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/400x300?text=MatFlow';
-      card.innerHTML = `
-        <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='https://via.placeholder.com/400x300?text=MatFlow'">
-        <div class="name">${p.name}</div>
-        <div class="price">${formatVND(p.price)}</div>
-      `;
-      card.addEventListener('click',()=>openProduct(p));
+      const card = createProductCard(p);
       productGrid.appendChild(card);
     });
   }
@@ -475,27 +500,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         const items = Array.isArray(data) ? data : [];
         items.forEach(p=>{
-          const card = document.createElement('div');
-          card.className = 'hp-card';
-          card.style.cursor = 'pointer';
-          
-          // Handle both base64 images (from admin) and regular URLs (from seed)
-          const imageUrl = (p.images && p.images[0]?.url) || '';
-          let thumb;
-          if (!imageUrl) {
-            thumb = '/assets/Icon MatFlow.png';
-          } else if (imageUrl.startsWith('data:image')) {
-            thumb = imageUrl; // Base64 image from admin
-          } else {
-            thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
-          }
-          
-          card.innerHTML = `
-            <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
-            <div class="name">${p.name}</div>
-            <div class="price">${formatVND(p.price)}</div>
-          `;
-          card.addEventListener('click',()=>openProduct(p));
+          const card = createProductCard(p);
           grid.appendChild(card);
         });
       }
@@ -593,27 +598,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const grid = document.getElementById('simpleProductsGrid');
         if (grid) {
           items.forEach(p => {
-            const card = document.createElement('div');
-            card.className = 'hp-card';
-            card.style.cursor = 'pointer';
-            
-            // Handle both base64 images (from admin) and regular URLs (from seed)
-            const imageUrl = (p.images && p.images[0]?.url) || '';
-            let thumb;
-            if (!imageUrl) {
-              thumb = '/assets/Icon MatFlow.png';
-            } else if (imageUrl.startsWith('data:image')) {
-              thumb = imageUrl; // Base64 image from admin
-            } else {
-              thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
-            }
-            
-            card.innerHTML = `
-              <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:140px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
-              <div class="name">${p.name}</div>
-              <div class="price">${formatVND(p.price)}</div>
-            `;
-            card.addEventListener('click', () => openProduct(p));
+            const card = createProductCard(p);
             grid.appendChild(card);
           });
         } else {
@@ -630,6 +615,58 @@ document.addEventListener('DOMContentLoaded', () => {
       container.innerHTML = '<div style="padding: 20px; text-align: center; color: red;">Lỗi khi tải sản phẩm</div>';
     }
   }
+
+  // Add CSS styles for out of stock products (same as product-all)
+  const style = document.createElement('style');
+  style.textContent = `
+    .hp-card.out-of-stock {
+      opacity: 0.6;
+      filter: grayscale(40%);
+      position: relative;
+    }
+    
+    .hp-card.out-of-stock:hover {
+      opacity: 0.7;
+      transform: none;
+    }
+    
+    .stock-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 10;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .out-of-stock-badge {
+      background: rgba(220, 38, 38, 0.95);
+      color: white;
+    }
+    
+    .low-stock-badge {
+      background: rgba(249, 115, 22, 0.95);
+      color: white;
+    }
+    
+    .stock-status-home {
+      font-size: 0.85rem;
+      color: #dc2626;
+      font-weight: 500;
+      margin-top: 4px;
+      text-align: center;
+    }
+    
+    .hp-card.out-of-stock .stock-status-home {
+      color: #dc2626;
+      font-weight: 600;
+    }
+  `;
+  document.head.appendChild(style);
 
   loadCategories();
   loadSimpleProducts(); // Add simple product loading

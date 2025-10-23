@@ -206,6 +206,65 @@ document.addEventListener('DOMContentLoaded', () => {
     productPrice.textContent = formatVND(product.price || 0);
     productDescription.textContent = product.description || 'Không có mô tả chi tiết.';
     
+    // Check stock status and update UI
+    const isOutOfStock = (product.stock || 0) <= 0;
+    const isLowStock = product.stock > 0 && product.stock < 10;
+    
+    // Add stock status display
+    if (!document.querySelector('.stock-status-info')) {
+      const stockInfo = document.createElement('div');
+      stockInfo.className = 'stock-status-info';
+      productPrice.parentElement.appendChild(stockInfo);
+    }
+    
+    const stockInfo = document.querySelector('.stock-status-info');
+    if (isOutOfStock) {
+      stockInfo.innerHTML = '<span class="out-of-stock-text">Hết hàng - Liên hệ để đặt hàng</span>';
+      // Disable quantity controls and buttons
+      quantityInput.disabled = true;
+      quantityInput.value = 0;
+      decreaseQty.disabled = true;
+      increaseQty.disabled = true;
+      addToCartBtn.disabled = true;
+      buyNowBtn.disabled = true;
+      addToCartBtn.textContent = 'Hết hàng';
+      buyNowBtn.textContent = 'Hết hàng';
+      addToCartBtn.style.background = '#9ca3af';
+      buyNowBtn.style.background = '#9ca3af';
+      addToCartBtn.style.cursor = 'not-allowed';
+      buyNowBtn.style.cursor = 'not-allowed';
+    } else if (isLowStock) {
+      stockInfo.innerHTML = `<span class="low-stock-text">⚠️ Chỉ còn ${product.stock} sản phẩm</span>`;
+      quantityInput.max = product.stock;
+      // Re-enable if previously disabled
+      quantityInput.disabled = false;
+      decreaseQty.disabled = false;
+      increaseQty.disabled = false;
+      addToCartBtn.disabled = false;
+      buyNowBtn.disabled = false;
+      addToCartBtn.textContent = 'Thêm vào giỏ';
+      buyNowBtn.textContent = 'Mua ngay';
+      addToCartBtn.style.background = '';
+      buyNowBtn.style.background = '';
+      addToCartBtn.style.cursor = 'pointer';
+      buyNowBtn.style.cursor = 'pointer';
+    } else {
+      stockInfo.innerHTML = `<span class="in-stock-text">✓ Còn ${product.stock} sản phẩm</span>`;
+      quantityInput.max = product.stock;
+      // Re-enable if previously disabled
+      quantityInput.disabled = false;
+      decreaseQty.disabled = false;
+      increaseQty.disabled = false;
+      addToCartBtn.disabled = false;
+      buyNowBtn.disabled = false;
+      addToCartBtn.textContent = 'Thêm vào giỏ';
+      buyNowBtn.textContent = 'Mua ngay';
+      addToCartBtn.style.background = '';
+      buyNowBtn.style.background = '';
+      addToCartBtn.style.cursor = 'pointer';
+      buyNowBtn.style.cursor = 'pointer';
+    }
+    
     // Update images
     updateProductImages(product.images || []);
     
@@ -262,11 +321,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   function updateProductSpecs(product) {
+    const stockStatus = (product.stock || 0) <= 0 
+      ? '<span style="color: #dc2626; font-weight: 600;">Hết hàng</span>'
+      : product.stock < 10 
+      ? `<span style="color: #f97316; font-weight: 600;">Còn ${product.stock}</span>`
+      : `<span style="color: #16a34a; font-weight: 600;">Còn ${product.stock}</span>`;
+    
     const specs = [
       { label: 'Tên sản phẩm', value: product.name },
       { label: 'Giá', value: formatVND(product.price) },
       { label: 'Danh mục', value: product.category?.name || 'Không xác định' },
-      { label: 'Trạng thái', value: product.status || 'Còn hàng' },
+      { label: 'Tồn kho', value: stockStatus },
       { label: 'Ngày tạo', value: product.createdAt ? new Date(product.createdAt).toLocaleDateString('vi-VN') : 'Không xác định' }
     ];
 
@@ -626,6 +691,38 @@ carouselStyles.textContent = `
     .related-card img {
       height: 150px;
     }
+  }
+  
+  .stock-status-info {
+    margin-top: 12px;
+    padding: 10px 15px;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  
+  .out-of-stock-text {
+    color: #dc2626;
+    background: #fef2f2;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  
+  .low-stock-text {
+    color: #f97316;
+    background: #fff7ed;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: inline-block;
+  }
+  
+  .in-stock-text {
+    color: #16a34a;
+    background: #f0fdf4;
+    padding: 8px 12px;
+    border-radius: 6px;
+    display: inline-block;
   }
 `;
 document.head.appendChild(carouselStyles);

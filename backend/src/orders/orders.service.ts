@@ -98,14 +98,19 @@ export class OrdersService {
     const stockMap = new Map(products.map((p) => [p.id, p.stock] as const));
     const nameMap = new Map(products.map((p) => [p.id, p.name] as const));
     
-    // Validate stock availability for each item
+    // Validate stock availability for each item STRICTLY
     const insufficientStockItems = [];
     for (const item of (payload.items || [])) {
       const requestedQty = Math.max(1, Number(item.quantity) || 1);
-      const availableStock = stockMap.get(item.productId) || 0;
+      const availableStock = stockMap.get(item.productId);
       const productName = nameMap.get(item.productId) || 'Unknown product';
       
-      if (requestedQty > availableStock) {
+      // CRITICAL: Stock must not be null/undefined and must be >= requested
+      if (availableStock === undefined || availableStock === null) {
+        throw new BadRequestException(`Sản phẩm ${productName} không tồn tại trong hệ thống`);
+      }
+      
+      if (availableStock < requestedQty) {
         insufficientStockItems.push({
           productId: item.productId,
           productName: productName,
@@ -150,21 +155,45 @@ export class OrdersService {
       },
     });
 
-    const order = await this.prisma.order.create({
-      data: {
-        code,
-        userId: user.id,
-        status: 'PENDING',
-        totalAmount,
-        items: { create: items },
-      },
-      include: { items: true },
-    });
+    // Use transaction to ensure atomicity: create order + decrease stock
+    const order = await this.prisma.$transaction(async (tx) => {
+      // Create the order
+      const createdOrder = await tx.order.create({
+        data: {
+          code,
+          userId: user.id,
+          status: 'PENDING',
+          totalAmount,
+          items: { create: items },
+        },
+        include: { items: true },
+      });
 
-    // If prepayment in payload, create a pending payment
-    if (payload?.payment?.amount > 0) {
-      await this.prisma.payment.create({ data: { orderId: order.id, amount: Math.trunc(payload.payment.amount), status: 'PENDING' } });
-    }
+      // Decrease stock for each product
+      for (const item of items) {
+        await tx.product.update({
+          where: { id: item.productId },
+          data: {
+            stock: {
+              decrement: item.quantity
+            }
+          }
+        });
+      }
+
+      // If prepayment in payload, create a pending payment
+      if (payload?.payment?.amount > 0) {
+        await tx.payment.create({ 
+          data: { 
+            orderId: createdOrder.id, 
+            amount: Math.trunc(payload.payment.amount), 
+            status: 'PENDING' 
+          } 
+        });
+      }
+
+      return createdOrder;
+    });
 
     return order;
   }
