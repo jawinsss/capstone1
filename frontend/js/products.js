@@ -148,6 +148,60 @@ document.addEventListener('DOMContentLoaded', () => {
     return Number(n||0).toLocaleString('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0});
   }
 
+  // Helper function to create product card with stock status
+  function createProductCard(p) {
+    const card = document.createElement('div');
+    card.className = 'hp-card';
+    
+    // Check stock status
+    const isOutOfStock = (p.stock || 0) <= 0;
+    const isLowStock = p.stock > 0 && p.stock < 10;
+    
+    if (isOutOfStock) {
+      card.classList.add('out-of-stock');
+      card.style.cursor = 'not-allowed';
+    } else {
+      card.style.cursor = 'pointer';
+    }
+    
+    // Handle both base64 images (from admin) and regular URLs (from seed)
+    const imageUrl = (p.images && p.images[0]?.url) || '';
+    let thumb;
+    if (!imageUrl) {
+      thumb = '/assets/Icon MatFlow.png';
+    } else if (imageUrl.startsWith('data:image')) {
+      thumb = imageUrl; // Base64 image from admin
+    } else {
+      thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
+    }
+    
+    // Stock badge
+    const stockBadge = isOutOfStock 
+      ? '<div class="stock-badge out-of-stock-badge">Hết hàng</div>' 
+      : (isLowStock ? '<div class="stock-badge low-stock-badge">Sắp hết</div>' : '');
+    
+    card.innerHTML = `
+      ${stockBadge}
+      <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
+      <div class="name">${p.name}</div>
+      <div class="price">${formatVND(p.price)}</div>
+      ${isOutOfStock ? '<div class="stock-status-products">Liên hệ để đặt hàng</div>' : ''}
+    `;
+    
+    if (!isOutOfStock) {
+      card.addEventListener('click', () => { 
+        window.location.href = `product-detail.html?id=${p.id}`; 
+      });
+    } else {
+      card.addEventListener('click', (e) => {
+        e.preventDefault();
+        alert('Sản phẩm này hiện đã hết hàng. Vui lòng liên hệ để được tư vấn sản phẩm tương tự!');
+      });
+    }
+    
+    return card;
+  }
+
   // ===== Product view functions =====
   async function loadProductCategories(){
     // Ensure categoryNameToId is loaded first
@@ -405,27 +459,7 @@ document.addEventListener('DOMContentLoaded', () => {
         items = [];
       }
       items.forEach(p=>{
-        const card = document.createElement('div');
-        card.className = 'hp-card';
-        card.style.cursor = 'pointer';
-        
-        // Handle both base64 images (from admin) and regular URLs (from seed)
-        const imageUrl = (p.images && p.images[0]?.url) || '';
-        let thumb;
-        if (!imageUrl) {
-          thumb = '/assets/Icon MatFlow.png';
-        } else if (imageUrl.startsWith('data:image')) {
-          thumb = imageUrl; // Base64 image from admin
-        } else {
-          thumb = CONFIG.getAssetUrl(imageUrl); // Regular URL from seed
-        }
-        
-        card.innerHTML = `
-          <img src="${thumb}" alt="${p.name}" loading="lazy" style="width:100%;height:120px;object-fit:contain;background:#fff;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'">
-          <div class="name">${p.name}</div>
-          <div class="price">${formatVND(p.price)}</div>
-        `;
-        card.addEventListener('click', ()=>{ window.location.href = `product-detail.html?id=${p.id}`; });
+        const card = createProductCard(p);
         productGrid.appendChild(card);
       });
       
@@ -662,6 +696,58 @@ document.addEventListener('DOMContentLoaded', () => {
     setupInfiniteScroll();
   }
   
+  // Add CSS styles for out of stock products
+  const style = document.createElement('style');
+  style.textContent = `
+    .hp-card.out-of-stock {
+      opacity: 0.6;
+      filter: grayscale(40%);
+      position: relative;
+    }
+    
+    .hp-card.out-of-stock:hover {
+      opacity: 0.7;
+      transform: none;
+    }
+    
+    .stock-badge {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      padding: 4px 12px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      z-index: 10;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .out-of-stock-badge {
+      background: rgba(220, 38, 38, 0.95);
+      color: white;
+    }
+    
+    .low-stock-badge {
+      background: rgba(249, 115, 22, 0.95);
+      color: white;
+    }
+    
+    .stock-status-products {
+      font-size: 0.85rem;
+      color: #dc2626;
+      font-weight: 500;
+      margin-top: 4px;
+      text-align: center;
+    }
+    
+    .hp-card.out-of-stock .stock-status-products {
+      color: #dc2626;
+      font-weight: 600;
+    }
+  `;
+  document.head.appendChild(style);
+
   // Start initialization
   initAll().catch(error => {
     console.error('Products initialization error:', error);
