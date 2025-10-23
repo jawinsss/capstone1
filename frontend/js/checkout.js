@@ -326,13 +326,25 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
-    // Load products and check stock
+    // Validate products exist and check stock
+    console.log('🔍 Validating products and stock...');
     const stockErrors = [];
+    const invalidProducts = [];
+    
     for (const item of cart) {
       try {
         const response = await window.apiService.get(`/products/${item.productId}`);
         if (response?.success) {
           const product = response.data?.data || response.data;
+          
+          // Check if product exists
+          if (!product || !product.id) {
+            console.error(`❌ Product ${item.productId} not found in database`);
+            invalidProducts.push(item.productId);
+            continue;
+          }
+          
+          // Check stock
           if (product.stock < item.quantity) {
             stockErrors.push({
               name: product.name,
@@ -340,10 +352,38 @@ document.addEventListener("DOMContentLoaded", () => {
               available: product.stock
             });
           }
+        } else {
+          console.error(`❌ Product ${item.productId} not found`);
+          invalidProducts.push(item.productId);
         }
       } catch (error) {
-        console.error(`Error checking stock for product ${item.productId}:`, error);
+        console.error(`❌ Error checking product ${item.productId}:`, error);
+        invalidProducts.push(item.productId);
       }
+    }
+    
+    // Handle invalid products (deleted from database)
+    if (invalidProducts.length > 0) {
+      console.warn('⚠️ Found invalid products in cart:', invalidProducts);
+      
+      // Clean cart
+      const cleanedCart = cart.filter(item => !invalidProducts.includes(item.productId));
+      localStorage.setItem('cart', JSON.stringify(cleanedCart));
+      
+      // Update cart count
+      if (window.CartUtils) {
+        window.CartUtils.updateCartCount();
+      }
+      
+      alert(
+        `⚠️ PHÁT HIỆN SẢN PHẨM KHÔNG TỒN TẠI\n\n` +
+        `Đã xóa ${invalidProducts.length} sản phẩm không còn tồn tại khỏi giỏ hàng.\n\n` +
+        `Vui lòng kiểm tra lại giỏ hàng trước khi đặt hàng.`
+      );
+      
+      // Redirect to cart to review
+      window.location.href = 'cart.html';
+      return;
     }
     
     if (stockErrors.length > 0) {
@@ -499,22 +539,34 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
     
-    const payment = sessionStorage.getItem("userPayment");
+    const paymentMethod = sessionStorage.getItem("userPayment") || 'COD';
+    console.log('💳 Payment method:', paymentMethod);
 
-    if (payment === "Ví MoMo") {
+    // Handle online payment methods (MoMo, ZaloPay)
+    if (paymentMethod === "Ví MoMo" || paymentMethod === "MOMO") {
       const total = document.querySelector(".total-payment").textContent;
       const amount = parseInt(total.replace(/\D/g, "")) || 0;
       
-      // Lưu tổng tiền vào sessionStorage cho bill.js
+      // Lưu tổng tiền vào sessionStorage cho payment result page
       sessionStorage.setItem("totalAmount", amount.toString());
+      
+      console.log('🔄 Creating MoMo payment for order:', createdOrder.id);
+      
       try {
-        const res = await fetch("http://localhost:3000/payment-gateway/create-momo", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount })
+        const res = await window.apiService.post('/payment-gateway/create-momo', {
+          amount,
+          orderId: createdOrder.id
         });
-        const data = await res.json();
-        if (data.payUrl) {
+        
+        console.log('💳 MoMo payment response:', res);
+        
+        // Extract MoMo data from wrapped response
+        const momoData = res.data || res;
+        
+        console.log('📦 MoMo data:', momoData);
+        console.log('🔗 PayUrl:', momoData.payUrl);
+        
+        if (momoData.payUrl) {
           // Lưu cart items vào sessionStorage để bill.js sử dụng
           const currentCart = localStorage.getItem('cart');
           sessionStorage.setItem('orderCart', currentCart || '[]');
@@ -522,25 +574,37 @@ document.addEventListener("DOMContentLoaded", () => {
           // Lưu thông tin MoMo response để sử dụng trong bill.js
           sessionStorage.setItem("momoCreatedTime", new Date().toISOString());
           sessionStorage.setItem("momoResponse", JSON.stringify({
-            status: data.status,
-            message: data.message,
-            resultCode: data.resultCode,
-            timestamp: data.timestamp
+            status: momoData.status,
+            message: momoData.message,
+            resultCode: momoData.resultCode,
+            timestamp: momoData.timestamp
           }));
+          
+          console.log('✅ Redirecting to MoMo payment page...');
+          
           // Clear cart before redirecting to payment
           localStorage.removeItem('cart');
-          window.location.href = data.payUrl;
+          
+          // Update cart count
+          if (window.CartUtils) {
+            window.CartUtils.updateCartCount();
+          }
+          
+          window.location.href = momoData.payUrl;
         } else {
           // Lưu thông tin lỗi để hiển thị trong bill
+          console.error('❌ No payUrl in response:', momoData);
           sessionStorage.setItem("momoResponse", JSON.stringify({
             status: 'failed',
-            message: data.message || 'Không tạo được mã thanh toán MoMo',
-            resultCode: data.resultCode || -1,
+            message: momoData.message || res.message || 'Không tạo được mã thanh toán MoMo',
+            resultCode: momoData.resultCode || -1,
             timestamp: new Date().toISOString()
           }));
-          alert("Không tạo được QR MoMo: " + JSON.stringify(data));
+          alert("❌ Không tạo được QR MoMo: " + (momoData.message || res.message || 'Vui lòng thử lại!'));
         }
       } catch (err) {
+        console.error('❌ Error creating MoMo payment:', err);
+        
         // Lưu thông tin lỗi để hiển thị trong bill
         sessionStorage.setItem("momoResponse", JSON.stringify({
           status: 'error',
@@ -548,37 +612,59 @@ document.addEventListener("DOMContentLoaded", () => {
           resultCode: -1,
           timestamp: new Date().toISOString()
         }));
-        alert("Lỗi kết nối server MoMo: " + err.message);
+        alert("❌ Lỗi kết nối server MoMo: " + err.message);
       }
-    } else if (payment === "Ví ZaloPay") {
+    } else if (paymentMethod === "Ví ZaloPay" || paymentMethod === "ZALOPAY") {
       const total = document.querySelector(".total-payment").textContent;
       const amount = parseInt(total.replace(/\D/g, "")) || 0;
       
-      // Lưu tổng tiền vào sessionStorage cho bill.js
+      // Lưu tổng tiền vào sessionStorage cho payment result page
       sessionStorage.setItem("totalAmount", amount.toString());
+      
+      console.log('🔄 Creating ZaloPay payment for order:', createdOrder.id);
+      
       try {
-        const res = await fetch("http://localhost:3000/payment-gateway/create-zalopay", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ amount }),
+        const res = await window.apiService.post('/payment-gateway/create-zalopay', {
+          amount,
+          orderId: createdOrder.id
         });
-        const data = await res.json();
-        if (data.order_url) {
+        
+        console.log('💳 ZaloPay payment response:', res);
+        
+        // Extract ZaloPay data from wrapped response
+        const zaloData = res.data || res;
+        
+        console.log('📦 ZaloPay data:', zaloData);
+        console.log('🔗 Order URL:', zaloData.order_url);
+        
+        if (zaloData.order_url) {
           // Lưu cart items vào sessionStorage để bill.js sử dụng
           const currentCart = localStorage.getItem('cart');
           sessionStorage.setItem('orderCart', currentCart || '[]');
           
+          console.log('✅ Redirecting to ZaloPay payment page...');
+          
           // Clear cart before redirecting to payment
           localStorage.removeItem('cart');
-          window.location.href = data.order_url;
+          
+          // Update cart count
+          if (window.CartUtils) {
+            window.CartUtils.updateCartCount();
+          }
+          
+          window.location.href = zaloData.order_url;
         } else {
-          alert("Không tạo được đơn ZaloPay: " + JSON.stringify(data));
+          console.error('❌ No order_url in response:', zaloData);
+          alert("❌ Không tạo được đơn ZaloPay: " + (zaloData.message || res.message || 'Vui lòng thử lại!'));
         }
       } catch (err) {
-        alert("Lỗi kết nối ZaloPay: " + err.message);
+        console.error('❌ Error creating ZaloPay payment:', err);
+        alert("❌ Lỗi kết nối ZaloPay: " + err.message);
       }
     } else {
-      // Thanh toán khi nhận hàng (COD)
+      // Thanh toán khi nhận hàng (COD) - Default
+      console.log('💵 Cash on Delivery (COD) selected');
+      
       const total = document.querySelector(".total-payment").textContent;
       const amount = parseInt(total.replace(/\D/g, "")) || 0;
       

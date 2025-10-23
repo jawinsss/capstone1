@@ -288,6 +288,41 @@
     <script src="../../js/cart.js" defer></script>
     
     <script>
+        // EMERGENCY: Force sync cart count on cart page load
+        (function() {
+            // Run immediately (before DOMContentLoaded)
+            function emergencyCartSync() {
+                try {
+                    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+                    const count = Array.isArray(cart) ? cart.reduce((sum, item) => sum + (item.quantity || 0), 0) : 0;
+                    
+                    // Try to update count element if it exists
+                    const updateCount = () => {
+                        const cartCountEl = document.getElementById('hpCartCount');
+                        if (cartCountEl) {
+                            cartCountEl.textContent = count;
+                            console.log('🚨 Emergency cart sync: count =', count);
+                        }
+                    };
+                    
+                    // Update immediately if DOM ready
+                    if (document.readyState === 'loading') {
+                        document.addEventListener('DOMContentLoaded', updateCount);
+                    } else {
+                        updateCount();
+                    }
+                    
+                    // Also update after a short delay to catch late renders
+                    setTimeout(updateCount, 100);
+                    setTimeout(updateCount, 500);
+                } catch (e) {
+                    console.error('Emergency cart sync failed:', e);
+                }
+            }
+            
+            emergencyCartSync();
+        })();
+        
         // User session management
         document.addEventListener('DOMContentLoaded', () => {
             const userNameEl = document.getElementById('hpUserName');

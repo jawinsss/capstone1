@@ -1,0 +1,261 @@
+/* Payment Result Page Styles */
+.payment-result-container {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  padding: 20px;
+}
+
+.payment-result-card {
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 60px 40px;
+  max-width: 600px;
+  width: 100%;
+  text-align: center;
+}
+
+.payment-state {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.payment-state.hidden {
+  display: none;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Loading State */
+.loading-spinner {
+  width: 60px;
+  height: 60px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 30px;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.payment-state h2 {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin-bottom: 12px;
+}
+
+.payment-state p {
+  font-size: 16px;
+  color: #666;
+  margin-bottom: 0;
+}
+
+/* Success State */
+.success-icon {
+  margin-bottom: 30px;
+  animation: scaleIn 0.6s ease-out;
+}
+
+@keyframes scaleIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.success-message {
+  color: #22c55e;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+/* Failed State */
+.failed-icon {
+  margin-bottom: 30px;
+  animation: shake 0.6s ease-out;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-10px); }
+  20%, 40%, 60%, 80% { transform: translateX(10px); }
+}
+
+.failed-message {
+  color: #ef4444;
+  font-weight: 500;
+  margin-bottom: 30px;
+}
+
+/* Order Info */
+.order-info {
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 24px;
+  margin: 30px 0;
+  text-align: left;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.info-row .label {
+  font-size: 14px;
+  color: #6b7280;
+  font-weight: 500;
+}
+
+.info-row .value {
+  font-size: 16px;
+  color: #1f2937;
+  font-weight: 600;
+}
+
+.status-confirmed {
+  color: #22c55e !important;
+  background: #f0fdf4;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 14px !important;
+}
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 24px;
+  border-radius: 10px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.4);
+}
+
+.btn-secondary {
+  background: white;
+  color: #667eea;
+  border: 2px solid #667eea;
+}
+
+.btn-secondary:hover {
+  background: #f9fafb;
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(102, 126, 234, 0.2);
+}
+
+.btn svg {
+  width: 20px;
+  height: 20px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .payment-result-card {
+    padding: 40px 24px;
+  }
+
+  .payment-state h2 {
+    font-size: 24px;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+  }
+
+  .order-info {
+    padding: 20px;
+  }
+
+  .info-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+
+  .info-row .value {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .payment-result-container {
+    padding: 12px;
+  }
+
+  .payment-result-card {
+    padding: 30px 20px;
+    border-radius: 15px;
+  }
+
+  .success-icon svg,
+  .failed-icon svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .payment-state h2 {
+    font-size: 20px;
+  }
+
+  .payment-state p {
+    font-size: 14px;
+  }
+}
+

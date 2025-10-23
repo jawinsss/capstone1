@@ -101,16 +101,17 @@ model ProductImage {
 }
 
 model Order {
-  id          String       @id @default(cuid())
-  code        String       @unique
-  userId      String
-  user        User         @relation(fields: [userId], references: [id])
-  status      OrderStatus  @default(PENDING)
-  totalAmount Int          @default(0)
-  paidAmount  Int          @default(0)
-  isPaid      Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
+  id            String        @id @default(cuid())
+  code          String        @unique
+  userId        String
+  user          User          @relation(fields: [userId], references: [id])
+  status        OrderStatus   @default(PENDING)
+  totalAmount   Int           @default(0)
+  paidAmount    Int           @default(0)
+  isPaid        Boolean       @default(false)
+  paymentMethod PaymentMethod @default(COD)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   items       OrderItem[]
   payments    Payment[]
@@ -133,11 +134,15 @@ model OrderItem {
 }
 
 model Payment {
-  id        String        @id @default(cuid())
-  orderId   String
-  amount    Int           @default(0)
-  status    PaymentStatus @default(PENDING)
-  createdAt DateTime      @default(now())
+  id            String        @id @default(cuid())
+  orderId       String
+  amount        Int           @default(0)
+  status        PaymentStatus @default(PENDING)
+  method        PaymentMethod @default(COD)
+  transactionId String?       // MoMo/ZaloPay transaction ID
+  metadata      String?       // JSON string for extra data
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
 
   order     Order         @relation(fields: [orderId], references: [id])
 
@@ -183,6 +188,12 @@ enum PaymentStatus {
   PENDING
   CONFIRMED
   FAILED
+}
+
+enum PaymentMethod {
+  COD         // Cash On Delivery
+  MOMO        // MoMo e-wallet
+  ZALOPAY     // ZaloPay e-wallet
 }
 
 enum ReturnStatus {

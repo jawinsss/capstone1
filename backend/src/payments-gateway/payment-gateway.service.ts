@@ -1,31 +1,39 @@
 // src/payment-gateway/payment-gateway.service.ts
-import { Injectable, InternalServerErrorException } from '@nestjs/common';
+import { Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
 import * as crypto from 'crypto';
 import * as https from 'https';
 import * as moment from 'moment';
 import { firstValueFrom } from 'rxjs';
 import { HttpService } from '@nestjs/axios';
+import { PrismaService } from '../prisma/prisma.service';
+import { OrderStatus, PaymentStatus, PaymentMethod } from '@prisma/client';
 
 @Injectable()
 export class PaymentGatewayService {
-  constructor(private readonly httpService: HttpService) {}
+  private readonly logger = new Logger(PaymentGatewayService.name);
+
+  constructor(
+    private readonly httpService: HttpService,
+    private readonly prisma: PrismaService,
+  ) {}
 
   // ================== MoMo ==================
-  async createMomoPayment(amount: number) {
-    const partnerCode = process.env.MOMO_PARTNER_CODE;
-    const accessKey = process.env.MOMO_ACCESS_KEY;
-    const secretkey = process.env.MOMO_SECRET_KEY;
+  async createMomoPayment(amount: number, orderId: string) {
+    const partnerCode = process.env.MOMO_PARTNER_CODE || 'MOMO';
+    const accessKey = process.env.MOMO_ACCESS_KEY || 'F8BBA842ECF85';
+    const secretkey = process.env.MOMO_SECRET_KEY || 'K951B6PE1waDMi640xX08PD3vg6EkVlz';
     const requestId = partnerCode + new Date().getTime();
-    const orderId = requestId;
-    const orderInfo = 'Thanh toán đơn hàng MatFlow';
-    const redirectUrl = process.env.MOMO_REDIRECT_URL;
-    const ipnUrl = process.env.MOMO_IPN_URL;
+    const momoOrderId = requestId; // MoMo internal order ID
+    const orderInfo = `Thanh toán đơn hàng MatFlow #${orderId}`;
+    // Redirect về bill.html sau khi thanh toán
+    const redirectUrl = process.env.MOMO_REDIRECT_URL || 'http://localhost:5500/frontend/Page/homepage/bill.html';
+    const ipnUrl = process.env.MOMO_IPN_URL || 'http://localhost:3000/payment-gateway/momo-ipn';
     const requestType = 'captureWallet';
-    const extraData = '';
+    const extraData = Buffer.from(JSON.stringify({ orderId })).toString('base64'); // Store our order ID
 
     const rawSignature =
       `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}` +
-      `&ipnUrl=${ipnUrl}&orderId=${orderId}&orderInfo=${orderInfo}` +
+      `&ipnUrl=${ipnUrl}&orderId=${momoOrderId}&orderInfo=${orderInfo}` +
       `&partnerCode=${partnerCode}&redirectUrl=${redirectUrl}` +
       `&requestId=${requestId}&requestType=${requestType}`;
 
@@ -39,7 +47,7 @@ export class PaymentGatewayService {
       accessKey,
       requestId,
       amount,
-      orderId,
+      orderId: momoOrderId,
       orderInfo,
       redirectUrl,
       ipnUrl,
@@ -88,19 +96,21 @@ export class PaymentGatewayService {
   }
 
   // ================== ZaloPay ==================
-  async createZaloPayPayment(amount: number) {
+  async createZaloPayPayment(amount: number, orderId: string) {
     const config = {
-      app_id: process.env.ZALOPAY_APP_ID,
-      key1: process.env.ZALOPAY_KEY1,
-      endpoint: process.env.ZALOPAY_ENDPOINT,
+      app_id: process.env.ZALOPAY_APP_ID || '2553',
+      key1: process.env.ZALOPAY_KEY1 || 'PcY4iZIKFCIdgZvA6ueMcMHHUbRLYjPL',
+      endpoint: process.env.ZALOPAY_ENDPOINT || 'https://sb-openapi.zalopay.vn/v2/create',
     };
 
     const embed_data = {
-      redirecturl: process.env.ZALOPAY_REDIRECT_URL,
+      // Redirect về bill.html sau khi thanh toán
+      redirecturl: process.env.ZALOPAY_REDIRECT_URL || 'http://localhost:5500/frontend/Page/homepage/bill.html',
+      orderId, // Store our order ID in embed_data
     };
 
     const items = [
-      { itemid: 'matflow', itemname: 'Thanh toán MatFlow', itemprice: amount },
+      { itemid: orderId, itemname: `Thanh toán MatFlow #${orderId}`, itemprice: amount },
     ];
 
     const transID = Math.floor(Math.random() * 1000000);
@@ -143,6 +153,353 @@ export class PaymentGatewayService {
       return response.data;
     } catch (error) {
       throw new InternalServerErrorException(error.response?.data || error.message);
+    }
+  }
+
+  // ================== MoMo IPN Handler ==================
+  async handleMomoIPN(body: any) {
+    this.logger.log('🔔 MoMo IPN received:', JSON.stringify(body));
+
+    const {
+      partnerCode,
+      orderId: momoOrderId,
+      requestId,
+      amount,
+      orderInfo,
+      orderType,
+      transId,
+      resultCode,
+      message,
+      payType,
+      responseTime,
+      extraData,
+      signature,
+    } = body;
+
+    // Verify signature
+    const secretkey = process.env.MOMO_SECRET_KEY;
+    const accessKey = process.env.MOMO_ACCESS_KEY;
+    
+    const rawSignature =
+      `accessKey=${accessKey}&amount=${amount}&extraData=${extraData}` +
+      `&message=${message}&orderId=${momoOrderId}&orderInfo=${orderInfo}` +
+      `&orderType=${orderType}&partnerCode=${partnerCode}` +
+      `&payType=${payType}&requestId=${requestId}` +
+      `&responseTime=${responseTime}&resultCode=${resultCode}` +
+      `&transId=${transId}`;
+
+    const calculatedSignature = crypto
+      .createHmac('sha256', secretkey)
+      .update(rawSignature)
+      .digest('hex');
+
+    if (calculatedSignature !== signature) {
+      this.logger.error('❌ MoMo signature verification failed!');
+      return { success: false, message: 'Invalid signature' };
+    }
+
+    // Extract our orderId from extraData
+    let orderId: string;
+    try {
+      const decodedData = JSON.parse(Buffer.from(extraData, 'base64').toString());
+      orderId = decodedData.orderId;
+    } catch (error) {
+      this.logger.error('❌ Failed to parse extraData:', error);
+      return { success: false, message: 'Invalid extraData' };
+    }
+
+    // Handle payment result
+    if (resultCode === 0) {
+      // Payment successful
+      this.logger.log(`✅ MoMo payment successful for order ${orderId}`);
+      
+      await this.prisma.$transaction(async (tx) => {
+        // Update order
+        await tx.order.update({
+          where: { id: orderId },
+          data: {
+            status: OrderStatus.CONFIRMED, // Auto-confirm for online payment
+            isPaid: true,
+            paidAmount: amount,
+          },
+        });
+
+        // Create payment record
+        await tx.payment.create({
+          data: {
+            orderId,
+            amount,
+            status: PaymentStatus.CONFIRMED,
+            method: PaymentMethod.MOMO,
+            transactionId: transId.toString(),
+            metadata: JSON.stringify(body),
+          },
+        });
+      });
+
+      return { success: true, message: 'Payment confirmed' };
+    } else {
+      // Payment failed
+      this.logger.error(`❌ MoMo payment failed for order ${orderId}: ${message}`);
+      
+      await this.prisma.payment.create({
+        data: {
+          orderId,
+          amount,
+          status: PaymentStatus.FAILED,
+          method: PaymentMethod.MOMO,
+          transactionId: transId?.toString() || '',
+          metadata: JSON.stringify(body),
+        },
+      });
+
+      return { success: false, message };
+    }
+  }
+
+  // ================== ZaloPay Callback Handler ==================
+  async handleZaloPayCallback(body: any) {
+    this.logger.log('🔔 ZaloPay callback received:', JSON.stringify(body));
+
+    const { data: dataStr, mac: reqMac } = body;
+
+    // Verify MAC
+    const key2 = process.env.ZALOPAY_KEY2;
+    const calculatedMac = crypto
+      .createHmac('sha256', key2)
+      .update(dataStr)
+      .digest('hex');
+
+    if (reqMac !== calculatedMac) {
+      this.logger.error('❌ ZaloPay MAC verification failed!');
+      return { return_code: -1, return_message: 'Invalid MAC' };
+    }
+
+    // Parse data
+    const dataJson = JSON.parse(dataStr);
+    const {
+      app_trans_id,
+      app_id,
+      app_user,
+      amount,
+      embed_data,
+      item,
+      zp_trans_id,
+      server_time,
+    } = dataJson;
+
+    // Extract our orderId from embed_data
+    let orderId: string;
+    try {
+      const embedDataObj = JSON.parse(embed_data);
+      orderId = embedDataObj.orderId;
+    } catch (error) {
+      this.logger.error('❌ Failed to parse embed_data:', error);
+      return { return_code: -1, return_message: 'Invalid embed_data' };
+    }
+
+    this.logger.log(`✅ ZaloPay payment successful for order ${orderId}`);
+
+    await this.prisma.$transaction(async (tx) => {
+      // Update order
+      await tx.order.update({
+        where: { id: orderId },
+        data: {
+          status: OrderStatus.CONFIRMED, // Auto-confirm for online payment
+          isPaid: true,
+          paidAmount: amount,
+        },
+      });
+
+      // Create payment record
+      await tx.payment.create({
+        data: {
+          orderId,
+          amount,
+          status: PaymentStatus.CONFIRMED,
+          method: PaymentMethod.ZALOPAY,
+          transactionId: zp_trans_id.toString(),
+          metadata: JSON.stringify(dataJson),
+        },
+      });
+    });
+
+    return { return_code: 1, return_message: 'success' };
+  }
+
+  // ================== Get Payment Status ==================
+  async getPaymentStatus(orderId: string) {
+    const payments = await this.prisma.payment.findMany({
+      where: { orderId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    const order = await this.prisma.order.findUnique({
+      where: { id: orderId },
+      select: {
+        id: true,
+        code: true,
+        status: true,
+        isPaid: true,
+        paidAmount: true,
+        totalAmount: true,
+        paymentMethod: true,
+      },
+    });
+
+    return {
+      success: true,
+      data: {
+        order,
+        payments,
+      },
+    };
+  }
+
+  // ================== Manual Confirm Payment (from redirect) ==================
+  async confirmPaymentManual(payload: {
+    orderId: string;
+    transactionId: string;
+    method: string;
+    amount: number;
+    resultCode: number;
+  }) {
+    this.logger.log(`✅ Manual payment confirmation for order: ${payload.orderId}`);
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        // Update order status to CONFIRMED and mark as paid
+        await tx.order.update({
+          where: { id: payload.orderId },
+          data: {
+            status: OrderStatus.CONFIRMED,
+            isPaid: true,
+            paidAmount: payload.amount,
+          },
+        });
+
+        // Update or create payment record
+        const existingPayment = await tx.payment.findFirst({
+          where: {
+            orderId: payload.orderId,
+            method: payload.method as PaymentMethod,
+          },
+        });
+
+        if (existingPayment) {
+          // Update existing payment
+          await tx.payment.update({
+            where: { id: existingPayment.id },
+            data: {
+              status: PaymentStatus.CONFIRMED,
+              transactionId: payload.transactionId,
+              metadata: JSON.stringify({
+                resultCode: payload.resultCode,
+                confirmedAt: new Date().toISOString(),
+                confirmedVia: 'redirect_callback',
+              }),
+            },
+          });
+        } else {
+          // Create new payment record
+          await tx.payment.create({
+            data: {
+              orderId: payload.orderId,
+              amount: payload.amount,
+              status: PaymentStatus.CONFIRMED,
+              method: payload.method as PaymentMethod,
+              transactionId: payload.transactionId,
+              metadata: JSON.stringify({
+                resultCode: payload.resultCode,
+                confirmedAt: new Date().toISOString(),
+                confirmedVia: 'redirect_callback',
+              }),
+            },
+          });
+        }
+      });
+
+      this.logger.log(`✅ Payment confirmed successfully for order: ${payload.orderId}`);
+
+      return {
+        success: true,
+        message: 'Payment confirmed successfully',
+      };
+    } catch (error) {
+      this.logger.error(`❌ Failed to confirm payment for order: ${payload.orderId}`, error);
+      return {
+        success: false,
+        message: 'Failed to confirm payment',
+        error: error.message,
+      };
+    }
+  }
+
+  // ================== Manual Fail Payment (canceled/expired) ==================
+  async failPaymentManual(payload: {
+    orderId: string;
+    method: string;
+    resultCode: number;
+    message: string;
+  }) {
+    this.logger.log(`❌ Manual payment failure for order: ${payload.orderId} - ${payload.message}`);
+
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        // Update or create payment record as FAILED
+        const existingPayment = await tx.payment.findFirst({
+          where: {
+            orderId: payload.orderId,
+            method: payload.method as PaymentMethod,
+          },
+        });
+
+        if (existingPayment) {
+          // Update existing payment
+          await tx.payment.update({
+            where: { id: existingPayment.id },
+            data: {
+              status: PaymentStatus.FAILED,
+              metadata: JSON.stringify({
+                resultCode: payload.resultCode,
+                failedAt: new Date().toISOString(),
+                failReason: payload.message,
+                failedVia: 'redirect_callback',
+              }),
+            },
+          });
+        } else {
+          // Create new payment record
+          await tx.payment.create({
+            data: {
+              orderId: payload.orderId,
+              amount: 0,
+              status: PaymentStatus.FAILED,
+              method: payload.method as PaymentMethod,
+              metadata: JSON.stringify({
+                resultCode: payload.resultCode,
+                failedAt: new Date().toISOString(),
+                failReason: payload.message,
+                failedVia: 'redirect_callback',
+              }),
+            },
+          });
+        }
+      });
+
+      this.logger.log(`✅ Payment marked as failed for order: ${payload.orderId}`);
+
+      return {
+        success: true,
+        message: 'Payment marked as failed',
+      };
+    } catch (error) {
+      this.logger.error(`❌ Failed to update payment status for order: ${payload.orderId}`, error);
+      return {
+        success: false,
+        message: 'Failed to update payment status',
+        error: error.message,
+      };
     }
   }
 }

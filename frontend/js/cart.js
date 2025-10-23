@@ -44,6 +44,8 @@ class CartManager {
                 return;
             }
             
+            console.log('🔍 Validating cart products...');
+            
             // Load products by fetching each product individually
             // This is more efficient than loading all products
             const productPromises = cartProductIds.map(async (productId) => {
@@ -52,23 +54,90 @@ class CartManager {
                     if (response?.success) {
                         // Handle nested response
                         const data = response.data?.data || response.data;
-                        return data;
+                        return { productId, product: data, exists: true };
                     }
-                    return null;
+                    return { productId, product: null, exists: false };
                 } catch (error) {
-                    console.error(`Error loading product ${productId}:`, error);
-                    return null;
+                    console.error(`❌ Product ${productId} not found in database:`, error);
+                    return { productId, product: null, exists: false };
                 }
             });
             
-            const loadedProducts = await Promise.all(productPromises);
-            this.products = loadedProducts.filter(p => p !== null);
+            const results = await Promise.all(productPromises);
             
-            console.log(`Loaded ${this.products.length} products for ${this.cart.length} cart items`);
+            // Filter out products that exist
+            this.products = results
+                .filter(r => r.exists && r.product !== null)
+                .map(r => r.product);
+            
+            // Find invalid products (deleted from database)
+            const invalidProductIds = results
+                .filter(r => !r.exists)
+                .map(r => r.productId);
+            
+            // Auto-clean cart: Remove invalid products
+            if (invalidProductIds.length > 0) {
+                console.warn('⚠️ Found invalid products in cart:', invalidProductIds);
+                console.log('🧹 Cleaning cart...');
+                
+                // Remove invalid items from cart
+                this.cart = this.cart.filter(item => 
+                    !invalidProductIds.includes(item.productId)
+                );
+                
+                // Save cleaned cart and force update count
+                localStorage.setItem('cart', JSON.stringify(this.cart));
+                
+                console.log(`✅ Removed ${invalidProductIds.length} invalid product(s) from cart`);
+                console.log(`📦 Cart now has ${this.cart.length} valid item(s)`);
+                
+                // Force update cart count immediately
+                if (window.CartUtils) {
+                    window.CartUtils.updateCartCount();
+                }
+                
+                // Show notification to user
+                alert(`⚠️ Đã xóa ${invalidProductIds.length} sản phẩm không còn tồn tại khỏi giỏ hàng.`);
+            }
+            
+            // If cart is now empty, reset to 0
+            if (this.cart.length === 0) {
+                console.log('🗑️ Cart is now empty. Resetting...');
+                localStorage.setItem('cart', JSON.stringify([]));
+                
+                // Force update cart count to 0
+                const cartCountEl = document.getElementById('hpCartCount');
+                if (cartCountEl) {
+                    cartCountEl.textContent = '0';
+                    console.log('✅ Cart count forced to 0');
+                }
+                
+                if (window.CartUtils) {
+                    window.CartUtils.updateCartCount();
+                }
+            }
+            
+            console.log(`✅ Loaded ${this.products.length} valid products for ${this.cart.length} cart items`);
             
         } catch (error) {
-            console.error('Error loading products:', error);
+            console.error('❌ Error loading products:', error);
             this.products = [];
+            
+            // On error, clear cart to be safe
+            console.log('🧹 Clearing cart due to error...');
+            this.cart = [];
+            localStorage.setItem('cart', JSON.stringify([]));
+            
+            // Force update cart count to 0
+            const cartCountEl = document.getElementById('hpCartCount');
+            if (cartCountEl) {
+                cartCountEl.textContent = '0';
+                console.log('✅ Cart count forced to 0 due to error');
+            }
+            
+            if (window.CartUtils) {
+                window.CartUtils.updateCartCount();
+            }
         }
     }
 

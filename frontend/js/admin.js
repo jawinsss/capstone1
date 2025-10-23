@@ -1704,6 +1704,40 @@ document.addEventListener('DOMContentLoaded', async () => {
             </span>`;
         }
 
+        // Get payment method text
+        function getPaymentMethodText(method) {
+            const methodMap = {
+                'COD': 'Thanh toán khi nhận hàng',
+                'MOMO': 'Ví MoMo',
+                'ZALOPAY': 'Ví ZaloPay'
+            };
+            return methodMap[method] || method || 'COD';
+        }
+
+        // Get payment status badge
+        function getPaymentStatusBadge(order) {
+            const method = order.paymentMethod || 'COD';
+            const isPaid = order.isPaid || false;
+            
+            // Online payment (MoMo/ZaloPay)
+            if (method === 'MOMO' || method === 'ZALOPAY') {
+                if (isPaid) {
+                    return `<span style="background:#d1fae5;color:#10b981;padding:4px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:8px;">
+                        <i class="fa-solid fa-check-circle"></i> Đã thanh toán
+                    </span>`;
+                } else {
+                    return `<span style="background:#fee2e2;color:#ef4444;padding:4px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:8px;">
+                        <i class="fa-solid fa-times-circle"></i> Chưa thanh toán
+                    </span>`;
+                }
+            }
+            
+            // COD
+            return `<span style="background:#fef3c7;color:#f59e0b;padding:4px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;margin-left:8px;">
+                <i class="fa-solid fa-hand-holding-dollar"></i> Thanh toán khi nhận hàng
+            </span>`;
+        }
+
         // Load orders from API
         async function loadOrders() {
             try {
@@ -1850,11 +1884,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     }
                 }
 
-                return `
+                    return `
                     <div class="order-card" data-order-id="${order.id}" style="display:flex;gap:16px;padding:16px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;">
                         <div class="order-image" style="width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0;">
                             <img src="${productImage}" alt="Product" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://via.placeholder.com/80x80?text=No+Image'" />
-                        </div>
+                            </div>
                         <div style="flex:1;min-width:0;">
                             <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
                                 <div>
@@ -1888,7 +1922,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                         </div>
                     </div>
                 `;
-            }).join('');
+                }).join('');
 
             elements.container.innerHTML = listHTML;
 
@@ -2031,6 +2065,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 <span style="color:#64748b;">Tổng tiền:</span>
                                 <strong style="color:#3b82f6;margin-left:8px;font-size:1.125rem;">${formatVND(total)}</strong>
                             </div>
+                            <div style="margin-bottom:8px;">
+                                <span style="color:#64748b;">Phương thức:</span>
+                                <strong style="color:#1e293b;margin-left:8px;">${getPaymentMethodText(order.paymentMethod)}</strong>
+                            </div>
+                            <div>
+                                <span style="color:#64748b;">Thanh toán:</span>
+                                ${getPaymentStatusBadge(order)}
+                            </div>
                         </div>
                     </div>
                     <div>
@@ -2139,7 +2181,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
                 const res = await window.apiService.patch(`/orders/${orderId}/status`, { status: newStatus });
                 
-                if (res?.success) {
+            if (res?.success) {
                     alert('✅ Cập nhật trạng thái thành công!');
                     // Close modal
                     closeModal();
@@ -2846,9 +2888,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 mainCategorySelect.value = product.category.id;
                 // Update sub categories based on main category ID
                 updateEditSubCategories(product.category.id).then(() => {
-                    // Get saved subCategory from localStorage
-                    const savedSubCategory = getProductSubCategory(product.id);
-                    
+                // Get saved subCategory from localStorage
+                const savedSubCategory = getProductSubCategory(product.id);
+                
                     const subCategorySelect = document.getElementById('editSubCategory');
                     if (subCategorySelect && !subCategorySelect.disabled) {
                         if (savedSubCategory) {
@@ -2859,7 +2901,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                             } else {
                                 // If saved subCategory not found, select first available
                                 if (subCategorySelect.options.length > 1) {
-                                    subCategorySelect.selectedIndex = 1;
+                                subCategorySelect.selectedIndex = 1;
                                 }
                             }
                         } else {
@@ -2911,18 +2953,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             
             console.log('Categories data:', categoriesData);
             
-            mainCategorySelect.innerHTML = '';
-            const placeholder = document.createElement('option');
-            placeholder.textContent = 'Chọn danh mục sản phẩm';
-            placeholder.value = '';
-            mainCategorySelect.appendChild(placeholder);
-            
+                mainCategorySelect.innerHTML = '';
+                const placeholder = document.createElement('option');
+                placeholder.textContent = 'Chọn danh mục sản phẩm';
+                placeholder.value = '';
+                mainCategorySelect.appendChild(placeholder);
+                
             categoriesData.forEach(cat => {
-                const opt = document.createElement('option');
-                opt.value = cat.id;
-                opt.textContent = cat.name;
-                mainCategorySelect.appendChild(opt);
-            });
+                    const opt = document.createElement('option');
+                    opt.value = cat.id;
+                    opt.textContent = cat.name;
+                    mainCategorySelect.appendChild(opt);
+                });
         } catch (e) {
             console.error('Load edit categories error', e);
         }
@@ -2958,14 +3000,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.log('Subcategories data:', subcategories);
 
             if (subcategories.length > 0) {
-                subCategorySelect.disabled = false;
+            subCategorySelect.disabled = false;
                 subcategories.forEach(sub => {
-                    const opt = document.createElement('option');
+                const opt = document.createElement('option');
                     opt.value = sub.id;
                     opt.textContent = sub.name;
-                    subCategorySelect.appendChild(opt);
-                });
-            } else {
+                subCategorySelect.appendChild(opt);
+            });
+        } else {
                 subCategorySelect.disabled = true;
             }
         } catch (error) {

@@ -485,7 +485,7 @@ function createOrderCardHTML(order) {
                     <div class="order-product-name">${name}</div>
                     <div class="order-product-price">${formatVND(price)}</div>
                     <div class="order-product-quantity">Số lượng: ${qty}</div>
-                </div>
+        </div>
             </div>
         `;
     }).join('');
@@ -513,8 +513,8 @@ function createOrderCardHTML(order) {
                 <div class="order-total">
                     <div class="order-total-label">Tổng tiền</div>
                     <div class="order-total-amount">${formatVND(total)}</div>
-                </div>
-                <div class="order-actions">
+        </div>
+        <div class="order-actions">
                     ${actionsHTML}
                 </div>
             </div>
@@ -2031,20 +2031,20 @@ document.querySelectorAll(".nav-item").forEach((item) => {
           if (response.success) {
             console.log('✅ Profile updated successfully:', response);
             
-            updateDisplayName()
-            syncUserName()
+        updateDisplayName()
+        syncUserName()
             
             // Reload profile to sync new data
             await loadUserProfile();
-            
-            showModal(
-              "Thành công",
-              "Cập nhật thông tin thành công!",
-              () => {
-                exitEditMode()
-              },
-              null,
-            )
+  
+          showModal(
+            "Thành công",
+            "Cập nhật thông tin thành công!",
+            () => {
+              exitEditMode()
+            },
+            null,
+          )
           } else {
             console.error('❌ Failed to update profile:', response);
             showModal("Lỗi", response.message || "Có lỗi xảy ra khi cập nhật thông tin.", null, null)

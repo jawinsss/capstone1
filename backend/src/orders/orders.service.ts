@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
+import { PaymentMethod } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -113,6 +114,16 @@ export class OrdersService {
     const code = `ORD-${Date.now()}`;
     const productIds = (payload.items || []).map((i) => i.productId);
     
+    // Convert payment method string to enum
+    const paymentMethodStr = payload?.payment?.method || 'COD';
+    let paymentMethod: PaymentMethod = PaymentMethod.COD;
+    
+    if (paymentMethodStr === 'Ví MoMo' || paymentMethodStr === 'MOMO') {
+      paymentMethod = PaymentMethod.MOMO;
+    } else if (paymentMethodStr === 'Ví ZaloPay' || paymentMethodStr === 'ZALOPAY') {
+      paymentMethod = PaymentMethod.ZALOPAY;
+    }
+    
     // Load products with stock information
     const products = await this.prisma.product.findMany({ 
       where: { id: { in: productIds } }, 
@@ -188,8 +199,9 @@ export class OrdersService {
         data: {
           code,
           userId: user.id,
-          status: 'PENDING',
+          status: 'PENDING', // Always start with PENDING, will be updated to CONFIRMED by payment callback
           totalAmount,
+          paymentMethod, // Store payment method
           items: { create: items },
         },
         include: { items: true },
@@ -207,13 +219,15 @@ export class OrdersService {
         });
       }
 
-      // If prepayment in payload, create a pending payment
-      if (payload?.payment?.amount > 0) {
+      // Create initial payment record for tracking
+      // Note: This will be updated by payment gateway callback (MoMo/ZaloPay IPN)
+      if (payload?.payment?.amount > 0 || paymentMethod !== PaymentMethod.COD) {
         await tx.payment.create({ 
           data: { 
             orderId: createdOrder.id, 
-            amount: Math.trunc(payload.payment.amount), 
-            status: 'PENDING' 
+            amount: Math.trunc(payload.payment?.amount || totalAmount), 
+            status: 'PENDING',
+            method: paymentMethod
           } 
         });
       }

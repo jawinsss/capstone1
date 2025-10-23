@@ -78,6 +78,27 @@ document.addEventListener("DOMContentLoaded", async () => {
                         case 0:
                             paymentStatus = "Thành công";
                             isPaymentSuccess = true;
+                            
+                            // ✅ Call API to confirm payment in database
+                            const lastOrderId = sessionStorage.getItem('lastOrderId');
+                            if (lastOrderId) {
+                                console.log('🔄 Confirming payment for order:', lastOrderId);
+                                try {
+                                    const confirmRes = await window.apiService.post(
+                                        `/payment-gateway/confirm-payment`,
+                                        {
+                                            orderId: lastOrderId,
+                                            transactionId: urlParams.get('transId'),
+                                            method: 'MOMO',
+                                            amount: parseInt(urlParams.get('amount') || totalAmount),
+                                            resultCode: resultCode
+                                        }
+                                    );
+                                    console.log('✅ Payment confirmed:', confirmRes);
+                                } catch (error) {
+                                    console.error('❌ Failed to confirm payment:', error);
+                                }
+                            }
                             break;
                         case 1006:
                             paymentStatus = decodedMessage || "Giao dịch bị từ chối bởi người dùng";
@@ -94,10 +115,50 @@ document.addEventListener("DOMContentLoaded", async () => {
                         case 1009:
                             paymentStatus = "Giao dịch bị hủy";
                             isPaymentSuccess = false;
+                            
+                            // ❌ Call API to mark payment as failed
+                            const canceledOrderId = sessionStorage.getItem('lastOrderId');
+                            if (canceledOrderId) {
+                                console.log('🔄 Marking payment as failed (canceled) for order:', canceledOrderId);
+                                try {
+                                    await window.apiService.post(
+                                        `/payment-gateway/fail-payment`,
+                                        {
+                                            orderId: canceledOrderId,
+                                            method: 'MOMO',
+                                            resultCode: resultCode,
+                                            message: 'User canceled payment'
+                                        }
+                                    );
+                                    console.log('✅ Payment marked as failed');
+                                } catch (error) {
+                                    console.error('❌ Failed to update payment status:', error);
+                                }
+                            }
                             break;
                         case 1010:
                             paymentStatus = "Giao dịch hết hạn";
                             isPaymentSuccess = false;
+                            
+                            // ❌ Call API to mark payment as failed (expired)
+                            const expiredOrderId = sessionStorage.getItem('lastOrderId');
+                            if (expiredOrderId) {
+                                console.log('🔄 Marking payment as failed (expired) for order:', expiredOrderId);
+                                try {
+                                    await window.apiService.post(
+                                        `/payment-gateway/fail-payment`,
+                                        {
+                                            orderId: expiredOrderId,
+                                            method: 'MOMO',
+                                            resultCode: resultCode,
+                                            message: 'Payment expired (10 minutes)'
+                                        }
+                                    );
+                                    console.log('✅ Payment marked as failed');
+                                } catch (error) {
+                                    console.error('❌ Failed to update payment status:', error);
+                                }
+                            }
                             break;
                         default:
                             paymentStatus = decodedMessage || `Lỗi không xác định (Code: ${resultCode})`;
