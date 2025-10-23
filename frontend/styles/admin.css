@@ -554,6 +554,8 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
   height: 100%;
   z-index: 10000;
   display: none;
+  align-items: center;
+  justify-content: center;
 }
 
 .modal-overlay {
@@ -567,11 +569,19 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
   animation: fadeIn 0.2s ease;
 }
 
+/* Edit Product Modal specific styles */
+#editProductModal {
+  display: none;
+}
+
+#editProductModal.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
 .modal-content {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+  position: relative;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
@@ -580,6 +590,7 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
   max-height: 90vh;
   overflow-y: auto;
   animation: slideUp 0.3s ease;
+  z-index: 10001;
 }
 
 .modal-header {

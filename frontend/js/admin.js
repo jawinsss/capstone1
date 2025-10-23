@@ -1195,6 +1195,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             products.forEach(p => {
                 const item = document.createElement('article');
                 item.className = 'list-item';
+                
+                // Check if product is out of stock
+                const isOutOfStock = (p.stock || 0) <= 0;
+                if (isOutOfStock) {
+                    item.style.opacity = '0.5';
+                    item.style.filter = 'grayscale(30%)';
+                }
+                
                 const imageUrl = (p.images && p.images[0]?.url) || '';
                 // Handle both base64 and regular URLs
                 let thumb;
@@ -1207,10 +1215,16 @@ document.addEventListener('DOMContentLoaded', async () => {
                     // Regular URL - use CONFIG.getAssetUrl
                     thumb = CONFIG.getAssetUrl(imageUrl);
                 }
+                
+                // Stock badge
+                const stockBadge = isOutOfStock 
+                    ? '<span class="chip" style="background:#ef4444;color:#fff;font-size:0.7rem;padding:2px 6px;">Hết hàng</span>' 
+                    : '';
+                
                 item.innerHTML = `
                     <img src="${thumb}" alt="${p.name}" loading="lazy" class="avatar" style="width:40px;height:40px;object-fit:cover;border-radius:8px" onerror="this.src='/assets/Icon MatFlow.png'"/>
                     <div style="flex:1">
-                        <div class="list-title">${p.name} <span class="chip ${p.isActive ? 'green' : 'red'}">${p.isActive ? 'Đang bán' : 'Ẩn'}</span></div>
+                        <div class="list-title">${p.name} ${stockBadge} <span class="chip ${p.isActive ? 'green' : 'red'}">${p.isActive ? 'Đang bán' : 'Ẩn'}</span></div>
                         <div class="list-sub">Giá: ${formatCurrency(p.price)} • Danh mục: ${p.category?.name || ''} • Kho: ${p.stock}</div>
                     </div>
                     <div>
@@ -2788,13 +2802,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const mainCategorySelect = document.getElementById('editMainCategory');
             if (product.category && product.category.id) {
                 mainCategorySelect.value = product.category.id;
-                // Update sub categories based on main category
-                updateEditSubCategories(product.category.name);
-                
-                // Get saved subCategory from localStorage
-                const savedSubCategory = getProductSubCategory(product.id);
-                
-                setTimeout(() => {
+                // Update sub categories based on main category ID
+                updateEditSubCategories(product.category.id).then(() => {
+                    // Get saved subCategory from localStorage
+                    const savedSubCategory = getProductSubCategory(product.id);
+                    
                     const subCategorySelect = document.getElementById('editSubCategory');
                     if (subCategorySelect && !subCategorySelect.disabled) {
                         if (savedSubCategory) {
@@ -2804,7 +2816,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                                 subCategorySelect.value = savedSubCategory;
                             } else {
                                 // If saved subCategory not found, select first available
-                                subCategorySelect.selectedIndex = 1;
+                                if (subCategorySelect.options.length > 1) {
+                                    subCategorySelect.selectedIndex = 1;
+                                }
                             }
                         } else {
                             // If no saved subCategory, select first available
@@ -2813,17 +2827,22 @@ document.addEventListener('DOMContentLoaded', async () => {
                             }
                         }
                     }
-                }, 100);
+                });
             }
         });
 
+        // Show modal with flexbox centering
         modal.style.display = 'flex';
+        modal.classList.add('show');
+        document.body.style.overflow = 'hidden';
     }
 
     function closeEditModal() {
         const modal = document.getElementById('editProductModal');
         if (modal) {
             modal.style.display = 'none';
+            modal.classList.remove('show');
+            document.body.style.overflow = '';
             currentEditProduct = null;
         }
     }
@@ -2833,34 +2852,43 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (!mainCategorySelect) return;
 
         try {
-            const res = await window.apiService.get('/categories');
-            if (res?.success && Array.isArray(res.data)) {
-                mainCategorySelect.innerHTML = '';
-                const placeholder = document.createElement('option');
-                placeholder.textContent = 'Chọn danh mục sản phẩm';
-                placeholder.value = '';
-                mainCategorySelect.appendChild(placeholder);
-                
-                res.data.forEach(cat => {
-                    const opt = document.createElement('option');
-                    opt.value = cat.id;
-                    opt.textContent = cat.name;
-                    mainCategorySelect.appendChild(opt);
-                });
+            const res = await window.apiService.get('/categories/main');
+            console.log('Load edit categories response:', res);
+            
+            // Handle nested response structure: {success: true, data: {success: true, data: [...]}}
+            let categoriesData = [];
+            if (res?.success) {
+                if (res.data?.data && Array.isArray(res.data.data)) {
+                    // Nested structure
+                    categoriesData = res.data.data;
+                } else if (Array.isArray(res.data)) {
+                    // Direct array
+                    categoriesData = res.data;
+                }
             }
+            
+            console.log('Categories data:', categoriesData);
+            
+            mainCategorySelect.innerHTML = '';
+            const placeholder = document.createElement('option');
+            placeholder.textContent = 'Chọn danh mục sản phẩm';
+            placeholder.value = '';
+            mainCategorySelect.appendChild(placeholder);
+            
+            categoriesData.forEach(cat => {
+                const opt = document.createElement('option');
+                opt.value = cat.id;
+                opt.textContent = cat.name;
+                mainCategorySelect.appendChild(opt);
+            });
         } catch (e) {
             console.error('Load edit categories error', e);
         }
     }
 
-    function updateEditSubCategories(mainCategoryName) {
+    async function updateEditSubCategories(categoryId) {
         const subCategorySelect = document.getElementById('editSubCategory');
         if (!subCategorySelect) return;
-
-        // Find matching category in categories from API
-        const matchingCategory = categories.find(cat => 
-            cat.name.toLowerCase() === mainCategoryName.toLowerCase()
-        );
 
         subCategorySelect.innerHTML = '';
         const placeholder = document.createElement('option');
@@ -2868,17 +2896,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         placeholder.value = '';
         subCategorySelect.appendChild(placeholder);
 
-        if (matchingCategory && matchingCategory.children) {
-            subCategorySelect.disabled = false;
-            matchingCategory.children.forEach(child => {
-                const opt = document.createElement('option');
-                opt.value = child;
-                opt.textContent = child;
-                subCategorySelect.appendChild(opt);
-            });
-            
-            // Don't auto-select in edit modal - let user choose
-        } else {
+        if (!categoryId) {
+            subCategorySelect.disabled = true;
+            return;
+        }
+
+        try {
+            // Call API to get subcategories
+            const res = await window.apiService.get(`/categories/${categoryId}/subcategories`);
+            console.log('Subcategories response:', res);
+
+            let subcategories = [];
+            if (Array.isArray(res)) {
+                subcategories = res;
+            } else if (res?.data && Array.isArray(res.data)) {
+                subcategories = res.data;
+            }
+
+            console.log('Subcategories data:', subcategories);
+
+            if (subcategories.length > 0) {
+                subCategorySelect.disabled = false;
+                subcategories.forEach(sub => {
+                    const opt = document.createElement('option');
+                    opt.value = sub.id;
+                    opt.textContent = sub.name;
+                    subCategorySelect.appendChild(opt);
+                });
+            } else {
+                subCategorySelect.disabled = true;
+            }
+        } catch (error) {
+            console.error('Load subcategories error:', error);
             subCategorySelect.disabled = true;
         }
     }
@@ -2896,8 +2945,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Validation
         if (!name) return showNotification('Vui lòng nhập tên sản phẩm', 'error');
-        if (!price || price < 0) return showNotification('Giá bán không hợp lệ', 'error');
-        if (!stock || stock < 0) return showNotification('Số lượng không hợp lệ', 'error');
+        if (price === undefined || price === null || price < 0) return showNotification('Giá bán không hợp lệ', 'error');
+        if (stock === undefined || stock === null || stock < 0) return showNotification('Số lượng không hợp lệ', 'error');
         if (!description) return showNotification('Vui lòng nhập mô tả sản phẩm', 'error');
         if (!categoryId) return showNotification('Vui lòng chọn danh mục', 'error');
 
@@ -2912,7 +2961,12 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Note: subCategory is not supported by backend yet
             };
 
+            console.log('Updating product:', currentEditProduct.id);
+            console.log('Payload:', payload);
+
             const res = await window.apiService.patch(`/products/${currentEditProduct.id}`, payload);
+            
+            console.log('Update product response:', res);
             
             if (res?.success) {
                 // Save subCategory to localStorage
@@ -2922,7 +2976,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     removeProductSubCategory(currentEditProduct.id);
                 }
                 
-                showNotification('Đã cập nhật sản phẩm thành công!', 'success');
+                showNotification('✅ Đã cập nhật sản phẩm thành công!', 'success');
                 closeEditModal();
                 await loadProductsData();
                 
@@ -2934,9 +2988,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                     window.location.reload();
                 }, 1500);
             } else {
+                console.error('Update failed:', res);
                 showNotification(res?.message || 'Cập nhật sản phẩm thất bại', 'error');
             }
         } catch (e) {
+            console.error('Update product error:', e);
             showNotification('Có lỗi khi cập nhật sản phẩm: ' + (e.message || 'Lỗi không xác định'), 'error');
         }
     }
@@ -2956,8 +3012,8 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     document.addEventListener('change', (e) => {
         if (e.target && e.target.id === 'editMainCategory') {
-            const selectedCategoryName = e.target.options[e.target.selectedIndex].text;
-            updateEditSubCategories(selectedCategoryName);
+            const selectedCategoryId = e.target.value;
+            updateEditSubCategories(selectedCategoryId);
         }
     });
 
