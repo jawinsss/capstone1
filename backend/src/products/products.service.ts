@@ -43,21 +43,50 @@ export class ProductsService {
     const skip = (page - 1) * take;
     const where: any = {};
     
-    // Handle categoryId - include products from subcategories
+    // Handle categoryId - include products from subcategories and siblings
     if (params?.categoryId) {
-      // First, get all subcategories of the given category
-      const subcategories = await this.prisma.category.findMany({
-        where: {
-          parentId: params.categoryId
-        },
-        select: { id: true }
+      console.log('[ProductsService] Querying with categoryId:', params.categoryId);
+      
+      // Get the category to check if it has a parent
+      const category = await this.prisma.category.findUnique({
+        where: { id: params.categoryId },
+        select: { id: true, parentId: true, name: true }
       });
       
-      // Create array of category IDs (parent + all subcategories)
-      const categoryIds = [params.categoryId, ...subcategories.map(sub => sub.id)];
-      
-      // Find products in any of these categories
-      where.categoryId = { in: categoryIds };
+      if (!category) {
+        console.log('[ProductsService] Category not found:', params.categoryId);
+        where.categoryId = params.categoryId; // Fallback to exact match
+      } else {
+        console.log('[ProductsService] Category info:', category);
+        
+        // Check if this category has subcategories (is a parent)
+        const subcategories = await this.prisma.category.findMany({
+          where: { parentId: params.categoryId },
+          select: { id: true }
+        });
+        
+        console.log('[ProductsService] Found subcategories:', subcategories.length);
+        
+        if (subcategories.length > 0) {
+          // This is a parent category - include parent + all children
+          const categoryIds = [params.categoryId, ...subcategories.map(sub => sub.id)];
+          console.log('[ProductsService] Parent category - using IDs:', categoryIds);
+          where.categoryId = { in: categoryIds };
+        } else if (category.parentId) {
+          // This is a child category - include all siblings + parent for related products
+          const siblings = await this.prisma.category.findMany({
+            where: { parentId: category.parentId },
+            select: { id: true }
+          });
+          const categoryIds = [category.parentId, ...siblings.map(sib => sib.id)];
+          console.log('[ProductsService] Child category - including parent and siblings:', categoryIds);
+          where.categoryId = { in: categoryIds };
+        } else {
+          // Root category with no children - just use exact match
+          console.log('[ProductsService] Root category without children - exact match');
+          where.categoryId = params.categoryId;
+        }
+      }
     }
     
     if (params?.q) where.name = { contains: String(params.q), mode: 'insensitive' };
@@ -78,6 +107,15 @@ export class ProductsService {
       this.prisma.product.findMany({ where, include: { images: true, category: true }, orderBy, skip, take }),
       this.prisma.product.count({ where }),
     ]);
+    
+    console.log('[ProductsService] Query results:', {
+      foundItems: items.length,
+      total: total,
+      page: page,
+      take: take,
+      skip: skip
+    });
+    
     return {
       success: true,
       data: items,

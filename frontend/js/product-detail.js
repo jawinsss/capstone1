@@ -144,9 +144,22 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       
       console.log('Product data after processing:', productData);
+      console.log('Product categoryId:', productData?.categoryId);
+      console.log('Product category:', productData?.category);
+      
       currentProduct = productData;
       displayProductDetail(currentProduct);
-      loadRelatedProducts(currentProduct.categoryId, productId);
+      
+      // Get categoryId from product data (prioritize categoryId field)
+      const categoryId = currentProduct.categoryId || currentProduct.category?.id;
+      console.log('Using categoryId for related products:', categoryId);
+      
+      if (categoryId) {
+        loadRelatedProducts(categoryId, productId);
+      } else {
+        console.warn('No categoryId found for product, cannot load related products');
+      }
+      
       hideLoading();
       
     } catch (error) {
@@ -269,29 +282,71 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function loadRelatedProducts(categoryId, currentProductId) {
-    if (!categoryId) return;
+    if (!categoryId) {
+      console.warn('loadRelatedProducts: No categoryId provided');
+      return;
+    }
 
     try {
+      console.log(`Loading related products for category: ${categoryId}, excluding product: ${currentProductId}`);
+      
       // Load many products (50) to show all products in same category
-      const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(categoryId)}&take=50`);
+      // Using 'page' parameter (backend uses page, not skip)
+      const res = await window.apiService.get(`/products?categoryId=${encodeURIComponent(categoryId)}&take=50&page=1`);
+      
+      console.log('Related products API response:', res);
       
       if (!res?.success) {
-        console.log('Failed to load related products');
+        console.log('Failed to load related products:', res?.message);
         return;
       }
       
-      // Handle nested response structure
-      let data = res.data;
-      if (data && typeof data === 'object' && data.success && data.data) {
-        data = data.data;
+      // Handle multiple response structures
+      console.log('Raw API response structure:', {
+        hasData: !!res.data,
+        dataType: typeof res.data,
+        isArray: Array.isArray(res.data),
+        hasNestedData: !!(res.data?.data),
+        nestedDataIsArray: Array.isArray(res.data?.data),
+        hasMeta: !!res.meta,
+        keys: res.data ? Object.keys(res.data) : []
+      });
+      
+      let products = [];
+      if (res.data?.data && Array.isArray(res.data.data)) {
+        // Nested structure: {success, data: {data: [...], meta: {...}}}
+        console.log('Using nested structure: res.data.data');
+        products = res.data.data;
+      } else if (Array.isArray(res.data)) {
+        // Direct array: {success, data: [...]}
+        console.log('Using direct array: res.data');
+        products = res.data;
+      } else if (res.data && typeof res.data === 'object') {
+        // Object structure
+        console.log('Using object structure, checking properties...');
+        products = res.data.items || res.data.products || [];
+        console.log('Found items/products:', products.length);
       }
       
-      const products = Array.isArray(data) ? data : [];
-      // Filter out current product - show ALL remaining products
-      const relatedItems = products.filter(p => p.id !== currentProductId);
+      console.log(`✅ Found ${products.length} products in category ${categoryId}`);
+      if (products.length > 0) {
+        console.log('Sample product:', products[0]);
+      }
       
-      console.log(`Loaded ${relatedItems.length} related products for category ${categoryId}`);
-      displayRelatedProducts(relatedItems);
+      // Filter out current product - show ALL remaining products
+      const relatedItems = products.filter(p => p && p.id && p.id !== currentProductId);
+      
+      console.log(`Filtered to ${relatedItems.length} related products (excluding current product)`);
+      
+      if (relatedItems.length > 0) {
+        displayRelatedProducts(relatedItems);
+      } else {
+        console.log('No related products found to display');
+        // Show message instead of hiding section
+        if (relatedProducts) {
+          relatedProducts.innerHTML = '<p style="text-align: center; color: #666; padding: 40px;">Không có sản phẩm liên quan trong danh mục này.</p>';
+        }
+      }
       
     } catch (error) {
       console.error('Error loading related products:', error);
