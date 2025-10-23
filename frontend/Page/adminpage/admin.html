@@ -704,79 +704,188 @@
             </section>
 
             <!-- =========== payments ========= -->
+            <!-- =========== PAYMENT MANAGEMENT ========= -->
             <section id="view-payments" data-view="payments" hidden>
-                <h1>Quản lý thanh toán</h1>
-                <div class="tabs">
-                    <button class="tab-btn active">Xác nhận thanh toán</button>
-                    <button class="tab-btn">Quản lý công nợ</button>
-                    <button class="tab-btn">Phiếu thu/chi</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h1 style="margin:0;font-size:2rem;font-weight:700;color:#1e293b;">💰 Quản lý Thanh toán</h1>
+                        <p class="muted" style="margin-top:8px;">Theo dõi và xác nhận các giao dịch thanh toán • <span id="paymentLastUpdate">Đang tải...</span></p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="paymentRefreshBtn" class="btn" style="background: #3b82f6; color: #fff; border-color: #2563eb; display: flex; align-items: center; gap: 8px;" title="Làm mới dữ liệu">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span class="hide-sm">Làm mới</span>
+                        </button>
+                    </div>
                 </div>
 
-                <section class="order-stats">
-                    <div class="order-stat">
-                        <div class="order-stat-title">Chờ xác nhận</div>
-                        <div class="order-stat-value">3</div>
+                <!-- KPI Cards -->
+                <div class="payment-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
+                    <!-- Total Revenue -->
+                    <div class="payment-kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <i class="fa-solid fa-coins" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">Tổng</span>
+                        </div>
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 4px;">Tổng Doanh Thu</div>
+                        <div id="paymentKpiTotalRevenue" style="font-size: 2rem; font-weight: 700;">0 đ</div>
                     </div>
-                </section>
-                <section class="order-stats">
-                    <div class="order-stat">
-                        <div class="order-stat-title">Đã xác nhận</div>
-                        <div class="order-stat-value">12</div>
-                    </div>
-                </section>
-                <section class="order-stats">
-                    <div class="order-stat">
-                        <div class="order-stat-title">Công nợ quá hạn</div>
-                        <div class="order-stat-value">2</div>
-                    </div>
-                </section>
-                <section class="order-stats">
-                    <div class="order-stat">
-                        <div class="order-stat-title">Tổng doanh thu</div>
-                        <div class="order-stat-value">45.2M</div>
-                    </div>
-                </section>
 
-                <section class="list">
-                    <article class="list-item">
-                        <div
-                            class="avatar"
-                            style="
-                            width: 40px;
-                            height: 40px;
-                            background: #e5e7eb;
-                            border-radius: 8px;
-                            "
-                        ></div>
-                        <div style="flex:1">
-                            <div class="list-title">Họ và tên: Nguyễn Văn A</div>
-                            <div class="list-sub">Đã thanh toán chờ xác nhận</div>
+                    <!-- Pending COD -->
+                    <div class="payment-kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <i class="fa-solid fa-clock" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">COD</span>
                         </div>
-                        <button 
-                            class="btn"
-                            style="background: #22c55e; color: #fff; border-color: #16a34a"
-                        > Xác nhận </button>
-                    </article>
-                    <article class="list-item">
-                        <div
-                            class="avatar"
-                            style="
-                            width: 40px;
-                            height: 40px;
-                            background: #e5e7eb;
-                            border-radius: 8px;
-                            "
-                        ></div>
-                        <div style="flex:1">
-                            <div class="list-title">Họ và tên: Ngô Minh Tâm</div>
-                            <div class="list-sub">Đã thanh toán chờ xác nhận</div>
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 4px;">Chờ Xác Nhận</div>
+                        <div id="paymentKpiPendingCOD" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+
+                    <!-- Confirmed Payments -->
+                    <div class="payment-kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <i class="fa-solid fa-check-circle" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">OK</span>
                         </div>
-                        <button 
-                            class="btn"
-                            style="background: #22c55e; color: #fff; border-color: #16a34a"
-                        > Xác nhận </button>
-                    </article>
-                </section>
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 4px;">Đã Xác Nhận</div>
+                        <div id="paymentKpiConfirmed" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+
+                    <!-- Failed Payments -->
+                    <div class="payment-kpi-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                            <i class="fa-solid fa-times-circle" style="font-size: 2rem; opacity: 0.9;"></i>
+                            <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">Lỗi</span>
+                        </div>
+                        <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 4px;">Thất Bại</div>
+                        <div id="paymentKpiFailed" style="font-size: 2rem; font-weight: 700;">0</div>
+                    </div>
+                </div>
+
+                <!-- Revenue Breakdown -->
+                <div id="paymentRevenueBreakdown" style="background: #fff; border-radius: 16px; padding: 24px; margin-bottom: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <h3 style="margin: 0 0 20px 0; font-size: 1.25rem; font-weight: 600; color: #1e293b;">
+                        <i class="fa-solid fa-chart-pie" style="color: #3b82f6; margin-right: 8px;"></i>
+                        Doanh Thu Theo Phương Thức
+                    </h3>
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;" id="paymentMethodBreakdown">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+
+                <!-- Filter Section -->
+                <div style="background: #f8fafc; border-radius: 16px; padding: 24px; margin-bottom: 24px; border: 1px solid #e2e8f0;">
+                    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px;">
+                        <!-- Payment Method Filter -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.875rem;">
+                                <i class="fa-solid fa-filter"></i> Phương thức
+                            </label>
+                            <select id="paymentMethodFilter" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; background: white;">
+                                <option value="">Tất cả</option>
+                                <option value="COD">COD (Ship hàng)</option>
+                                <option value="MOMO">Ví MoMo</option>
+                                <option value="ZALOPAY">Ví ZaloPay</option>
+                            </select>
+                        </div>
+
+                        <!-- Status Filter -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.875rem;">
+                                <i class="fa-solid fa-tag"></i> Trạng thái
+                            </label>
+                            <select id="paymentStatusFilter" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem; background: white;">
+                                <option value="">Tất cả</option>
+                                <option value="PENDING">Chờ xác nhận</option>
+                                <option value="CONFIRMED">Đã xác nhận</option>
+                                <option value="FAILED">Thất bại</option>
+                            </select>
+                        </div>
+
+                        <!-- Search -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.875rem;">
+                                <i class="fa-solid fa-search"></i> Tìm kiếm
+                            </label>
+                            <input type="text" id="paymentSearchInput" placeholder="Mã đơn, mã giao dịch..." style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem;" />
+                        </div>
+
+                        <!-- Date Range -->
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.875rem;">
+                                <i class="fa-solid fa-calendar"></i> Từ ngày
+                            </label>
+                            <input type="date" id="paymentStartDate" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem;" />
+                        </div>
+
+                        <div>
+                            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #475569; font-size: 0.875rem;">
+                                <i class="fa-solid fa-calendar"></i> Đến ngày
+                            </label>
+                            <input type="date" id="paymentEndDate" style="width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.875rem;" />
+                        </div>
+
+                        <!-- Apply Filters Button -->
+                        <div style="display: flex; align-items: flex-end;">
+                            <button id="paymentApplyFiltersBtn" style="width: 100%; padding: 10px 16px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                                <i class="fa-solid fa-check"></i> Áp dụng
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Payments Table -->
+                <div style="background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                    <div style="overflow-x: auto;">
+                        <table class="data-table" style="width: 100%; border-collapse: collapse;">
+                            <thead style="background: #f8fafc; border-bottom: 2px solid #e2e8f0;">
+                                <tr>
+                                    <th style="padding: 16px; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Mã GD</th>
+                                    <th style="padding: 16px; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Đơn hàng</th>
+                                    <th style="padding: 16px; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Khách hàng</th>
+                                    <th style="padding: 16px; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Phương thức</th>
+                                    <th style="padding: 16px; text-align: right; font-weight: 600; color: #475569; font-size: 0.875rem;">Số tiền</th>
+                                    <th style="padding: 16px; text-align: center; font-weight: 600; color: #475569; font-size: 0.875rem;">Trạng thái</th>
+                                    <th style="padding: 16px; text-align: left; font-weight: 600; color: #475569; font-size: 0.875rem;">Ngày tạo</th>
+                                    <th style="padding: 16px; text-align: center; font-weight: 600; color: #475569; font-size: 0.875rem;">Thao tác</th>
+                                </tr>
+                            </thead>
+                            <tbody id="paymentsTableBody">
+                                <tr>
+                                    <td colspan="8" style="padding: 60px; text-align: center; color: #94a3b8;">
+                                        <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; margin-bottom: 12px;"></i>
+                                        <div>Đang tải dữ liệu...</div>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Empty State -->
+                <div id="paymentEmptyState" style="display: none; text-align: center; padding: 60px 20px; background: white; border-radius: 16px; margin-top: 20px;">
+                    <i class="fa-solid fa-receipt" style="font-size: 4rem; color: #cbd5e1; margin-bottom: 16px;"></i>
+                    <h3 style="color: #64748b; margin-bottom: 8px;">Không tìm thấy giao dịch</h3>
+                    <p style="color: #94a3b8;">Thử thay đổi bộ lọc hoặc tìm kiếm với từ khóa khác</p>
+                </div>
+
+                <!-- Payment Detail Modal -->
+                <div id="paymentDetailModal" class="modal" style="display: none;">
+                    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; padding-bottom: 16px; border-bottom: 2px solid #e2e8f0;">
+                            <h2 style="margin: 0; font-size: 1.5rem; font-weight: 700; color: #1e293b;">
+                                <i class="fa-solid fa-receipt"></i> Chi tiết giao dịch
+                            </h2>
+                            <button onclick="closePaymentDetailModal()" style="background: none; border: none; font-size: 1.5rem; color: #64748b; cursor: pointer; padding: 8px; line-height: 1;">
+                                <i class="fa-solid fa-times"></i>
+                            </button>
+                        </div>
+                        <div id="paymentDetailContent">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+
             </section>
 
             <!-- =========== reports ========= -->

@@ -219,18 +219,22 @@ export class OrdersService {
         });
       }
 
-      // Create initial payment record for tracking
-      // Note: This will be updated by payment gateway callback (MoMo/ZaloPay IPN)
-      if (payload?.payment?.amount > 0 || paymentMethod !== PaymentMethod.COD) {
-        await tx.payment.create({ 
-          data: { 
-            orderId: createdOrder.id, 
-            amount: Math.trunc(payload.payment?.amount || totalAmount), 
-            status: 'PENDING',
-            method: paymentMethod
-          } 
-        });
-      }
+      // Create initial payment record for ALL orders (including COD)
+      // - COD: status = PENDING (will be confirmed by admin after delivery)
+      // - MoMo/ZaloPay: status = PENDING (will be confirmed by payment gateway callback)
+      await tx.payment.create({ 
+        data: { 
+          orderId: createdOrder.id, 
+          amount: Math.trunc(totalAmount), 
+          status: 'PENDING',
+          method: paymentMethod,
+          metadata: JSON.stringify({
+            createdFrom: 'order-checkout',
+            paymentMethod: paymentMethod,
+            initialAmount: totalAmount,
+          }),
+        } 
+      });
 
       return createdOrder;
     });

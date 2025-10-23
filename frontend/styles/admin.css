@@ -2334,3 +2334,86 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
     grid-template-columns: 1fr;
   }
 }
+
+/* ========== PAYMENT MANAGEMENT ========== */
+#paymentDetailModal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 10000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  backdrop-filter: blur(4px);
+  animation: fadeIn 0.2s ease-out;
+}
+
+#paymentDetailModal.show {
+  display: flex !important;
+}
+
+#paymentDetailModal .modal-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  animation: slideUp 0.3s ease-out;
+  position: relative;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.payment-kpi-card {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.payment-kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Responsive adjustments for payment management */
+@media (max-width: 768px) {
+  .payment-kpis {
+    grid-template-columns: 1fr !important;
+  }
+  
+  #paymentDetailModal .modal-content {
+    margin: 20px;
+    max-width: calc(100% - 40px) !important;
+  }
+  
+  #paymentDetailContent > div[style*="grid"] {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Data table enhancements */
+.data-table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+  background: #f8fafc !important;
+  transform: scale(1.001);
+}

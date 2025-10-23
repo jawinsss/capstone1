@@ -63,6 +63,12 @@ class ApiService {
                 throw new Error(data.message || `HTTP error! status: ${response.status}`);
             }
 
+            // If backend already returns structured response with success/data, return as-is
+            if (data && typeof data === 'object' && 'success' in data && 'data' in data) {
+                return data;
+            }
+
+            // Otherwise, wrap it
             return {
                 success: true,
                 data: data,

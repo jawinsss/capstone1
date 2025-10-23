@@ -5464,4 +5464,506 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         });
     });
+
+    // ========== PAYMENT MANAGEMENT ==========
+    function initPaymentsView() {
+        console.log('🔄 Initializing Payment Management View...');
+        
+        const elements = {
+            // KPI Elements
+            kpiTotalRevenue: document.getElementById('paymentKpiTotalRevenue'),
+            kpiPendingCOD: document.getElementById('paymentKpiPendingCOD'),
+            kpiConfirmed: document.getElementById('paymentKpiConfirmed'),
+            kpiFailed: document.getElementById('paymentKpiFailed'),
+            
+            // Filter Elements
+            methodFilter: document.getElementById('paymentMethodFilter'),
+            statusFilter: document.getElementById('paymentStatusFilter'),
+            searchInput: document.getElementById('paymentSearchInput'),
+            startDate: document.getElementById('paymentStartDate'),
+            endDate: document.getElementById('paymentEndDate'),
+            applyFiltersBtn: document.getElementById('paymentApplyFiltersBtn'),
+            
+            // Table Elements
+            tableBody: document.getElementById('paymentsTableBody'),
+            emptyState: document.getElementById('paymentEmptyState'),
+            
+            // Other Elements
+            refreshBtn: document.getElementById('paymentRefreshBtn'),
+            lastUpdate: document.getElementById('paymentLastUpdate'),
+            methodBreakdown: document.getElementById('paymentMethodBreakdown'),
+        };
+
+        let state = {
+            payments: [],
+            stats: null,
+            filters: {
+                method: '',
+                status: '',
+                search: '',
+                startDate: null,
+                endDate: null,
+            },
+        };
+
+        // Helper Functions
+        function formatVND(amount) {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+            });
+        }
+
+        function getPaymentMethodBadge(method) {
+            const methodMap = {
+                COD: { text: 'COD', icon: 'fa-hand-holding-dollar', color: '#f59e0b', bg: '#fef3c7' },
+                MOMO: { text: 'MoMo', icon: 'fa-wallet', color: '#ec4899', bg: '#fce7f3' },
+                ZALOPAY: { text: 'ZaloPay', icon: 'fa-wallet', color: '#3b82f6', bg: '#dbeafe' },
+            };
+            const m = methodMap[method] || { text: method, icon: 'fa-question', color: '#64748b', bg: '#f1f5f9' };
+            return `<span style="background:${m.bg};color:${m.color};padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fa-solid ${m.icon}"></i> ${m.text}
+            </span>`;
+        }
+
+        function getPaymentStatusBadge(status) {
+            const statusMap = {
+                PENDING: { text: 'Chờ xác nhận', icon: 'fa-clock', color: '#f59e0b', bg: '#fef3c7' },
+                CONFIRMED: { text: 'Đã xác nhận', icon: 'fa-check-circle', color: '#10b981', bg: '#d1fae5' },
+                FAILED: { text: 'Thất bại', icon: 'fa-times-circle', color: '#ef4444', bg: '#fee2e2' },
+            };
+            const s = statusMap[status] || { text: status, icon: 'fa-question', color: '#64748b', bg: '#f1f5f9' };
+            return `<span style="background:${s.bg};color:${s.color};padding:6px 12px;border-radius:8px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:6px;">
+                <i class="fa-solid ${s.icon}"></i> ${s.text}
+            </span>`;
+        }
+
+        // Load Payments
+        async function loadPayments() {
+            try {
+                console.log('📡 Loading payments with filters:', state.filters);
+                
+                const queryParams = new URLSearchParams();
+                if (state.filters.method) queryParams.append('method', state.filters.method);
+                if (state.filters.status) queryParams.append('status', state.filters.status);
+                if (state.filters.search) queryParams.append('search', state.filters.search);
+                if (state.filters.startDate) queryParams.append('startDate', state.filters.startDate);
+                if (state.filters.endDate) queryParams.append('endDate', state.filters.endDate);
+
+                const url = `/payments${queryParams.toString() ? '?' + queryParams.toString() : ''}`;
+                const res = await window.apiService.get(url);
+                
+                console.log('✅ Payments loaded:', res);
+                
+                if (res.success && res.data) {
+                    state.payments = res.data;
+                    renderPayments();
+                    updateLastUpdate();
+                }
+            } catch (error) {
+                console.error('❌ Error loading payments:', error);
+                showError('Không thể tải dữ liệu thanh toán');
+            }
+        }
+
+        // Load Statistics
+        async function loadStats() {
+            try {
+                console.log('📊 Loading payment statistics...');
+                
+                const res = await window.apiService.get('/payments/stats');
+                
+                console.log('✅ Stats loaded:', res);
+                
+                if (res.success && res.data) {
+                    state.stats = res.data;
+                    updateKPIs();
+                    updateRevenueBreakdown();
+                }
+            } catch (error) {
+                console.error('❌ Error loading stats:', error);
+            }
+        }
+
+        // Update KPIs
+        function updateKPIs() {
+            if (!state.stats) return;
+            
+            elements.kpiTotalRevenue.textContent = formatVND(state.stats.totalRevenue || 0);
+            elements.kpiPendingCOD.textContent = (state.stats.pendingCOD || 0).toString();
+            elements.kpiConfirmed.textContent = (state.stats.confirmedCount || 0).toString();
+            elements.kpiFailed.textContent = (state.stats.failedCount || 0).toString();
+        }
+
+        // Update Revenue Breakdown
+        function updateRevenueBreakdown() {
+            if (!state.stats || !state.stats.revenueByMethod) return;
+            
+            const methodIcons = {
+                COD: 'fa-hand-holding-dollar',
+                MOMO: 'fa-wallet',
+                ZALOPAY: 'fa-wallet',
+            };
+
+            const methodColors = {
+                COD: '#f59e0b',
+                MOMO: '#ec4899',
+                ZALOPAY: '#3b82f6',
+            };
+
+            const html = state.stats.revenueByMethod.map(item => `
+                <div style="background: #f8fafc; border-radius: 12px; padding: 20px; border-left: 4px solid ${methodColors[item.method] || '#64748b'};">
+                    <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px;">
+                        <i class="fa-solid ${methodIcons[item.method] || 'fa-question'}" style="font-size: 1.5rem; color: ${methodColors[item.method] || '#64748b'};"></i>
+                        <div>
+                            <div style="font-weight: 600; color: #1e293b; font-size: 0.875rem;">
+                                ${item.method === 'COD' ? 'Ship COD' : item.method === 'MOMO' ? 'Ví MoMo' : item.method === 'ZALOPAY' ? 'Ví ZaloPay' : item.method}
+                            </div>
+                            <div style="color: #64748b; font-size: 0.75rem;">${item.count} giao dịch</div>
+                        </div>
+                    </div>
+                    <div style="font-size: 1.5rem; font-weight: 700; color: ${methodColors[item.method] || '#64748b'};">
+                        ${formatVND(item.revenue || 0)}
+                    </div>
+                </div>
+            `).join('');
+
+            elements.methodBreakdown.innerHTML = html;
+        }
+
+        // Render Payments Table
+        function renderPayments() {
+            if (!state.payments || state.payments.length === 0) {
+                elements.tableBody.innerHTML = '';
+                elements.emptyState.style.display = 'block';
+                return;
+            }
+
+            elements.emptyState.style.display = 'none';
+
+            const html = state.payments.map(payment => {
+                const customerName = payment.order?.user?.fullName || 'N/A';
+                const orderCode = payment.order?.code || 'N/A';
+                const transactionId = payment.transactionId || payment.id.substring(0, 8);
+                
+                return `
+                    <tr style="border-bottom: 1px solid #e2e8f0; transition: background 0.2s;" onmouseover="this.style.background='#f8fafc'" onmouseout="this.style.background='white'">
+                        <td style="padding: 16px;">
+                            <div style="font-weight: 600; color: #1e293b; font-size: 0.875rem;">${transactionId}</div>
+                        </td>
+                        <td style="padding: 16px;">
+                            <div style="font-weight: 600; color: #3b82f6; font-size: 0.875rem; cursor: pointer;" onclick="viewPaymentDetail('${payment.id}')">
+                                ${orderCode}
+                            </div>
+                        </td>
+                        <td style="padding: 16px;">
+                            <div style="font-weight: 500; color: #1e293b; font-size: 0.875rem;">${customerName}</div>
+                            <div style="color: #64748b; font-size: 0.75rem;">${payment.order?.user?.email || ''}</div>
+                        </td>
+                        <td style="padding: 16px;">
+                            ${getPaymentMethodBadge(payment.method)}
+                        </td>
+                        <td style="padding: 16px; text-align: right;">
+                            <div style="font-weight: 700; color: #1e293b; font-size: 0.875rem;">${formatVND(payment.amount)}</div>
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            ${getPaymentStatusBadge(payment.status)}
+                        </td>
+                        <td style="padding: 16px;">
+                            <div style="color: #475569; font-size: 0.875rem;">${formatDate(payment.createdAt)}</div>
+                        </td>
+                        <td style="padding: 16px; text-align: center;">
+                            ${getActionButtons(payment)}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            elements.tableBody.innerHTML = html;
+        }
+
+        // Get Action Buttons
+        function getActionButtons(payment) {
+            const buttons = [];
+            
+            // View Detail Button
+            buttons.push(`
+                <button onclick="viewPaymentDetail('${payment.id}')" 
+                    style="padding: 8px 16px; background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer; margin-right: 8px;"
+                    onmouseover="this.style.background='#e2e8f0'"
+                    onmouseout="this.style.background='#f8fafc'">
+                    <i class="fa-solid fa-eye"></i> Chi tiết
+                </button>
+            `);
+
+            // Confirm COD Button (only for pending COD payments)
+            if (payment.method === 'COD' && payment.status === 'PENDING') {
+                buttons.push(`
+                    <button onclick="confirmCODPayment('${payment.id}')" 
+                        style="padding: 8px 16px; background: #10b981; color: white; border: none; border-radius: 8px; font-size: 0.75rem; font-weight: 600; cursor: pointer;"
+                        onmouseover="this.style.background='#059669'"
+                        onmouseout="this.style.background='#10b981'">
+                        <i class="fa-solid fa-check"></i> Xác nhận COD
+                    </button>
+                `);
+            }
+
+            return buttons.join('');
+        }
+
+        // View Payment Detail
+        window.viewPaymentDetail = async function(paymentId) {
+            try {
+                console.log('🔍 Viewing payment detail:', paymentId);
+                
+                const res = await window.apiService.get(`/payments/${paymentId}`);
+                
+                if (res.success && res.data) {
+                    showPaymentDetailModal(res.data);
+                }
+            } catch (error) {
+                console.error('❌ Error loading payment detail:', error);
+                alert('Không thể tải chi tiết giao dịch');
+            }
+        };
+
+        // Show Payment Detail Modal
+        function showPaymentDetailModal(payment) {
+            const modal = document.getElementById('paymentDetailModal');
+            const content = document.getElementById('paymentDetailContent');
+            
+            const customerName = payment.order?.user?.fullName || 'N/A';
+            const customerEmail = payment.order?.user?.email || 'N/A';
+            const customerPhone = payment.order?.user?.phone || 'N/A';
+            const orderCode = payment.order?.code || 'N/A';
+            const transactionId = payment.transactionId || payment.id;
+            
+            let customerAddress = payment.order?.user?.fullAddress || 'N/A';
+            if (!payment.order?.user?.fullAddress && payment.order?.user?.street) {
+                const parts = [
+                    payment.order.user.street,
+                    payment.order.user.ward,
+                    payment.order.user.district,
+                    payment.order.user.city
+                ].filter(Boolean);
+                customerAddress = parts.join(', ') || 'N/A';
+            }
+
+            const metadata = payment.metadata ? JSON.parse(payment.metadata) : {};
+            
+            const html = `
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <!-- Payment Info -->
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px; color: #1e293b;">
+                            <i class="fa-solid fa-money-bill"></i> Thông tin thanh toán
+                        </h3>
+                        <div style="background: #f8fafc; padding: 16px; border-radius: 12px;">
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Mã giao dịch</div>
+                                <div style="font-weight: 600; color: #1e293b;">${transactionId}</div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Phương thức</div>
+                                <div>${getPaymentMethodBadge(payment.method)}</div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Trạng thái</div>
+                                <div>${getPaymentStatusBadge(payment.status)}</div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Số tiền</div>
+                                <div style="font-weight: 700; color: #3b82f6; font-size: 1.25rem;">${formatVND(payment.amount)}</div>
+                            </div>
+                            <div>
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Ngày tạo</div>
+                                <div style="font-weight: 500; color: #1e293b;">${formatDate(payment.createdAt)}</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Customer Info -->
+                    <div>
+                        <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px; color: #1e293b;">
+                            <i class="fa-solid fa-user"></i> Thông tin khách hàng
+                        </h3>
+                        <div style="background: #f8fafc; padding: 16px; border-radius: 12px;">
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Họ tên</div>
+                                <div style="font-weight: 600; color: #1e293b;">${customerName}</div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Email</div>
+                                <div style="font-weight: 500; color: #1e293b;">${customerEmail}</div>
+                            </div>
+                            <div style="margin-bottom: 12px;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Điện thoại</div>
+                                <div style="font-weight: 500; color: #1e293b;">${customerPhone}</div>
+                            </div>
+                            <div>
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Địa chỉ</div>
+                                <div style="font-weight: 500; color: #1e293b;">${customerAddress}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Order Info -->
+                <div style="margin-top: 24px;">
+                    <h3 style="font-size: 1.125rem; font-weight: 600; margin-bottom: 16px; color: #1e293b;">
+                        <i class="fa-solid fa-shopping-cart"></i> Thông tin đơn hàng
+                    </h3>
+                    <div style="background: #f8fafc; padding: 16px; border-radius: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 12px;">
+                            <div>
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Mã đơn hàng</div>
+                                <div style="font-weight: 600; color: #3b82f6;">${orderCode}</div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 4px;">Tổng tiền</div>
+                                <div style="font-weight: 700; color: #1e293b;">${formatVND(payment.order?.totalAmount || 0)}</div>
+                            </div>
+                        </div>
+                        ${payment.order?.items && payment.order.items.length > 0 ? `
+                            <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e2e8f0;">
+                                <div style="color: #64748b; font-size: 0.875rem; margin-bottom: 8px;">Sản phẩm (${payment.order.items.length})</div>
+                                ${payment.order.items.map(item => `
+                                    <div style="display: flex; gap: 12px; margin-bottom: 8px; padding: 8px; background: white; border-radius: 8px;">
+                                        <img src="${item.product?.images?.[0] || '/assets/Icon MatFlow.png'}" 
+                                             style="width: 40px; height: 40px; border-radius: 8px; object-fit: cover;" />
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 500; color: #1e293b; font-size: 0.875rem;">${item.product?.name || 'N/A'}</div>
+                                            <div style="color: #64748b; font-size: 0.75rem;">SL: ${item.quantity} × ${formatVND(item.price)}</div>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        ` : ''}
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                ${payment.method === 'COD' && payment.status === 'PENDING' ? `
+                    <div style="margin-top: 24px; padding-top: 24px; border-top: 2px solid #e2e8f0; text-align: center;">
+                        <button onclick="confirmCODPayment('${payment.id}')" 
+                            style="padding: 12px 32px; background: #10b981; color: white; border: none; border-radius: 12px; font-size: 1rem; font-weight: 600; cursor: pointer; box-shadow: 0 4px 6px rgba(16,185,129,0.2);"
+                            onmouseover="this.style.background='#059669'"
+                            onmouseout="this.style.background='#10b981'">
+                            <i class="fa-solid fa-check-circle"></i> Xác nhận đã nhận tiền COD
+                        </button>
+                        <p style="color: #64748b; font-size: 0.875rem; margin-top: 12px;">
+                            Xác nhận rằng bạn đã nhận tiền mặt từ khách hàng cho đơn hàng này
+                        </p>
+                    </div>
+                ` : ''}
+            `;
+
+            content.innerHTML = html;
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close Payment Detail Modal
+        window.closePaymentDetailModal = function() {
+            const modal = document.getElementById('paymentDetailModal');
+            modal.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        };
+
+        // Confirm COD Payment
+        window.confirmCODPayment = async function(paymentId) {
+            if (!confirm('⚠️ Xác nhận rằng bạn đã nhận tiền mặt từ khách hàng?\n\nHành động này không thể hoàn tác.')) {
+                return;
+            }
+
+            try {
+                console.log('✅ Confirming COD payment:', paymentId);
+                
+                const res = await window.apiService.patch(`/payments/${paymentId}/confirm`);
+                
+                if (res.success) {
+                    alert('✅ Đã xác nhận thanh toán COD thành công!');
+                    closePaymentDetailModal();
+                    await loadPayments();
+                    await loadStats();
+                } else {
+                    alert('❌ Không thể xác nhận thanh toán: ' + (res.message || 'Lỗi không xác định'));
+                }
+            } catch (error) {
+                console.error('❌ Error confirming COD payment:', error);
+                alert('❌ Không thể xác nhận thanh toán. Vui lòng thử lại.');
+            }
+        };
+
+        // Apply Filters
+        function applyFilters() {
+            state.filters.method = elements.methodFilter.value;
+            state.filters.status = elements.statusFilter.value;
+            state.filters.search = elements.searchInput.value.trim();
+            state.filters.startDate = elements.startDate.value || null;
+            state.filters.endDate = elements.endDate.value || null;
+
+            loadPayments();
+        }
+
+        // Update Last Update Time
+        function updateLastUpdate() {
+            if (elements.lastUpdate) {
+                elements.lastUpdate.textContent = new Date().toLocaleString('vi-VN', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                });
+            }
+        }
+
+        // Show Error
+        function showError(message) {
+            elements.tableBody.innerHTML = `
+                <tr>
+                    <td colspan="8" style="padding: 60px; text-align: center;">
+                        <i class="fa-solid fa-exclamation-circle" style="font-size: 2rem; color: #ef4444; margin-bottom: 12px;"></i>
+                        <div style="color: #ef4444; font-weight: 600;">${message}</div>
+                    </td>
+                </tr>
+            `;
+        }
+
+        // Event Listeners
+        elements.refreshBtn?.addEventListener('click', async () => {
+            await loadPayments();
+            await loadStats();
+        });
+
+        elements.applyFiltersBtn?.addEventListener('click', applyFilters);
+
+        elements.searchInput?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                applyFilters();
+            }
+        });
+
+        // Initialize
+        loadPayments();
+        loadStats();
+        
+        console.log('✅ Payment Management View initialized');
+    }
+
+    // ========== PAYMENT MANAGEMENT ==========
+    document.addEventListener('DOMContentLoaded', () => {
+        const navItems = document.querySelectorAll('.nav-item[data-link="payments"]');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                setTimeout(() => initPaymentsView(), 100);
+            });
+        });
+    });
 });
