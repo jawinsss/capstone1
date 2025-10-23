@@ -1,6 +1,7 @@
 import { Body, Controller, Get, Param, Patch, Post, Delete, UseGuards, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
+import { OrderAutomationService } from './order-automation.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { RolesGuard } from '../auth/roles.guard';
 import { Roles } from '../auth/roles.decorator';
@@ -8,7 +9,10 @@ import { Roles } from '../auth/roles.decorator';
 @ApiTags('orders')
 @Controller('orders')
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly ordersService: OrdersService,
+    private readonly automationService: OrderAutomationService,
+  ) {}
 
   @Get()
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -70,6 +74,41 @@ export class OrdersController {
   @ApiBearerAuth()
   requestReturn(@Param('id') id: string, @Body() body: any, @Req() req) {
     return this.ordersService.requestReturn(id, req.user.id, body);
+  }
+
+  // ========================================
+  // AUTOMATION ENDPOINTS (ADMIN ONLY)
+  // ========================================
+
+  // Get automation statistics
+  @Get('automation/stats')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  getAutomationStats() {
+    return this.automationService.getAutomationStats();
+  }
+
+  // Manually trigger automation for specific order
+  @Post('automation/process/:id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  processOrderManually(@Param('id') id: string) {
+    return this.automationService.processOrder(id);
+  }
+
+  // Manually trigger automation for all orders (run now)
+  @Post('automation/run')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  async runAutomationNow() {
+    await this.automationService.autoApproveOrders();
+    return {
+      success: true,
+      message: 'Automation executed successfully',
+    };
   }
 }
 
