@@ -355,7 +355,7 @@ class CartManager {
             }
         });
 
-        const shippingFee = 1000;
+        const shippingFee = 0;
         const total = subtotal + (totalItems > 0 ? shippingFee : 0);
 
         // Update summary display

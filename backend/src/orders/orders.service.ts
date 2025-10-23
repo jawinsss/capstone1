@@ -306,7 +306,7 @@ export class OrdersService {
   async markReceived(id: string, userId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      select: { id: true, userId: true, status: true, code: true }
+      select: { id: true, userId: true, status: true, code: true, paymentMethod: true }
     });
 
     if (!order) {
@@ -323,10 +323,13 @@ export class OrdersService {
       throw new BadRequestException('Can only mark received for orders that are shipping');
     }
 
-    // Update status to COMPLETED
+    // Update order status to COMPLETED and set receivedAt timestamp
     const updatedOrder = await this.prisma.order.update({
       where: { id },
-      data: { status: 'COMPLETED' },
+      data: { 
+        status: 'COMPLETED',
+        receivedAt: new Date() // Track when user confirmed receipt
+      },
       include: { items: { include: { product: true } } }
     });
 

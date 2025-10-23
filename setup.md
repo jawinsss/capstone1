@@ -33,6 +33,8 @@ npm run prisma:seed
 npm run start:dev
 ```
 
+npx prisma migrate dev --name backup_db
+
 ### 5. Mở Frontend
 
 - Mở `frontend/index.html` trong trình duyệt

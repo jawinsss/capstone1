@@ -11,11 +11,15 @@ export class PaymentCleanupService {
 
   /**
    * Auto-cancel pending online payments after 5 minutes
-   * Runs every 2 minutes
+   * Auto-confirm pending COD payments after 3 minutes (when order completed)
+   * Runs every minute
    */
   @Cron(CronExpression.EVERY_MINUTE)
   async autoCancelExpiredPayments() {
     this.logger.log('🔄 Running payment cleanup job...');
+    
+    // Auto-confirm COD payments first
+    await this.autoConfirmCODPayments();
 
     const now = new Date();
     const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
@@ -144,6 +148,112 @@ export class PaymentCleanupService {
     } catch (error) {
       this.logger.error(
         `❌ Failed to cancel payment ${payment.id}: ${error.message}`,
+      );
+    }
+  }
+
+  /**
+   * Auto-confirm COD payments after 3 minutes when order is COMPLETED
+   */
+  private async autoConfirmCODPayments() {
+    const now = new Date();
+    const threeMinutesAgo = new Date(now.getTime() - 3 * 60 * 1000); // 3 minutes ago
+
+    try {
+      // Find PENDING COD payments where order is COMPLETED and receivedAt > 3 minutes ago
+      const pendingCODPayments = await this.prisma.payment.findMany({
+        where: {
+          status: PaymentStatus.PENDING,
+          method: PaymentMethod.COD,
+          order: {
+            status: OrderStatus.COMPLETED,
+            receivedAt: {
+              lte: threeMinutesAgo,
+              not: null,
+            },
+          },
+        },
+        include: {
+          order: {
+            select: {
+              id: true,
+              code: true,
+              receivedAt: true,
+            },
+          },
+        },
+      });
+
+      if (pendingCODPayments.length === 0) {
+        this.logger.debug('✅ No COD payments ready for auto-confirmation');
+        return;
+      }
+
+      this.logger.log(
+        `💰 Found ${pendingCODPayments.length} COD payments ready for auto-confirmation:`,
+      );
+
+      pendingCODPayments.forEach((p) => {
+        const age = Math.floor(
+          (now.getTime() - p.order.receivedAt.getTime()) / 60000,
+        );
+        this.logger.log(
+          `  - Payment ${p.id} (Order: ${p.order.code}) - Age since received: ${age} minutes`,
+        );
+      });
+
+      // Confirm each COD payment
+      for (const payment of pendingCODPayments) {
+        await this.confirmCODPayment(payment);
+      }
+
+      this.logger.log(
+        `✅ Successfully auto-confirmed ${pendingCODPayments.length} COD payments`,
+      );
+    } catch (error) {
+      this.logger.error(
+        `❌ Error in COD payment auto-confirmation: ${error.message}`,
+        error.stack,
+      );
+    }
+  }
+
+  /**
+   * Confirm a single COD payment
+   */
+  private async confirmCODPayment(payment: any) {
+    try {
+      await this.prisma.$transaction(async (tx) => {
+        // 1. Update payment status to CONFIRMED
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.CONFIRMED,
+            metadata: JSON.stringify({
+              confirmedAt: new Date().toISOString(),
+              confirmReason: 'Auto-confirmed 3 minutes after order received',
+              autoConfirmed: true,
+              orderReceivedAt: payment.order.receivedAt,
+            }),
+          },
+        });
+
+        // 2. Update order isPaid flag
+        await tx.order.update({
+          where: { id: payment.orderId },
+          data: {
+            isPaid: true,
+            paidAmount: payment.amount,
+          },
+        });
+
+        this.logger.log(
+          `✅ Auto-confirmed COD payment for order ${payment.order.code} (payment: ${payment.id})`,
+        );
+      });
+    } catch (error) {
+      this.logger.error(
+        `❌ Failed to confirm COD payment ${payment.id}: ${error.message}`,
       );
     }
   }
