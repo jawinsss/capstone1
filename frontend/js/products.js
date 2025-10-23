@@ -23,7 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   let pvState = {
     page: 1,
-    pageSize: 16,
+    pageSize: 40, // Load 40 products at a time for infinite scroll
     sort: 'all',
     categoryId: null,
     min: 0,
@@ -31,6 +31,9 @@ document.addEventListener('DOMContentLoaded', () => {
     totalPages: 1,
     filteredItems: null, // For subcategory filtering
     isRendering: false, // Prevent duplicate renders
+    isLoadingMore: false, // Track if loading more products
+    hasMoreProducts: true, // Track if there are more products to load
+    allLoadedProducts: [], // Store all loaded products for infinite scroll
   };
 
   // Load categories from API
@@ -203,7 +206,11 @@ document.addEventListener('DOMContentLoaded', () => {
       pvState.filteredItems = filteredItems; // Always use filtered items, even if empty
       pvState.categoryId = categoryId; // Set the main category
       pvState.page = 1;
-      renderProductList();
+      pvState.allLoadedProducts = [];
+      pvState.hasMoreProducts = true;
+      renderProductList().then(() => {
+        setupInfiniteScroll();
+      });
     });
   }
 
@@ -263,7 +270,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildProductQuery(){
     const params = new URLSearchParams();
     params.set('take', String(pvState.pageSize));
-    params.set('skip', String((pvState.page-1)*pvState.pageSize));
+    params.set('page', String(pvState.page)); // Backend uses 'page' not 'skip'
     if(pvState.categoryId) params.set('categoryId', pvState.categoryId);
     // Sort mapping
     switch(pvState.sort){
@@ -280,16 +287,27 @@ document.addEventListener('DOMContentLoaded', () => {
     return params.toString();
   }
 
-  async function renderProductList(){
+  async function renderProductList(append = false){
     if(!productGrid) return;
     
     // Prevent multiple simultaneous renders
     if(pvState.isRendering) return;
     pvState.isRendering = true;
     
+    console.log('=== renderProductList START ===');
+    console.log('pvState:', {
+      page: pvState.page,
+      pageSize: pvState.pageSize,
+      append: append,
+      allLoadedProducts: pvState.allLoadedProducts.length
+    });
+    
     if(pv.loading) pv.loading.removeAttribute('hidden');
     if(pv.empty) pv.empty.setAttribute('hidden','');
-    productGrid.innerHTML = '';
+    if(!append) {
+      productGrid.innerHTML = '';
+      pvState.allLoadedProducts = [];
+    }
     
     let items, meta, total;
     
@@ -309,19 +327,60 @@ document.addEventListener('DOMContentLoaded', () => {
         console.log('Products API query:', qs);
         const res = await window.apiService.get(`/products?${qs}`);
         console.log('Products API response:', res);
+        console.log('Response structure:', {
+          success: res?.success,
+          hasData: !!res?.data,
+          hasMeta: !!res?.meta,
+          dataType: typeof res?.data,
+          dataIsArray: Array.isArray(res?.data)
+        });
+        
         if (!res?.success) {
           console.error('Failed to load products:', res?.message);
           items = [];
           meta = { total: 0 };
           total = 0;
         } else {
-          // Handle nested data structure: res.data.data
-          const data = res.data?.data || res.data;
+          // Try multiple response structures
+          let data;
+          if (res.data?.data) {
+            // Nested structure: {success, data: {data: [...], meta: {...}}, meta: {...}}
+            console.log('Using nested data structure: res.data.data');
+            data = res.data.data;
+            meta = res.data.meta || res.meta || { total: 0 };
+          } else if (Array.isArray(res.data)) {
+            // Direct array: {success, data: [...], meta: {...}}
+            console.log('Using direct array structure: res.data');
+            data = res.data;
+            meta = res.meta || { total: data.length };
+          } else if (res.data && typeof res.data === 'object') {
+            // Object with data property
+            console.log('Using object structure');
+            data = res.data.items || res.data.products || res.data.data || [];
+            meta = res.data.meta || res.meta || { total: res.data.total || 0 };
+          } else {
+            console.error('Unknown response structure!');
+            data = [];
+            meta = { total: 0 };
+          }
+          
           items = Array.isArray(data) ? data : [];
-          meta = res.meta || { total: items.length };
-          total = Number(meta?.total || items.length || 0);
-          console.log(`Loaded ${items.length} products, total: ${total}`);
+          total = Number(meta?.total || 0);
+          console.log(`✅ Loaded ${items.length} products, total in DB: ${total}`);
+          
+          if (items.length > 0) {
+            console.log('First product:', items[0]);
+          } else if (total > 0) {
+            console.warn('⚠️ Total > 0 but items.length = 0. Possible pagination issue.');
+          }
         }
+      }
+      
+      // Track loaded products
+      if (Array.isArray(items)) {
+        pvState.allLoadedProducts = append ? [...pvState.allLoadedProducts, ...items] : items;
+        pvState.hasMoreProducts = pvState.allLoadedProducts.length < total;
+        console.log(`Loaded: ${items.length} products, Total loaded: ${pvState.allLoadedProducts.length}/${total}, Has more: ${pvState.hasMoreProducts}`);
       }
       
       // Real-time count update
@@ -332,10 +391,9 @@ document.addEventListener('DOMContentLoaded', () => {
       
       // Update page info
       const pageInfo = document.getElementById('pageInfo');
-      if(pageInfo && pvState.totalPages > 1) {
-        const startItem = (pvState.page - 1) * pvState.pageSize + 1;
-        const endItem = Math.min(pvState.page * pvState.pageSize, total);
-        pageInfo.textContent = `Trang ${pvState.page}/${pvState.totalPages} (${startItem}-${endItem} của ${total} sản phẩm)`;
+      if(pageInfo) {
+        const loadedCount = pvState.allLoadedProducts.length;
+        pageInfo.textContent = `Đang hiển thị ${loadedCount} / ${total} sản phẩm`;
       }
       
       // Calculate total pages based on actual items count
@@ -371,36 +429,11 @@ document.addEventListener('DOMContentLoaded', () => {
         productGrid.appendChild(card);
       });
       
-      // Pagination numbers
-      if(pv.numbers){
-        pv.numbers.innerHTML = '';
-        // Show pagination only if there are multiple pages
-        if(pvState.totalPages > 1) {
-          for(let i=1;i<=pvState.totalPages;i++){
-            const b = document.createElement('button');
-            b.className = `pagination-number${i===pvState.page?' active':''}`;
-            b.textContent = String(i);
-            b.addEventListener('click', ()=>{ 
-              pvState.page = i; 
-              window.scrollTo({ top: 0, behavior: 'smooth' });
-              renderProductList(); 
-            });
-            pv.numbers.appendChild(b);
-          }
-        }
-      }
-      // Show/hide pagination controls based on total pages
+      // Hide pagination controls (using infinite scroll instead)
       const paginationContainer = document.getElementById('pvPagination');
       if(paginationContainer) {
-        if(pvState.totalPages > 1) {
-          paginationContainer.style.display = 'flex';
-        } else {
-          paginationContainer.style.display = 'none';
-        }
+        paginationContainer.style.display = 'none';
       }
-      
-      if(pv.prev) pv.prev.disabled = pvState.page<=1;
-      if(pv.next) pv.next.disabled = pvState.page>=pvState.totalPages;
       if(pv.loading) pv.loading.setAttribute('hidden','');
       if(pv.empty && items.length===0) pv.empty.removeAttribute('hidden');
       
@@ -416,7 +449,75 @@ document.addEventListener('DOMContentLoaded', () => {
   let renderTimer = null;
   function throttleRender(){
     if(renderTimer) clearTimeout(renderTimer);
-    renderTimer = setTimeout(()=>{ pvState.page = 1; renderProductList(); }, 250);
+    renderTimer = setTimeout(()=>{ 
+      pvState.page = 1; 
+      pvState.allLoadedProducts = [];
+      pvState.hasMoreProducts = true;
+      renderProductList();
+      setupInfiniteScroll();
+    }, 250);
+  }
+
+  // Load more products for infinite scroll
+  async function loadMoreProducts() {
+    if (pvState.isLoadingMore || !pvState.hasMoreProducts || pvState.isRendering) {
+      console.log('Skipping loadMore:', {
+        isLoadingMore: pvState.isLoadingMore,
+        hasMoreProducts: pvState.hasMoreProducts,
+        isRendering: pvState.isRendering
+      });
+      return;
+    }
+    
+    console.log('Loading more products...');
+    pvState.isLoadingMore = true;
+    pvState.page++;
+    
+    await renderProductList(true); // true = append mode
+    
+    pvState.isLoadingMore = false;
+  }
+
+  // Setup Intersection Observer for infinite scroll
+  let infiniteScrollObserver = null;
+  function setupInfiniteScroll() {
+    // Remove existing observer if any
+    if (infiniteScrollObserver) {
+      infiniteScrollObserver.disconnect();
+    }
+
+    // Create a sentinel element at the bottom of the grid
+    let sentinel = document.getElementById('infiniteScrollSentinel');
+    if (!sentinel) {
+      sentinel = document.createElement('div');
+      sentinel.id = 'infiniteScrollSentinel';
+      sentinel.style.height = '10px';
+      sentinel.style.width = '100%';
+      
+      // Insert after the products grid
+      const gridParent = productGrid.parentElement;
+      gridParent.insertBefore(sentinel, productGrid.nextSibling);
+    }
+
+    // Create Intersection Observer
+    infiniteScrollObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && pvState.hasMoreProducts) {
+            console.log('Sentinel visible, loading more products...');
+            loadMoreProducts();
+          }
+        });
+      },
+      {
+        root: null, // viewport
+        rootMargin: '200px', // Start loading 200px before reaching the sentinel
+        threshold: 0
+      }
+    );
+
+    infiniteScrollObserver.observe(sentinel);
+    console.log('Infinite scroll observer setup complete');
   }
 
 
@@ -441,7 +542,10 @@ document.addEventListener('DOMContentLoaded', () => {
         pvState.sort = btn.getAttribute('data-filter') || 'all';
         pvState.page = 1;
         pvState.filteredItems = null; // Clear any subcategory filter when changing sort
+        pvState.allLoadedProducts = [];
+        pvState.hasMoreProducts = true;
         renderProductList();
+        setupInfiniteScroll();
       });
     });
 
@@ -474,12 +578,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset all filters
     pv.reset && pv.reset.addEventListener('click', ()=>{
       pvState.page = 1;
-      pvState.pageSize = 16;
+      pvState.pageSize = 40;
       pvState.sort = 'all';
       pvState.categoryId = null;
       pvState.min = 0;
       pvState.max = 5000000;
       pvState.filteredItems = null; // Clear filtered items
+      pvState.allLoadedProducts = [];
+      pvState.hasMoreProducts = true;
       if(pv.minPrice) pv.minPrice.value = '0';
       if(pv.maxPrice) pv.maxPrice.value = '5000000';
       if(pv.priceLabel) pv.priceLabel.textContent = `${formatVND(0)} - ${formatVND(5000000)}`;
@@ -488,12 +594,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const def = document.querySelector('.filter-tabs .filter-tab[data-filter="all"]') || document.querySelector('.filter-tabs .filter-tab');
       if(def) def.classList.add('active');
       renderProductList();
+      setupInfiniteScroll();
     });
 
     // Load categories for product page
     loadProductCategories();
-    // Render product list
-    renderProductList();
   }
 
   // Handle URL parameters and hash
@@ -518,25 +623,47 @@ document.addEventListener('DOMContentLoaded', () => {
       if (productId) {
         window.location.href = `product-detail.html?id=${productId}`;
       }
-    } else {
-      // Normal product list
-      renderProductList();
     }
+    // Don't render here - let the main initialization handle it
   }
 
   // Auto refresh products so new items from admin appear
+  // Note: Commented out to avoid disrupting infinite scroll experience
+  // Users can manually refresh if needed
+  /*
   setInterval(()=>{
     if (!pvState.isRendering) {
       renderProductList();
     }
   }, 15000);
+  */
 
   // Initialize everything
-  loadCategories().then(() => {
+  async function initAll() {
+    // 1. Handle URL params first (to set state like categoryId)
+    handleURLParams();
+    
+    // 2. Sync user UI
+    syncUserUI();
+    
+    // 3. Load categories
+    await loadCategories();
+    
+    // 4. Initialize product view
     initProductView();
-    loadProductsDropdown(); // Load dropdown after categories are loaded
-    renderProductList(); // Load products after initialization
+    
+    // 5. Load dropdown
+    loadProductsDropdown();
+    
+    // 6. Render products
+    await renderProductList();
+    
+    // 7. Setup infinite scroll AFTER rendering
+    setupInfiniteScroll();
+  }
+  
+  // Start initialization
+  initAll().catch(error => {
+    console.error('Products initialization error:', error);
   });
-  syncUserUI();
-  handleURLParams();
 });

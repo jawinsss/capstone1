@@ -38,7 +38,7 @@ export class ProductsService {
   ) {}
 
   async findAll(params?: any) {
-    const take = Math.min(Math.max(Number(params?.take) || 12, 1), 100);
+    const take = Math.min(Math.max(Number(params?.take) || 12, 1), 1000); // Increased from 100 to 1000 for infinite scroll
     const page = Math.max(Number(params?.page) || 1, 1);
     const skip = (page - 1) * take;
     const where: any = {};

@@ -24,7 +24,7 @@ document.addEventListener('DOMContentLoaded', () => {
   
   let pvState = {
     page: 1,
-    pageSize: 16,
+    pageSize: 40, // Load 40 products at a time for infinite scroll
     sort: 'all',
     categoryId: null,
     categoryName: '',
@@ -34,6 +34,9 @@ document.addEventListener('DOMContentLoaded', () => {
     filteredItems: null,
     isRendering: false,
     pendingSubcategory: null,
+    isLoadingMore: false, // Track if loading more products
+    hasMoreProducts: true, // Track if there are more products to load
+    allLoadedProducts: [], // Store all loaded products for infinite scroll
   };
 
   // Load categories from API
@@ -260,7 +263,10 @@ document.addEventListener('DOMContentLoaded', () => {
         e.target.classList.add('active');
         pvState.filteredItems = null;
         pvState.page = 1;
+        pvState.allLoadedProducts = [];
+        pvState.hasMoreProducts = true;
         renderProductList();
+        setupInfiniteScroll();
       });
       pv.catMenu.appendChild(allLi);
       
@@ -464,6 +470,8 @@ document.addEventListener('DOMContentLoaded', () => {
       pvState.categoryId = subCategory.id; // Keep subcategory ID for display
       pvState.categoryName = subCategoryName; // Update category name
       pvState.page = 1;
+      pvState.allLoadedProducts = [];
+      pvState.hasMoreProducts = true;
       
       // Set active class for the selected subcategory
       document.querySelectorAll('.cat-item a').forEach(link => {
@@ -474,6 +482,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       renderProductList();
+      setupInfiniteScroll();
     }).catch(error => {
       console.error('Error loading subcategory products:', error);
     });
@@ -547,7 +556,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function buildProductQuery(){
     const params = new URLSearchParams();
     params.set('take', String(pvState.pageSize));
-    params.set('skip', String((pvState.page-1)*pvState.pageSize));
+    params.set('page', String(pvState.page)); // Backend uses 'page' not 'skip'
     if(pvState.categoryId) {
       params.set('categoryId', pvState.categoryId);
       console.log('Building query with categoryId:', pvState.categoryId);
@@ -584,7 +593,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return queryString;
   }
 
-  async function renderProductList(){
+  async function renderProductList(append = false){
     if(!productGrid) {
       console.error('productGrid element not found!');
       return;
@@ -605,12 +614,16 @@ document.addEventListener('DOMContentLoaded', () => {
       sort: pvState.sort,
       min: pvState.min,
       max: pvState.max,
-      filteredItems: pvState.filteredItems ? 'YES' : 'NO'
+      filteredItems: pvState.filteredItems ? 'YES' : 'NO',
+      append: append
     });
     
     if(pv.loading) pv.loading.removeAttribute('hidden');
     if(pv.empty) pv.empty.setAttribute('hidden','');
-    productGrid.innerHTML = '';
+    if(!append) {
+      productGrid.innerHTML = '';
+      pvState.allLoadedProducts = [];
+    }
     
     let items, meta, total;
     
@@ -694,16 +707,22 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
       
+      // Track loaded products
+      if (Array.isArray(items)) {
+        pvState.allLoadedProducts = append ? [...pvState.allLoadedProducts, ...items] : items;
+        pvState.hasMoreProducts = pvState.allLoadedProducts.length < total;
+        console.log(`Loaded: ${items.length} products, Total loaded: ${pvState.allLoadedProducts.length}/${total}, Has more: ${pvState.hasMoreProducts}`);
+      }
+      
       const countEl = document.getElementById('productCount');
       if(countEl){
         countEl.textContent = String(total);
       }
       
       const pageInfo = document.getElementById('pageInfo');
-      if(pageInfo && pvState.totalPages > 1) {
-        const startItem = (pvState.page - 1) * pvState.pageSize + 1;
-        const endItem = Math.min(pvState.page * pvState.pageSize, total);
-        pageInfo.textContent = `Trang ${pvState.page}/${pvState.totalPages} (${startItem}-${endItem} của ${total} sản phẩm)`;
+      if(pageInfo) {
+        const loadedCount = pvState.allLoadedProducts.length;
+        pageInfo.textContent = `Đang hiển thị ${loadedCount} / ${total} sản phẩm`;
       }
       
       pvState.totalPages = Math.max(1, Math.ceil(total / pvState.pageSize));
@@ -739,94 +758,11 @@ document.addEventListener('DOMContentLoaded', () => {
         productGrid.appendChild(card);
       });
       
-      // Smart pagination with ellipsis
-      if(pv.numbers){
-        pv.numbers.innerHTML = '';
-        if(pvState.totalPages > 1) {
-          const currentPage = pvState.page;
-          const totalPages = pvState.totalPages;
-          const maxVisible = 7; // Maximum number of page buttons to show
-          
-          // Helper function to create page button
-          const createPageBtn = (pageNum, isActive = false) => {
-            const b = document.createElement('button');
-            b.className = `pagination-number${isActive ? ' active' : ''}`;
-            b.textContent = String(pageNum);
-            b.addEventListener('click', ()=>{ 
-              pvState.page = pageNum;
-              window.scrollTo({ top: 0, behavior: 'smooth' }); // Scroll to top
-              renderProductList(); 
-            });
-            return b;
-          };
-          
-          // Helper function to create ellipsis
-          const createEllipsis = () => {
-            const span = document.createElement('span');
-            span.className = 'pagination-ellipsis';
-            span.textContent = '...';
-            span.style.cssText = 'padding: 0 8px; color: #666;';
-            return span;
-          };
-          
-          if (totalPages <= maxVisible) {
-            // Show all pages if total is less than max visible
-            for(let i = 1; i <= totalPages; i++) {
-              pv.numbers.appendChild(createPageBtn(i, i === currentPage));
-            }
-          } else {
-            // Smart pagination with ellipsis
-            // Always show first page
-            pv.numbers.appendChild(createPageBtn(1, currentPage === 1));
-            
-            let startPage, endPage;
-            
-            if (currentPage <= 3) {
-              // Near the beginning
-              startPage = 2;
-              endPage = 5;
-            } else if (currentPage >= totalPages - 2) {
-              // Near the end
-              startPage = totalPages - 4;
-              endPage = totalPages - 1;
-            } else {
-              // In the middle
-              startPage = currentPage - 1;
-              endPage = currentPage + 1;
-            }
-            
-            // Add ellipsis after first page if needed
-            if (startPage > 2) {
-              pv.numbers.appendChild(createEllipsis());
-            }
-            
-            // Add middle pages
-            for(let i = startPage; i <= endPage; i++) {
-              pv.numbers.appendChild(createPageBtn(i, i === currentPage));
-            }
-            
-            // Add ellipsis before last page if needed
-            if (endPage < totalPages - 1) {
-              pv.numbers.appendChild(createEllipsis());
-            }
-            
-            // Always show last page
-            pv.numbers.appendChild(createPageBtn(totalPages, currentPage === totalPages));
-          }
-        }
-      }
-      
+      // Hide pagination controls (using infinite scroll instead)
       const paginationContainer = document.getElementById('pvPagination');
       if(paginationContainer) {
-        if(pvState.totalPages > 1) {
-          paginationContainer.style.display = 'flex';
-        } else {
-          paginationContainer.style.display = 'none';
-        }
+        paginationContainer.style.display = 'none';
       }
-      
-      if(pv.prev) pv.prev.disabled = pvState.page<=1;
-      if(pv.next) pv.next.disabled = pvState.page>=pvState.totalPages;
       if(pv.loading) pv.loading.setAttribute('hidden','');
       if(pv.empty && items.length===0) pv.empty.removeAttribute('hidden');
       
@@ -841,7 +777,75 @@ document.addEventListener('DOMContentLoaded', () => {
   let renderTimer = null;
   function throttleRender(){
     if(renderTimer) clearTimeout(renderTimer);
-    renderTimer = setTimeout(()=>{ pvState.page = 1; renderProductList(); }, 250);
+    renderTimer = setTimeout(()=>{ 
+      pvState.page = 1; 
+      pvState.allLoadedProducts = [];
+      pvState.hasMoreProducts = true;
+      renderProductList();
+      setupInfiniteScroll();
+    }, 250);
+  }
+
+  // Load more products for infinite scroll
+  async function loadMoreProducts() {
+    if (pvState.isLoadingMore || !pvState.hasMoreProducts || pvState.isRendering) {
+      console.log('Skipping loadMore:', {
+        isLoadingMore: pvState.isLoadingMore,
+        hasMoreProducts: pvState.hasMoreProducts,
+        isRendering: pvState.isRendering
+      });
+      return;
+    }
+    
+    console.log('Loading more products...');
+    pvState.isLoadingMore = true;
+    pvState.page++;
+    
+    await renderProductList(true); // true = append mode
+    
+    pvState.isLoadingMore = false;
+  }
+
+  // Setup Intersection Observer for infinite scroll
+  let infiniteScrollObserver = null;
+  function setupInfiniteScroll() {
+    // Remove existing observer if any
+    if (infiniteScrollObserver) {
+      infiniteScrollObserver.disconnect();
+    }
+
+    // Create a sentinel element at the bottom of the grid
+    let sentinel = document.getElementById('infiniteScrollSentinel');
+    if (!sentinel) {
+      sentinel = document.createElement('div');
+      sentinel.id = 'infiniteScrollSentinel';
+      sentinel.style.height = '10px';
+      sentinel.style.width = '100%';
+      
+      // Insert after the products grid
+      const gridParent = productGrid.parentElement;
+      gridParent.insertBefore(sentinel, productGrid.nextSibling);
+    }
+
+    // Create Intersection Observer
+    infiniteScrollObserver = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting && pvState.hasMoreProducts) {
+            console.log('Sentinel visible, loading more products...');
+            loadMoreProducts();
+          }
+        });
+      },
+      {
+        root: null, // viewport
+        rootMargin: '200px', // Start loading 200px before reaching the sentinel
+        threshold: 0
+      }
+    );
+
+    infiniteScrollObserver.observe(sentinel);
+    console.log('Infinite scroll observer setup complete');
   }
 
   function initProductView() {
@@ -864,7 +868,10 @@ document.addEventListener('DOMContentLoaded', () => {
         pvState.sort = btn.getAttribute('data-filter') || 'all';
         pvState.page = 1;
         pvState.filteredItems = null;
+        pvState.allLoadedProducts = [];
+        pvState.hasMoreProducts = true;
         renderProductList();
+        setupInfiniteScroll();
       });
     });
 
@@ -897,13 +904,15 @@ document.addEventListener('DOMContentLoaded', () => {
     // Reset all filters
     pv.reset && pv.reset.addEventListener('click', ()=>{
       pvState.page = 1;
-      pvState.pageSize = 16;
+      pvState.pageSize = 40;
       pvState.sort = 'all';
       pvState.categoryId = null;
       pvState.categoryName = '';
       pvState.min = 0;
       pvState.max = 5000000;
       pvState.filteredItems = null;
+      pvState.allLoadedProducts = [];
+      pvState.hasMoreProducts = true;
       if(pv.minPrice) pv.minPrice.value = '0';
       if(pv.maxPrice) pv.maxPrice.value = '5000000';
       if(pv.priceLabel) pv.priceLabel.textContent = `${formatVND(0)} - ${formatVND(5000000)}`;
@@ -912,15 +921,20 @@ document.addEventListener('DOMContentLoaded', () => {
       if(def) def.classList.add('active');
       updatePageTitle();
       renderProductList();
+      setupInfiniteScroll();
     });
   }
 
   // Auto refresh products
+  // Note: Commented out to avoid disrupting infinite scroll experience
+  // Users can manually refresh if needed
+  /*
   setInterval(()=>{
     if (!pvState.isRendering) {
       renderProductList();
     }
   }, 15000);
+  */
 
   // Initialize everything in proper sequence
   async function initAll() {
@@ -948,10 +962,13 @@ document.addEventListener('DOMContentLoaded', () => {
       await renderProductList();
     }
     
-    // 7. Load dropdown menu
+    // 7. Setup infinite scroll
+    setupInfiniteScroll();
+    
+    // 8. Load dropdown menu
     await loadProductsDropdown();
     
-    // 8. Sync user UI
+    // 9. Sync user UI
     syncUserUI();
   }
   
