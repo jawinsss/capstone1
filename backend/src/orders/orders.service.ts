@@ -224,6 +224,114 @@ export class OrdersService {
     return order;
   }
 
+  // User cancels their order
+  async cancelOrder(id: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: { id: true, userId: true, status: true, code: true }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Check if user owns this order
+    if (order.userId !== userId) {
+      throw new BadRequestException('You can only cancel your own orders');
+    }
+
+    // Only allow cancellation for PENDING or CONFIRMED orders
+    if (order.status !== 'PENDING' && order.status !== 'CONFIRMED') {
+      throw new BadRequestException('Cannot cancel order in current status');
+    }
+
+    // Update status to CANCELLED
+    const updatedOrder = await this.prisma.order.update({
+      where: { id },
+      data: { status: 'CANCELLED' },
+      include: { items: { include: { product: true } } }
+    });
+
+    return {
+      success: true,
+      data: updatedOrder,
+      message: 'Order cancelled successfully'
+    };
+  }
+
+  // User marks order as received
+  async markReceived(id: string, userId: string) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: { id: true, userId: true, status: true, code: true }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Check if user owns this order
+    if (order.userId !== userId) {
+      throw new BadRequestException('You can only update your own orders');
+    }
+
+    // Only allow marking as received for SHIPPING orders
+    if (order.status !== 'SHIPPING') {
+      throw new BadRequestException('Can only mark received for orders that are shipping');
+    }
+
+    // Update status to COMPLETED
+    const updatedOrder = await this.prisma.order.update({
+      where: { id },
+      data: { status: 'COMPLETED' },
+      include: { items: { include: { product: true } } }
+    });
+
+    return {
+      success: true,
+      data: updatedOrder,
+      message: 'Order marked as received successfully'
+    };
+  }
+
+  // User requests return/refund
+  async requestReturn(id: string, userId: string, payload: any) {
+    const order = await this.prisma.order.findUnique({
+      where: { id },
+      select: { id: true, userId: true, status: true, code: true, totalAmount: true }
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Check if user owns this order
+    if (order.userId !== userId) {
+      throw new BadRequestException('You can only request returns for your own orders');
+    }
+
+    // Only allow return requests for COMPLETED orders
+    if (order.status !== 'COMPLETED') {
+      throw new BadRequestException('Can only request return for completed orders');
+    }
+
+    // Create return request
+    const returnRequest = await this.prisma.returnRequest.create({
+      data: {
+        orderId: id,
+        reason: payload.reason || 'No reason provided',
+        status: 'PENDING',
+        refundAmount: order.totalAmount
+      }
+    });
+
+    return {
+      success: true,
+      data: returnRequest,
+      message: 'Return request submitted successfully'
+    };
+  }
+
   async delete(id: string, userId?: string) {
     // Check if order exists
     const order = await this.prisma.order.findUnique({ 

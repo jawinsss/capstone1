@@ -47,6 +47,30 @@ export class OrdersController {
   getUserOrders(@Req() req) {
     return this.ordersService.getUserOrders(req.user.id);
   }
+
+  // User cancel order
+  @Patch(':id/cancel')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  cancelOrder(@Param('id') id: string, @Req() req) {
+    return this.ordersService.cancelOrder(id, req.user.id);
+  }
+
+  // User mark order as received
+  @Patch(':id/received')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  markReceived(@Param('id') id: string, @Req() req) {
+    return this.ordersService.markReceived(id, req.user.id);
+  }
+
+  // User request return/refund
+  @Post(':id/return')
+  @UseGuards(JwtAuthGuard)
+  @ApiBearerAuth()
+  requestReturn(@Param('id') id: string, @Body() body: any, @Req() req) {
+    return this.ordersService.requestReturn(id, req.user.id, body);
+  }
 }
 
 
