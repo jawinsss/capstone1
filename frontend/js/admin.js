@@ -316,13 +316,6 @@ document.addEventListener('DOMContentLoaded', async () => {
                     loadOverviewData();
                 }
             });
-        } else if (route === 'orders') {
-            realTimeManager.startAutoRefresh('orders', () => {
-                const view = document.querySelector('[data-view="orders"]');
-                if (view && !view.hidden) {
-                    loadOrdersData();
-                }
-            });
         } else if (route === 'payments') {
             realTimeManager.startAutoRefresh('payments', () => {
                 const view = document.querySelector('[data-view="payments"]');
@@ -1622,66 +1615,656 @@ document.addEventListener('DOMContentLoaded', async () => {
         }));
     }
 
-    // ====== VIEW ORDERS ======
+    // ====== VIEW ORDERS - COMPREHENSIVE MANAGEMENT ======
+    let orderManagementState = {
+        allOrders: [],
+        filteredOrders: [],
+        filters: {
+            status: '',
+            dateFrom: '',
+            dateTo: '',
+            search: ''
+        },
+        autoRefreshInterval: null
+    };
+
     async function initOrdersView() {
         const view = document.querySelector('[data-view="orders"]');
         if (!view) return;
-        const listPanel = view.querySelector('.panel');
-        const stats = view.querySelectorAll('.order-stats .order-stat-value');
 
-        function render(orders) {
-            if (!listPanel) return;
-            const container = document.createElement('div');
-            container.className = 'list';
-            (orders || []).forEach(o => {
-                const item = document.createElement('article');
-                item.className = 'list-item';
-                const total = (o.items || []).reduce((s, it) => s + Number(it.product?.price || 0) * Number(it.quantity || 0), 0);
-                const itemsHtml = (o.items || []).map(it => {
-                    const p = it.product || {};
-                    const img = (p.images && p.images[0]?.url) || 'https://via.placeholder.com/40x40?text=';
-                    const name = p.name || 'Sản phẩm';
-                    const price = Number(p.price || 0).toLocaleString('vi-VN');
-                    const qty = Number(it.quantity || 0);
-                    return `
-                        <div class="order-item" style="display:flex;align-items:center;gap:8px;margin-top:6px">
-                            <img src="${img}" alt="${name}" style="width:40px;height:40px;object-fit:cover;border-radius:6px" onerror="this.src='https://via.placeholder.com/40x40?text='"/>
-                            <div style="flex:1">
-                                <div class="list-sub" style="font-weight:600">${name}</div>
-                                <div class="list-sub">Giá: ${price} đ • SL: ${qty}</div>
-                            </div>
-                        </div>`;
-                }).join('');
-                item.innerHTML = `
-                    <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
-                    <div style="flex:1">
-                        <div class="list-title">Mã đơn: ${o.id} <span class="chip">${o.status}</span></div>
-                        <div class="list-sub">Khách: ${o.user?.fullName || o.user?.username || ''} • Số món: ${(o.items||[]).length} • Tổng: ${Number(total).toLocaleString('vi-VN')} đ</div>
-                        ${itemsHtml}
-                    </div>`;
-                container.appendChild(item);
-            });
-            listPanel.innerHTML = '';
-            const title = document.createElement('div');
-            title.className = 'panel-title';
-            title.textContent = 'Danh sách đơn hàng';
-            listPanel.appendChild(title);
-            listPanel.appendChild(container);
+        // Get all elements
+        const elements = {
+            container: document.getElementById('orderListContainer'),
+            lastUpdate: document.getElementById('orderLastUpdate'),
+            count: document.getElementById('orderCount'),
+            refreshBtn: document.getElementById('orderRefreshBtn'),
+            exportBtn: document.getElementById('orderExportBtn'),
+            resetFilterBtn: document.getElementById('orderResetFilterBtn'),
+            filterStatus: document.getElementById('orderFilterStatus'),
+            filterDateFrom: document.getElementById('orderFilterDateFrom'),
+            filterDateTo: document.getElementById('orderFilterDateTo'),
+            searchInput: document.getElementById('orderSearchInput'),
+            statCards: document.querySelectorAll('.order-stat'),
+            statTotal: document.getElementById('orderStatTotal'),
+            statPending: document.getElementById('orderStatPending'),
+            statDelivering: document.getElementById('orderStatDelivering'),
+            statCompleted: document.getElementById('orderStatCompleted'),
+            statCancelled: document.getElementById('orderStatCancelled'),
+            modal: document.getElementById('orderDetailModal'),
+            modalOverlay: document.getElementById('orderDetailModalOverlay'),
+            modalClose: document.getElementById('orderDetailModalClose'),
+            modalTitle: document.getElementById('orderDetailModalTitle'),
+            modalBody: document.getElementById('orderDetailModalBody')
+        };
+
+        // Helper functions
+        function formatVND(amount) {
+            return Number(amount || 0).toLocaleString('vi-VN') + ' đ';
         }
 
-        try {
-            const res = await window.apiService.get('/orders');
-            if (res?.success) {
-                const orders = res.data || [];
-                render(orders);
-                // stats breakdown
-                const counts = orders.reduce((m, o) => { m[o.status] = (m[o.status]||0)+1; return m; }, {});
-                if (stats[0]) stats[0].textContent = String(orders.length || 0);
-                if (stats[1]) stats[1].textContent = String(counts['PENDING'] || 0);
-                if (stats[2]) stats[2].textContent = String(counts['SHIPPING'] || 0);
-                if (stats[3]) stats[3].textContent = String(counts['COMPLETED'] || 0);
+        function formatDate(dateString) {
+            if (!dateString) return '';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', { 
+                year: 'numeric', 
+                month: '2-digit', 
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+
+        function getStatusBadge(status) {
+            const statusMap = {
+                'PENDING': { text: 'Chờ xác nhận', color: '#f59e0b', bg: '#fef3c7', icon: 'clock' },
+                'DELIVERING': { text: 'Đang giao', color: '#3b82f6', bg: '#dbeafe', icon: 'truck-fast' },
+                'COMPLETED': { text: 'Hoàn thành', color: '#22c55e', bg: '#d1fae5', icon: 'check-circle' },
+                'CANCELLED': { text: 'Đã hủy', color: '#ef4444', bg: '#fee2e2', icon: 'times-circle' }
+            };
+            const s = statusMap[status] || { text: status, color: '#64748b', bg: '#f1f5f9', icon: 'question-circle' };
+            return `<span class="order-status-badge" style="background:${s.bg};color:${s.color};padding:4px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
+                <i class="fa-solid fa-${s.icon}"></i> ${s.text}
+            </span>`;
+        }
+
+        // Load orders from API
+        async function loadOrders() {
+            try {
+                console.log('Loading orders...');
+                const res = await window.apiService.get('/orders');
+                
+                if (res?.success) {
+                    orderManagementState.allOrders = res.data || [];
+                    console.log(`✅ Loaded ${orderManagementState.allOrders.length} orders`);
+                    
+                    // Update last update time
+                    if (elements.lastUpdate) {
+                        elements.lastUpdate.textContent = `Cập nhật lúc ${new Date().toLocaleTimeString('vi-VN')}`;
+                    }
+                    
+                    // Apply filters
+                    applyFilters();
+                    
+                    // Update stats
+                    updateStats();
+                    
+                    return true;
+                } else {
+                    console.error('Failed to load orders:', res?.message);
+                    showError('Không thể tải danh sách đơn hàng');
+                    return false;
+                }
+            } catch (error) {
+                console.error('Error loading orders:', error);
+                showError('Lỗi khi tải đơn hàng: ' + error.message);
+                return false;
             }
-        } catch (_) {}
+        }
+
+        // Update statistics
+        function updateStats() {
+            const counts = orderManagementState.allOrders.reduce((acc, order) => {
+                acc[order.status] = (acc[order.status] || 0) + 1;
+                return acc;
+            }, {});
+
+            if (elements.statTotal) elements.statTotal.textContent = orderManagementState.allOrders.length;
+            if (elements.statPending) elements.statPending.textContent = counts['PENDING'] || 0;
+            if (elements.statDelivering) elements.statDelivering.textContent = counts['DELIVERING'] || 0;
+            if (elements.statCompleted) elements.statCompleted.textContent = counts['COMPLETED'] || 0;
+            if (elements.statCancelled) elements.statCancelled.textContent = counts['CANCELLED'] || 0;
+        }
+
+        // Apply filters
+        function applyFilters() {
+            let filtered = [...orderManagementState.allOrders];
+
+            // Filter by status
+            if (orderManagementState.filters.status) {
+                filtered = filtered.filter(o => o.status === orderManagementState.filters.status);
+            }
+
+            // Filter by date range
+            if (orderManagementState.filters.dateFrom) {
+                const fromDate = new Date(orderManagementState.filters.dateFrom);
+                fromDate.setHours(0, 0, 0, 0);
+                filtered = filtered.filter(o => new Date(o.createdAt) >= fromDate);
+            }
+            if (orderManagementState.filters.dateTo) {
+                const toDate = new Date(orderManagementState.filters.dateTo);
+                toDate.setHours(23, 59, 59, 999);
+                filtered = filtered.filter(o => new Date(o.createdAt) <= toDate);
+            }
+
+            // Search filter
+            if (orderManagementState.filters.search) {
+                const search = orderManagementState.filters.search.toLowerCase();
+                filtered = filtered.filter(o => 
+                    (o.code && o.code.toLowerCase().includes(search)) ||
+                    (o.id && o.id.toLowerCase().includes(search)) ||
+                    (o.user?.fullName && o.user.fullName.toLowerCase().includes(search)) ||
+                    (o.user?.username && o.user.username.toLowerCase().includes(search)) ||
+                    (o.user?.email && o.user.email.toLowerCase().includes(search))
+                );
+            }
+
+            orderManagementState.filteredOrders = filtered;
+            renderOrders();
+        }
+
+        // Render orders list
+        function renderOrders() {
+            if (!elements.container) return;
+
+            // Update count
+            if (elements.count) {
+                elements.count.textContent = `(${orderManagementState.filteredOrders.length})`;
+            }
+
+            // Show empty state
+            if (orderManagementState.filteredOrders.length === 0) {
+                elements.container.innerHTML = `
+                    <div class="panel-placeholder small">
+                        <i class="fa-solid fa-box-open" style="font-size: 48px; color: #cbd5e1;"></i>
+                        <p>Không tìm thấy đơn hàng nào</p>
+                    </div>
+                `;
+                return;
+            }
+
+            // Sort by date (newest first)
+            const sortedOrders = [...orderManagementState.filteredOrders].sort((a, b) => 
+                new Date(b.createdAt) - new Date(a.createdAt)
+            );
+
+            // Build order list
+            const listHTML = sortedOrders.map(order => {
+                const total = Number(order.totalAmount || 0);
+                const itemCount = (order.items || []).length;
+                const customerName = order.user?.fullName || order.user?.username || 'Khách';
+                
+                // Get first product image (handle both base64 and URL)
+                const firstItem = order.items && order.items[0];
+                let productImage = 'https://via.placeholder.com/80x80?text=No+Image';
+                if (firstItem?.product?.images?.[0]?.url) {
+                    const imageUrl = firstItem.product.images[0].url;
+                    if (imageUrl.startsWith('data:image')) {
+                        // Base64 image from admin
+                        productImage = imageUrl;
+                    } else {
+                        // Regular URL - use CONFIG if available
+                        productImage = (typeof CONFIG !== 'undefined' && CONFIG.getAssetUrl) 
+                            ? CONFIG.getAssetUrl(imageUrl) 
+                            : imageUrl;
+                    }
+                }
+
+                return `
+                    <div class="order-card" data-order-id="${order.id}" style="display:flex;gap:16px;padding:16px;background:#fff;border:1px solid #e2e8f0;border-radius:12px;margin-bottom:12px;cursor:pointer;transition:all 0.2s;">
+                        <div class="order-image" style="width:80px;height:80px;border-radius:8px;overflow:hidden;flex-shrink:0;">
+                            <img src="${productImage}" alt="Product" style="width:100%;height:100%;object-fit:cover;" onerror="this.src='https://via.placeholder.com/80x80?text=No+Image'" />
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px;">
+                                <div>
+                                    <div style="font-weight:600;font-size:1rem;color:#1e293b;margin-bottom:4px;">
+                                        ${order.code || order.id}
+                                    </div>
+                                    <div style="font-size:0.875rem;color:#64748b;">
+                                        <i class="fa-solid fa-user"></i> ${customerName}
+                                        ${order.user?.email ? `<span style="margin-left:8px;"><i class="fa-solid fa-envelope"></i> ${order.user.email}</span>` : ''}
+                                    </div>
+                                </div>
+                                ${getStatusBadge(order.status)}
+                            </div>
+                            <div style="display:flex;gap:16px;font-size:0.875rem;color:#64748b;margin-bottom:8px;">
+                                <span><i class="fa-solid fa-box"></i> ${itemCount} sản phẩm</span>
+                                <span><i class="fa-solid fa-clock"></i> ${formatDate(order.createdAt)}</span>
+                            </div>
+                            <div style="display:flex;justify-content:space-between;align-items:center;">
+                                <div style="font-size:1.125rem;font-weight:700;color:#3b82f6;">
+                                    ${formatVND(total)}
+                                </div>
+                                <div style="display:flex;gap:8px;">
+                                    <button class="btn-view-detail" data-order-id="${order.id}" style="padding:6px 16px;background:#3b82f6;color:#fff;border:none;border-radius:6px;font-size:0.875rem;cursor:pointer;">
+                                        <i class="fa-solid fa-eye"></i> Chi tiết
+                                    </button>
+                                    <button class="btn-delete-order" data-order-id="${order.id}" data-order-code="${order.code || order.id}" style="padding:6px 12px;background:#ef4444;color:#fff;border:none;border-radius:6px;font-size:0.875rem;cursor:pointer;" title="Xóa đơn hàng">
+                                        <i class="fa-solid fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            elements.container.innerHTML = listHTML;
+
+            // Add click event listeners
+            elements.container.querySelectorAll('.order-card').forEach(card => {
+                card.addEventListener('click', (e) => {
+                    // Don't trigger if clicking the buttons
+                    if (e.target.closest('.btn-view-detail') || e.target.closest('.btn-delete-order')) return;
+                    const orderId = card.dataset.orderId;
+                    openOrderDetail(orderId);
+                });
+            });
+
+            elements.container.querySelectorAll('.btn-view-detail').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const orderId = btn.dataset.orderId;
+                    openOrderDetail(orderId);
+                });
+            });
+
+            elements.container.querySelectorAll('.btn-delete-order').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const orderId = btn.dataset.orderId;
+                    const orderCode = btn.dataset.orderCode;
+                    deleteOrder(orderId, orderCode);
+                });
+            });
+        }
+
+        // Show error message
+        function showError(message) {
+            if (elements.container) {
+                elements.container.innerHTML = `
+                    <div class="panel-placeholder small">
+                        <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #ef4444;"></i>
+                        <p style="color: #ef4444;">${message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Open order detail modal
+        function openOrderDetail(orderId) {
+            const order = orderManagementState.allOrders.find(o => o.id === orderId);
+            if (!order) return;
+
+            const total = Number(order.totalAmount || 0);
+            const customerName = order.user?.fullName || order.user?.username || 'Khách';
+
+            // Build items HTML
+            const itemsHTML = (order.items || []).map(item => {
+                const product = item.product || {};
+                
+                // Handle product image (base64 or URL)
+                let img = 'https://via.placeholder.com/60x60?text=No+Image';
+                if (product.images?.[0]?.url) {
+                    const imageUrl = product.images[0].url;
+                    if (imageUrl.startsWith('data:image')) {
+                        img = imageUrl;
+                    } else {
+                        img = (typeof CONFIG !== 'undefined' && CONFIG.getAssetUrl) 
+                            ? CONFIG.getAssetUrl(imageUrl) 
+                            : imageUrl;
+                    }
+                }
+                
+                const name = product.name || 'Sản phẩm';
+                const price = Number(item.price || product.price || 0);
+                const qty = Number(item.quantity || 0);
+                const subtotal = price * qty;
+
+                return `
+                    <div style="display:flex;gap:12px;padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;">
+                        <img src="${img}" alt="${name}" style="width:60px;height:60px;object-fit:cover;border-radius:6px;" onerror="this.src='https://via.placeholder.com/60x60?text=No+Image'" />
+                        <div style="flex:1;">
+                            <div style="font-weight:600;margin-bottom:4px;">${name}</div>
+                            <div style="font-size:0.875rem;color:#64748b;">
+                                ${formatVND(price)} × ${qty}
+                            </div>
+                        </div>
+                        <div style="font-weight:600;color:#3b82f6;">
+                            ${formatVND(subtotal)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            // Build status update buttons
+            const statusButtons = ['PENDING', 'DELIVERING', 'COMPLETED', 'CANCELLED']
+                .filter(status => status !== order.status)
+                .map(status => {
+                    const statusInfo = {
+                        'PENDING': { text: 'Chờ xác nhận', color: '#f59e0b', icon: 'clock' },
+                        'DELIVERING': { text: 'Đang giao', color: '#3b82f6', icon: 'truck-fast' },
+                        'COMPLETED': { text: 'Hoàn thành', color: '#22c55e', icon: 'check-circle' },
+                        'CANCELLED': { text: 'Hủy đơn', color: '#ef4444', icon: 'times-circle' }
+                    }[status];
+
+                    return `
+                        <button class="btn-update-status" data-order-id="${order.id}" data-status="${status}" 
+                                style="padding:8px 16px;background:${statusInfo.color};color:#fff;border:none;border-radius:6px;cursor:pointer;flex:1;">
+                            <i class="fa-solid fa-${statusInfo.icon}"></i> ${statusInfo.text}
+                        </button>
+                    `;
+                }).join('');
+
+            // Modal content
+            elements.modalBody.innerHTML = `
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:24px;margin-bottom:24px;">
+                    <div>
+                        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:#1e293b;">
+                            <i class="fa-solid fa-receipt"></i> Thông tin đơn hàng
+                        </h3>
+                        <div style="background:#f8fafc;padding:16px;border-radius:8px;">
+                            <div style="margin-bottom:8px;">
+                                <span style="color:#64748b;">Mã đơn:</span>
+                                <strong style="color:#1e293b;margin-left:8px;">${order.code || order.id}</strong>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <span style="color:#64748b;">Trạng thái:</span>
+                                <span style="margin-left:8px;">${getStatusBadge(order.status)}</span>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <span style="color:#64748b;">Ngày đặt:</span>
+                                <strong style="color:#1e293b;margin-left:8px;">${formatDate(order.createdAt)}</strong>
+                            </div>
+                            <div style="margin-bottom:8px;">
+                                <span style="color:#64748b;">Tổng tiền:</span>
+                                <strong style="color:#3b82f6;margin-left:8px;font-size:1.125rem;">${formatVND(total)}</strong>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:#1e293b;">
+                            <i class="fa-solid fa-user"></i> Thông tin khách hàng
+                        </h3>
+                        <div style="background:#f8fafc;padding:16px;border-radius:8px;">
+                            <div style="margin-bottom:8px;">
+                                <span style="color:#64748b;">Họ tên:</span>
+                                <strong style="color:#1e293b;margin-left:8px;">${customerName}</strong>
+                            </div>
+                            ${order.user?.email ? `
+                                <div style="margin-bottom:8px;">
+                                    <span style="color:#64748b;">Email:</span>
+                                    <strong style="color:#1e293b;margin-left:8px;">${order.user.email}</strong>
+                                </div>
+                            ` : ''}
+                            ${order.user?.phone ? `
+                                <div style="margin-bottom:8px;">
+                                    <span style="color:#64748b;">Điện thoại:</span>
+                                    <strong style="color:#1e293b;margin-left:8px;">${order.user.phone}</strong>
+                                </div>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+
+                <div style="margin-bottom:24px;">
+                    <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:#1e293b;">
+                        <i class="fa-solid fa-box"></i> Sản phẩm đã đặt
+                    </h3>
+                    ${itemsHTML}
+                </div>
+
+                <div style="border-top:1px solid #e2e8f0;padding-top:24px;margin-bottom:24px;">
+                    <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:#1e293b;">
+                        <i class="fa-solid fa-edit"></i> Cập nhật trạng thái
+                    </h3>
+                    <div style="display:flex;gap:8px;">
+                        ${statusButtons}
+                    </div>
+                </div>
+
+                <div style="border-top:1px solid #e2e8f0;padding-top:24px;">
+                    <h3 style="font-size:1rem;font-weight:600;margin-bottom:12px;color:#ef4444;">
+                        <i class="fa-solid fa-trash"></i> Xóa đơn hàng
+                    </h3>
+                    <p style="color:#64748b;font-size:0.875rem;margin-bottom:12px;">
+                        ⚠️ Hành động này không thể hoàn tác. Đơn hàng và tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn khỏi hệ thống.
+                    </p>
+                    <button class="btn-delete-order-modal" data-order-id="${order.id}" data-order-code="${order.code || order.id}" 
+                            style="padding:10px 20px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;font-weight:600;">
+                        <i class="fa-solid fa-trash"></i> Xóa đơn hàng này
+                    </button>
+                </div>
+            `;
+
+            // Show modal
+            elements.modal.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+
+            // Add event listeners for status update buttons
+            elements.modalBody.querySelectorAll('.btn-update-status').forEach(btn => {
+                btn.addEventListener('click', async () => {
+                    const newStatus = btn.dataset.status;
+                    await updateOrderStatus(order.id, newStatus);
+                });
+            });
+
+            // Add event listener for delete button in modal
+            const deleteBtn = elements.modalBody.querySelector('.btn-delete-order-modal');
+            if (deleteBtn) {
+                deleteBtn.addEventListener('click', async () => {
+                    const orderId = deleteBtn.dataset.orderId;
+                    const orderCode = deleteBtn.dataset.orderCode;
+                    await deleteOrder(orderId, orderCode);
+                });
+            }
+        }
+
+        // Update order status
+        async function updateOrderStatus(orderId, newStatus) {
+            try {
+                const confirmMsg = {
+                    'PENDING': 'Đặt lại về Chờ xác nhận?',
+                    'DELIVERING': 'Chuyển sang Đang giao?',
+                    'COMPLETED': 'Đánh dấu đơn hàng đã Hoàn thành?',
+                    'CANCELLED': 'Hủy đơn hàng này?'
+                }[newStatus] || 'Cập nhật trạng thái?';
+
+                if (!confirm(confirmMsg)) return;
+
+                const res = await window.apiService.patch(`/orders/${orderId}/status`, { status: newStatus });
+                
+                if (res?.success) {
+                    alert('✅ Cập nhật trạng thái thành công!');
+                    // Close modal
+                    closeModal();
+                    // Reload orders
+                    await loadOrders();
+                } else {
+                    alert('❌ Lỗi: ' + (res?.message || 'Không thể cập nhật trạng thái'));
+                }
+            } catch (error) {
+                console.error('Error updating order status:', error);
+                alert('❌ Lỗi khi cập nhật: ' + error.message);
+            }
+        }
+
+        // Delete order
+        async function deleteOrder(orderId, orderCode) {
+            try {
+                // Double confirmation for delete action
+                const confirmMsg = `⚠️ XÓA ĐƠN HÀNG\n\nBạn có chắc chắn muốn xóa đơn hàng "${orderCode}"?\n\n` +
+                    `Hành động này sẽ:\n` +
+                    `• Xóa vĩnh viễn đơn hàng khỏi hệ thống\n` +
+                    `• Xóa tất cả sản phẩm trong đơn hàng\n` +
+                    `• KHÔNG THỂ HOÀN TÁC\n\n` +
+                    `Nhấn OK để xác nhận xóa.`;
+
+                if (!confirm(confirmMsg)) return;
+
+                // Second confirmation
+                const finalConfirm = confirm('⚠️ XÁC NHẬN LẦN CUỐI\n\nBạn có HOÀN TOÀN CHẮC CHẮN muốn xóa đơn hàng này?');
+                if (!finalConfirm) return;
+
+                // Show loading
+                const loadingMsg = 'Đang xóa đơn hàng...';
+                console.log(loadingMsg);
+
+                const res = await window.apiService.delete(`/orders/${orderId}`);
+                
+                if (res?.success) {
+                    alert(`✅ Xóa đơn hàng "${orderCode}" thành công!`);
+                    // Close modal if open
+                    closeModal();
+                    // Reload orders
+                    await loadOrders();
+                } else {
+                    alert('❌ Lỗi: ' + (res?.message || 'Không thể xóa đơn hàng'));
+                }
+            } catch (error) {
+                console.error('Error deleting order:', error);
+                alert('❌ Lỗi khi xóa đơn hàng: ' + error.message);
+            }
+        }
+
+        // Close modal
+        function closeModal() {
+            elements.modal.style.display = 'none';
+            document.body.style.overflow = '';
+        }
+
+        // Export to Excel (basic CSV export)
+        function exportToExcel() {
+            const data = orderManagementState.filteredOrders.map(order => ({
+                'Mã đơn': order.code || order.id,
+                'Khách hàng': order.user?.fullName || order.user?.username || '',
+                'Email': order.user?.email || '',
+                'Trạng thái': order.status,
+                'Số sản phẩm': (order.items || []).length,
+                'Tổng tiền': order.totalAmount,
+                'Ngày đặt': formatDate(order.createdAt)
+            }));
+
+            // Convert to CSV
+            const headers = Object.keys(data[0] || {});
+            const csv = [
+                headers.join(','),
+                ...data.map(row => headers.map(h => row[h]).join(','))
+            ].join('\n');
+
+            // Download
+            const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+
+        // Event listeners
+        if (elements.refreshBtn) {
+            elements.refreshBtn.addEventListener('click', async () => {
+                elements.refreshBtn.disabled = true;
+                elements.refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+                await loadOrders();
+                elements.refreshBtn.disabled = false;
+                elements.refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> <span class="hide-sm">Làm mới</span>';
+            });
+        }
+
+        if (elements.exportBtn) {
+            elements.exportBtn.addEventListener('click', exportToExcel);
+        }
+
+        if (elements.resetFilterBtn) {
+            elements.resetFilterBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                orderManagementState.filters = { status: '', dateFrom: '', dateTo: '', search: '' };
+                if (elements.filterStatus) elements.filterStatus.value = '';
+                if (elements.filterDateFrom) elements.filterDateFrom.value = '';
+                if (elements.filterDateTo) elements.filterDateTo.value = '';
+                if (elements.searchInput) elements.searchInput.value = '';
+                applyFilters();
+            });
+        }
+
+        if (elements.filterStatus) {
+            elements.filterStatus.addEventListener('change', (e) => {
+                orderManagementState.filters.status = e.target.value;
+                applyFilters();
+            });
+        }
+
+        if (elements.filterDateFrom) {
+            elements.filterDateFrom.addEventListener('change', (e) => {
+                orderManagementState.filters.dateFrom = e.target.value;
+                applyFilters();
+            });
+        }
+
+        if (elements.filterDateTo) {
+            elements.filterDateTo.addEventListener('change', (e) => {
+                orderManagementState.filters.dateTo = e.target.value;
+                applyFilters();
+            });
+        }
+
+        if (elements.searchInput) {
+            let searchTimeout;
+            elements.searchInput.addEventListener('input', (e) => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(() => {
+                    orderManagementState.filters.search = e.target.value;
+                    applyFilters();
+                }, 300);
+            });
+        }
+
+        // Modal close handlers
+        if (elements.modalClose) {
+            elements.modalClose.addEventListener('click', closeModal);
+        }
+        if (elements.modalOverlay) {
+            elements.modalOverlay.addEventListener('click', closeModal);
+        }
+
+        // Stat card click filters
+        elements.statCards.forEach(card => {
+            card.addEventListener('click', () => {
+                const status = card.dataset.status;
+                if (status === 'all') {
+                    orderManagementState.filters.status = '';
+                    if (elements.filterStatus) elements.filterStatus.value = '';
+                } else {
+                    orderManagementState.filters.status = status;
+                    if (elements.filterStatus) elements.filterStatus.value = status;
+                }
+                applyFilters();
+            });
+        });
+
+        // Initial load
+        await loadOrders();
+
+        // Setup auto-refresh every 30 seconds
+        if (orderManagementState.autoRefreshInterval) {
+            clearInterval(orderManagementState.autoRefreshInterval);
+        }
+        orderManagementState.autoRefreshInterval = setInterval(async () => {
+            console.log('Auto-refreshing orders...');
+            await loadOrders();
+        }, 30000);
+
+        console.log('✅ Order management initialized with auto-refresh');
     }
 
     // ====== VIEW PAYMENTS ======
@@ -1964,49 +2547,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     }
 
-    async function loadOrdersData() {
-        const view = document.querySelector('[data-view="orders"]');
-        if (!view || view.hidden) return;
-        
-        const listPanel = view.querySelector('.panel');
-        const stats = view.querySelectorAll('.order-stats .order-stat-value');
-        
-        try {
-            const res = await window.apiService.get('/orders');
-            if (res?.success) {
-                const orders = res.data || [];
-                
-                // Update stats
-                const counts = orders.reduce((m, o) => { m[o.status] = (m[o.status]||0)+1; return m; }, {});
-                if (stats[0]) stats[0].textContent = String(orders.length || 0);
-                if (stats[1]) stats[1].textContent = String(counts['PENDING'] || 0);
-                if (stats[2]) stats[2].textContent = String(counts['SHIPPING'] || 0);
-                if (stats[3]) stats[3].textContent = String(counts['COMPLETED'] || 0);
-                
-                // Update list
-                if (listPanel) {
-                    const container = document.createElement('div');
-                    container.className = 'list';
-                    orders.forEach(o => {
-                        const item = document.createElement('article');
-                        item.className = 'list-item';
-                        const total = (o.items || []).reduce((s, it) => s + Number(it.product?.price || 0) * Number(it.quantity || 0), 0);
-                        item.innerHTML = `
-                            <div class="avatar" style="width:40px;height:40px;background:#e5e7eb;border-radius:8px"></div>
-                            <div style="flex:1">
-                                <div class="list-title">Mã đơn: ${o.id} <span class="chip">${o.status}</span></div>
-                                <div class="list-sub">Khách: ${o.user?.fullName || o.user?.username || ''} • Tổng: ${Number(total).toLocaleString('vi-VN')} đ</div>
-                            </div>`;
-                        container.appendChild(item);
-                    });
-                    listPanel.innerHTML = '<div class="panel-title">Danh sách đơn hàng</div>';
-                    listPanel.appendChild(container);
-                }
-            }
-        } catch (e) {
-            console.error('Load orders data error:', e);
-        }
-    }
 
     async function loadPaymentsData() {
         const view = document.querySelector('[data-view="payments"]');

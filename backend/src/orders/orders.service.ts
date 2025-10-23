@@ -197,6 +197,65 @@ export class OrdersService {
 
     return order;
   }
+
+  async delete(id: string, userId?: string) {
+    // Check if order exists
+    const order = await this.prisma.order.findUnique({ 
+      where: { id },
+      include: { items: true, user: true }
+    });
+    
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    // Use transaction to delete order and its items
+    await this.prisma.$transaction(async (tx) => {
+      // Delete order items first (foreign key constraint)
+      await tx.orderItem.deleteMany({
+        where: { orderId: id }
+      });
+
+      // Delete order
+      await tx.order.delete({
+        where: { id }
+      });
+    });
+
+    // Create audit log for order deletion if userId is provided
+    if (userId) {
+      try {
+        await this.auditService.createAuditLog({
+          userId: userId,
+          action: 'DELETE',
+          resource: 'ORDER',
+          resourceId: order.id,
+          details: {
+            orderId: order.id,
+            orderCode: order.code,
+            totalAmount: order.totalAmount,
+            status: order.status,
+            itemsCount: order.items.length,
+            deletedBy: userId,
+            orderOwner: order.userId,
+            customerName: order.user?.fullName || order.user?.username || 'Unknown'
+          },
+          ipAddress: null,
+          userAgent: null,
+        });
+      } catch (error) {
+        console.error('Failed to create audit log for order deletion:', error);
+        // Continue even if audit log fails
+      }
+    }
+
+    return { 
+      success: true, 
+      message: 'Order deleted successfully',
+      deletedOrderId: id,
+      deletedOrderCode: order.code
+    };
+  }
 }
 
 

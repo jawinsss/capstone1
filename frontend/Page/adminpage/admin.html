@@ -171,67 +171,136 @@
 
             <!-- =====ORDERS ===== -->
             <section id="view-orders" data-view="orders" hidden>
-                <h1>Quản lý đơn hàng</h1>
-                <p class="muted">Theo dõi và quản lý tất cả đơn hàng trong hệ thống</p>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                    <div>
+                        <h1>Quản lý đơn hàng</h1>
+                        <p class="muted">Theo dõi và quản lý tất cả đơn hàng trong hệ thống • <span id="orderLastUpdate">Đang tải...</span></p>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button id="orderRefreshBtn" class="btn" style="background: #3b82f6; color: #fff; border-color: #2563eb;" title="Làm mới dữ liệu">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span class="hide-sm">Làm mới</span>
+                        </button>
+                        <button id="orderExportBtn" class="btn" style="background: #22c55e; color: #fff; border-color: #16a34a;" title="Xuất Excel">
+                            <i class="fa-solid fa-file-excel"></i>
+                            <span class="hide-sm">Xuất Excel</span>
+                        </button>
+                    </div>
+                </div>
 
                 <section class="order-stats">
-                    <div class="order-stat">
-                        <div class="order-stat-title">Tổng đơn hàng</div>
-                        <div class="order-stat-value">0</div>
+                    <div class="order-stat" data-status="all">
+                        <div class="order-stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                            <i class="fa-solid fa-shopping-cart"></i>
+                        </div>
+                        <div class="order-stat-content">
+                            <div class="order-stat-title">Tổng đơn hàng</div>
+                            <div class="order-stat-value" id="orderStatTotal">0</div>
+                        </div>
                     </div>
-                    <div class="order-stat">
-                        <div class="order-stat-title">Chờ xác nhận</div>
-                        <div class="order-stat-value">0</div>
+                    <div class="order-stat" data-status="PENDING">
+                        <div class="order-stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                            <i class="fa-solid fa-clock"></i>
+                        </div>
+                        <div class="order-stat-content">
+                            <div class="order-stat-title">Chờ xác nhận</div>
+                            <div class="order-stat-value" id="orderStatPending">0</div>
+                        </div>
                     </div>
-                    <div class="order-stat">
-                        <div class="order-stat-title">Đang giao</div>
-                        <div class="order-stat-value">0</div>
+                    <div class="order-stat" data-status="DELIVERING">
+                        <div class="order-stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                            <i class="fa-solid fa-truck-fast"></i>
+                        </div>
+                        <div class="order-stat-content">
+                            <div class="order-stat-title">Đang giao</div>
+                            <div class="order-stat-value" id="orderStatDelivering">0</div>
+                        </div>
                     </div>
-                    <div class="order-stat">
-                        <div class="order-stat-title">Hoàn thành</div>
-                        <div class="order-stat-value">0</div>
+                    <div class="order-stat" data-status="COMPLETED">
+                        <div class="order-stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                            <i class="fa-solid fa-check-circle"></i>
+                        </div>
+                        <div class="order-stat-content">
+                            <div class="order-stat-title">Hoàn thành</div>
+                            <div class="order-stat-value" id="orderStatCompleted">0</div>
+                        </div>
+                    </div>
+                    <div class="order-stat" data-status="CANCELLED">
+                        <div class="order-stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                            <i class="fa-solid fa-times-circle"></i>
+                        </div>
+                        <div class="order-stat-content">
+                            <div class="order-stat-title">Đã hủy</div>
+                            <div class="order-stat-value" id="orderStatCancelled">0</div>
+                        </div>
                     </div>
                 </section>
 
                 <section class="order-filter panel">
-                    <div class="panel-title">Bộ lọc <a class="link-reset" href="#">Đặt lại</a></div>
-                    <div class="filter-grid">
-                        <div class="filter-field">
-                            <label>Trạng thái</label>
-                            <select class="select">
-                                <option>Tất cả</option>
-                                <option>Chờ xác nhận</option>
-                                <option>Đang giao</option>
-                                <option>Hoàn thành</option>
-                            </select>
-                        </div>
-                        <div class="filter-field">
-                            <label>Thanh toán</label>
-                            <select class="select">
-                                <option>Tất cả</option>
-                                <option>Đã thanh toán</option>
-                                <option>Chưa thanh toán</option>
-                            </select>
-                        </div>
-                        <div class="filter-field">
-                            <label>Từ ngày</label>
-                            <input type="date" class="input" />
-                        </div>
-                        <div class="filter-field">
-                            <label>Đến ngày</label>
-                            <input type="date" class="input" />
+                    <div class="panel-title">
+                        <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                            <span><i class="fa-solid fa-filter"></i> Bộ lọc</span>
+                            <a class="link-reset" href="#" id="orderResetFilterBtn">Đặt lại</a>
                         </div>
                     </div>
-                    <div class="filter-sub">
-                        <span class="muted">Mã đơn hàng</span>
+                    <div class="filter-grid">
+                        <div class="filter-field">
+                            <label><i class="fa-solid fa-circle-info"></i> Trạng thái</label>
+                            <select class="select" id="orderFilterStatus">
+                                <option value="">Tất cả</option>
+                                <option value="PENDING">Chờ xác nhận</option>
+                                <option value="DELIVERING">Đang giao</option>
+                                <option value="COMPLETED">Hoàn thành</option>
+                                <option value="CANCELLED">Đã hủy</option>
+                            </select>
+                        </div>
+                        <div class="filter-field">
+                            <label><i class="fa-solid fa-calendar"></i> Từ ngày</label>
+                            <input type="date" class="input" id="orderFilterDateFrom" />
+                        </div>
+                        <div class="filter-field">
+                            <label><i class="fa-solid fa-calendar"></i> Đến ngày</label>
+                            <input type="date" class="input" id="orderFilterDateTo" />
+                        </div>
+                        <div class="filter-field">
+                            <label><i class="fa-solid fa-search"></i> Tìm kiếm</label>
+                            <input type="text" class="input" id="orderSearchInput" placeholder="Tìm mã đơn, tên khách..." />
+                        </div>
                     </div>
                 </section>
 
-                <section class="panel">
-                    <div class="panel-title">Danh sách đơn hàng</div>
-                    <div class="panel-placeholder small"></div>
+                <section class="panel" id="orderListPanel">
+                    <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>Danh sách đơn hàng <span id="orderCount" style="color: #3b82f6; font-weight: 600;">(0)</span></span>
+                        <div style="font-size: 0.875rem; color: #64748b;">
+                            <i class="fa-solid fa-circle" style="color: #22c55e; font-size: 8px;"></i>
+                            Auto-refresh mỗi 30s
+                        </div>
+                    </div>
+                    <div id="orderListContainer">
+                        <div class="panel-placeholder small">
+                            <i class="fa-solid fa-spinner fa-spin"></i>
+                            <p>Đang tải đơn hàng...</p>
+                        </div>
+                    </div>
                 </section>
             </section>
+
+            <!-- Order Detail Modal -->
+            <div id="orderDetailModal" class="modal" style="display: none;">
+                <div class="modal-overlay" id="orderDetailModalOverlay"></div>
+                <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto;">
+                    <div class="modal-header">
+                        <h2 id="orderDetailModalTitle">Chi tiết đơn hàng</h2>
+                        <button class="modal-close" id="orderDetailModalClose">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                    <div class="modal-body" id="orderDetailModalBody">
+                        <!-- Content will be injected here -->
+                    </div>
+                </div>
+            </div>
 
             <!-- ===== trả hàng/ hủy đơn ===== -->
             <section id="view-returns" data-view="returns" hidden>

@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Patch, Post, UseGuards, Req } from '@nestjs/common';
+import { Body, Controller, Get, Param, Patch, Post, Delete, UseGuards, Req } from '@nestjs/common';
 import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
@@ -24,6 +24,14 @@ export class OrdersController {
   @ApiBearerAuth()
   updateStatus(@Param('id') id: string, @Body('status') status: any) {
     return this.ordersService.updateStatus(id, status);
+  }
+
+  @Delete(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles('ADMIN')
+  @ApiBearerAuth()
+  deleteOrder(@Param('id') id: string, @Req() req) {
+    return this.ordersService.delete(id, req.user?.id);
   }
 
   // Public checkout
