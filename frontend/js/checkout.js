@@ -295,6 +295,44 @@ document.addEventListener("DOMContentLoaded", () => {
 
   placeOrderBtn.addEventListener("click", async (e) => {
     e.preventDefault();
+    
+    // Validate stock before proceeding
+    const cart = JSON.parse(localStorage.getItem('cart') || '[]');
+    if (cart.length === 0) {
+      alert('Giỏ hàng của bạn đang trống!');
+      return;
+    }
+    
+    // Load products and check stock
+    const stockErrors = [];
+    for (const item of cart) {
+      try {
+        const response = await window.apiService.get(`/products/${item.productId}`);
+        if (response?.success) {
+          const product = response.data?.data || response.data;
+          if (product.stock < item.quantity) {
+            stockErrors.push({
+              name: product.name,
+              requested: item.quantity,
+              available: product.stock
+            });
+          }
+        }
+      } catch (error) {
+        console.error(`Error checking stock for product ${item.productId}:`, error);
+      }
+    }
+    
+    if (stockErrors.length > 0) {
+      const errorMsg = stockErrors.map(err => 
+        `${err.name}: Bạn đặt ${err.requested}, chỉ còn ${err.available} trong kho`
+      ).join('\n');
+      alert(`Không thể đặt hàng. Vượt quá số lượng tồn kho:\n\n${errorMsg}\n\nVui lòng cập nhật giỏ hàng!`);
+      // Redirect back to cart to update quantities
+      window.location.href = 'cart.html';
+      return;
+    }
+    
     // Kiểm tra địa chỉ giao hàng trước khi đặt hàng
     const storedAddress = sessionStorage.getItem("userAddress");
     const addressEl = document.getElementById("userAddress");

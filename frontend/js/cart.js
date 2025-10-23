@@ -136,6 +136,10 @@ class CartManager {
                 }
                 const price = this.formatVND(product.price);
 
+                const stockStatus = product.stock > 0 
+                    ? `<span class="stock-available">Còn ${product.stock} sản phẩm</span>`
+                    : `<span class="stock-unavailable">Hết hàng</span>`;
+                
                 return `
                     <div class="product-card" data-product-id="${product.id}">
                         <div class="product-image">
@@ -145,9 +149,10 @@ class CartManager {
                         <div class="product-info">
                             <h3 class="product-name">${product.name}</h3>
                             <p class="product-price">${price}</p>
+                            <p class="product-stock">${stockStatus}</p>
                             <div class="quantity-controls">
                                 <button class="qty-btn minus" data-product-id="${product.id}">−</button>
-                                <input type="number" class="qty-input" value="${cartItem.quantity}" min="0" 
+                                <input type="number" class="qty-input" value="${cartItem.quantity}" min="0" max="${product.stock}"
                                        data-product-id="${product.id}">
                                 <button class="qty-btn plus" data-product-id="${product.id}">+</button>
                             </div>
@@ -178,6 +183,12 @@ class CartManager {
                 let currentQty = parseInt(input.value) || 0;
 
                 if (e.target.classList.contains('plus')) {
+                    // Check stock before increasing quantity
+                    const product = this.getProductById(productId);
+                    if (product && currentQty >= product.stock) {
+                        alert(`Không thể thêm! Chỉ còn ${product.stock} sản phẩm trong kho.`);
+                        return;
+                    }
                     currentQty++;
                 } else if (e.target.classList.contains('minus') && currentQty > 0) {
                     currentQty--;
@@ -203,7 +214,15 @@ class CartManager {
                     e.target.value = 0;
                     value = 0;
                 } else {
-                    e.target.value = value;
+                    // Check stock limit
+                    const product = this.getProductById(productId);
+                    if (product && value > product.stock) {
+                        alert(`Không thể đặt ${value} sản phẩm! Chỉ còn ${product.stock} trong kho.`);
+                        e.target.value = product.stock;
+                        value = product.stock;
+                    } else {
+                        e.target.value = value;
+                    }
                 }
 
                 this.updateCartItem(productId, value);
@@ -359,6 +378,26 @@ style.textContent = `
     .btn-continue-shopping:hover {
         background: #0284c7;
         transform: translateY(-2px);
+    }
+    
+    .product-stock {
+        font-size: 0.9rem;
+        margin: 0.25rem 0 0.5rem 0;
+    }
+    
+    .stock-available {
+        color: #16a34a;
+        font-weight: 500;
+    }
+    
+    .stock-unavailable {
+        color: #dc2626;
+        font-weight: 600;
+    }
+    
+    .stock-low {
+        color: #f97316;
+        font-weight: 500;
     }
 `;
 document.head.appendChild(style);

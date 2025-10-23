@@ -36,11 +36,50 @@ class CartUtils {
         }
     }
 
-    // Add item to cart
-    static addToCart(productId, quantity = 1) {
+    // Add item to cart (async version with stock validation)
+    static async addToCart(productId, quantity = 1, maxStock = null) {
         try {
             const cart = JSON.parse(localStorage.getItem('cart') || '[]');
             const existingItem = cart.find(item => item.productId === productId);
+            
+            // If maxStock is provided, validate against it
+            if (maxStock !== null) {
+                const currentQty = existingItem ? existingItem.quantity : 0;
+                const newQty = currentQty + quantity;
+                
+                if (newQty > maxStock) {
+                    const remaining = Math.max(0, maxStock - currentQty);
+                    if (remaining === 0) {
+                        alert(`Không thể thêm! Bạn đã có tối đa ${maxStock} sản phẩm này trong giỏ.`);
+                    } else {
+                        alert(`Chỉ có thể thêm ${remaining} sản phẩm nữa. Tồn kho: ${maxStock}, trong giỏ: ${currentQty}`);
+                    }
+                    return false;
+                }
+            } else {
+                // If maxStock not provided, fetch product to check stock
+                try {
+                    const response = await window.apiService.get(`/products/${productId}`);
+                    if (response?.success) {
+                        const product = response.data?.data || response.data;
+                        const currentQty = existingItem ? existingItem.quantity : 0;
+                        const newQty = currentQty + quantity;
+                        
+                        if (newQty > product.stock) {
+                            const remaining = Math.max(0, product.stock - currentQty);
+                            if (remaining === 0) {
+                                alert(`Không thể thêm! Bạn đã có tối đa ${product.stock} sản phẩm này trong giỏ.`);
+                            } else {
+                                alert(`Chỉ có thể thêm ${remaining} sản phẩm nữa. Tồn kho: ${product.stock}, trong giỏ: ${currentQty}`);
+                            }
+                            return false;
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error checking product stock:', error);
+                    // Continue without validation if API fails
+                }
+            }
             
             if (existingItem) {
                 existingItem.quantity += quantity;

@@ -458,11 +458,11 @@ document.addEventListener('DOMContentLoaded', () => {
     quantityInput.value = Math.max(1, value);
   });
 
-  addToCartBtn.addEventListener('click', () => {
+  addToCartBtn.addEventListener('click', async () => {
     if (!currentProduct) return;
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const success = CartUtils.addToCart(currentProduct.id, quantity);
+    const success = await CartUtils.addToCart(currentProduct.id, quantity, currentProduct.stock);
     
     if (success) {
       // Show success message
@@ -474,23 +474,21 @@ document.addEventListener('DOMContentLoaded', () => {
         addToCartBtn.innerHTML = originalText;
         addToCartBtn.style.background = '#3498db';
       }, 2000);
-    } else {
-      alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
     }
+    // Removed else block - validation errors are shown by CartUtils.addToCart
   });
 
-  buyNowBtn.addEventListener('click', () => {
+  buyNowBtn.addEventListener('click', async () => {
     if (!currentProduct) return;
     
     const quantity = parseInt(quantityInput.value) || 1;
-    const success = CartUtils.addToCart(currentProduct.id, quantity);
+    const success = await CartUtils.addToCart(currentProduct.id, quantity, currentProduct.stock);
     
     if (success) {
       // Redirect to cart page
       window.location.href = 'cart.html';
-    } else {
-      alert('Có lỗi xảy ra khi thêm sản phẩm vào giỏ hàng');
     }
+    // Validation errors are shown by CartUtils.addToCart
   });
 
   // ===== Initialize =====

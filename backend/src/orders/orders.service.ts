@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
 
@@ -86,8 +86,48 @@ export class OrdersService {
     // payload: { customer: { fullName, email, phone, address }, items: [{ productId, quantity }], payment: { method } }
     const code = `ORD-${Date.now()}`;
     const productIds = (payload.items || []).map((i) => i.productId);
-    const products = await this.prisma.product.findMany({ where: { id: { in: productIds } }, select: { id: true, price: true } });
+    
+    // Load products with stock information
+    const products = await this.prisma.product.findMany({ 
+      where: { id: { in: productIds } }, 
+      select: { id: true, price: true, stock: true, name: true } 
+    });
+    
+    // Create maps for easy lookup
     const priceMap = new Map(products.map((p) => [p.id, p.price] as const));
+    const stockMap = new Map(products.map((p) => [p.id, p.stock] as const));
+    const nameMap = new Map(products.map((p) => [p.id, p.name] as const));
+    
+    // Validate stock availability for each item
+    const insufficientStockItems = [];
+    for (const item of (payload.items || [])) {
+      const requestedQty = Math.max(1, Number(item.quantity) || 1);
+      const availableStock = stockMap.get(item.productId) || 0;
+      const productName = nameMap.get(item.productId) || 'Unknown product';
+      
+      if (requestedQty > availableStock) {
+        insufficientStockItems.push({
+          productId: item.productId,
+          productName: productName,
+          requested: requestedQty,
+          available: availableStock
+        });
+      }
+    }
+    
+    // If any items have insufficient stock, throw error with details
+    if (insufficientStockItems.length > 0) {
+      const errorMessage = insufficientStockItems.map(item => 
+        `${item.productName}: Yêu cầu ${item.requested}, chỉ còn ${item.available} trong kho`
+      ).join('; ');
+      
+      throw new BadRequestException({
+        message: 'Số lượng sản phẩm vượt quá tồn kho',
+        details: insufficientStockItems,
+        errorMessage: errorMessage
+      });
+    }
+    
     const items = (payload.items || []).map((i) => ({
       productId: i.productId,
       quantity: Math.max(1, Number(i.quantity) || 1),

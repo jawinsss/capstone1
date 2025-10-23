@@ -530,12 +530,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   closeModalBtn && closeModalBtn.addEventListener('click',()=>modal.setAttribute('hidden',''));
-  addToCartBtn && addToCartBtn.addEventListener('click',()=>{
+  addToCartBtn && addToCartBtn.addEventListener('click', async ()=>{
     const qty = Math.max(1, parseInt(qtyInput.value||'1',10));
     if (activeProduct && activeProduct.id) {
-      CartUtils.addToCart(activeProduct.id, qty);
+      const success = await CartUtils.addToCart(activeProduct.id, qty, activeProduct.stock);
+      if (success) {
+        alert('Đã thêm vào giỏ');
+      }
+      // Validation errors are shown by CartUtils.addToCart
     }
-    alert('Đã thêm vào giỏ');
   });
 
   submitReview && submitReview.addEventListener('click', async ()=>{
