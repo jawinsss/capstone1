@@ -2049,6 +2049,18 @@ document.addEventListener('DOMContentLoaded', async () => {
                                     <strong style="color:#1e293b;margin-left:8px;">${order.user.phone}</strong>
                                 </div>
                             ` : ''}
+                            ${order.user?.fullAddress || order.user?.street ? `
+                                <div style="margin-bottom:0px;">
+                                    <span style="color:#64748b;">Địa chỉ:</span>
+                                    <strong style="color:#1e293b;margin-left:8px;display:block;margin-top:4px;line-height:1.5;">
+                                        ${order.user.fullAddress || 
+                                          [order.user.street, order.user.wardName, order.user.district, order.user.provinceName]
+                                            .filter(Boolean)
+                                            .join(', ')
+                                        }
+                                    </strong>
+                                </div>
+                            ` : ''}
                         </div>
                     </div>
                 </div>

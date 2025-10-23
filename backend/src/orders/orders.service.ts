@@ -21,7 +21,22 @@ export class OrdersService {
             } 
           } 
         }, 
-        user: true 
+        user: {
+          select: {
+            id: true,
+            username: true,
+            fullName: true,
+            email: true,
+            phone: true,
+            province: true,
+            provinceName: true,
+            district: true,
+            ward: true,
+            wardName: true,
+            street: true,
+            fullAddress: true
+          }
+        }
       },
       orderBy: { createdAt: 'desc' },
     });
