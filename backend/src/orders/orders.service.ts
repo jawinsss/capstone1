@@ -11,7 +11,18 @@ export class OrdersService {
 
   list() {
     return this.prisma.order.findMany({
-      include: { items: { include: { product: true } }, user: true },
+      include: { 
+        items: { 
+          include: { 
+            product: {
+              include: {
+                images: true
+              }
+            } 
+          } 
+        }, 
+        user: true 
+      },
       orderBy: { createdAt: 'desc' },
     });
   }

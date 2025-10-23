@@ -580,6 +580,17 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
   justify-content: center;
 }
 
+/* Order Detail Modal specific styles */
+#orderDetailModal {
+  display: none;
+}
+
+#orderDetailModal.show {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+}
+
 .modal-content {
   position: relative;
   background: #fff;

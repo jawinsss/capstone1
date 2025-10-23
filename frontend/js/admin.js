@@ -1819,17 +1819,30 @@ document.addEventListener('DOMContentLoaded', async () => {
                 
                 // Get first product image (handle both base64 and URL)
                 const firstItem = order.items && order.items[0];
-                let productImage = 'https://via.placeholder.com/80x80?text=No+Image';
-                if (firstItem?.product?.images?.[0]?.url) {
-                    const imageUrl = firstItem.product.images[0].url;
-                    if (imageUrl.startsWith('data:image')) {
-                        // Base64 image from admin
-                        productImage = imageUrl;
-                    } else {
-                        // Regular URL - use CONFIG if available
-                        productImage = (typeof CONFIG !== 'undefined' && CONFIG.getAssetUrl) 
-                            ? CONFIG.getAssetUrl(imageUrl) 
-                            : imageUrl;
+                let productImage = '/assets/Icon MatFlow.png'; // Default fallback
+                
+                if (firstItem?.product) {
+                    const product = firstItem.product;
+                    
+                    // Try to get image from images array
+                    if (product.images && Array.isArray(product.images) && product.images.length > 0) {
+                        const imageUrl = product.images[0].url;
+                        console.log('Product image URL:', imageUrl);
+                        
+                        if (imageUrl) {
+                            if (imageUrl.startsWith('data:image')) {
+                                // Base64 image from admin upload
+                                productImage = imageUrl;
+                            } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+                                // Full URL
+                                productImage = imageUrl;
+                            } else {
+                                // Relative path - use CONFIG.getAssetUrl
+                                productImage = (typeof CONFIG !== 'undefined' && CONFIG.getAssetUrl) 
+                                    ? CONFIG.getAssetUrl(imageUrl) 
+                                    : `/assets/vat_tu/${imageUrl}`;
+                            }
+                        }
                     }
                 }
 
@@ -1928,15 +1941,24 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const product = item.product || {};
                 
                 // Handle product image (base64 or URL)
-                let img = 'https://via.placeholder.com/60x60?text=No+Image';
-                if (product.images?.[0]?.url) {
+                let img = '/assets/Icon MatFlow.png'; // Default fallback
+                
+                if (product.images && Array.isArray(product.images) && product.images.length > 0) {
                     const imageUrl = product.images[0].url;
-                    if (imageUrl.startsWith('data:image')) {
-                        img = imageUrl;
-                    } else {
-                        img = (typeof CONFIG !== 'undefined' && CONFIG.getAssetUrl) 
-                            ? CONFIG.getAssetUrl(imageUrl) 
-                            : imageUrl;
+                    
+                    if (imageUrl) {
+                        if (imageUrl.startsWith('data:image')) {
+                            // Base64 image from admin upload
+                            img = imageUrl;
+                        } else if (imageUrl.startsWith('http://') || imageUrl.startsWith('https://')) {
+                            // Full URL
+                            img = imageUrl;
+                        } else {
+                            // Relative path - use CONFIG.getAssetUrl
+                            img = (typeof CONFIG !== 'undefined' && CONFIG.getAssetUrl) 
+                                ? CONFIG.getAssetUrl(imageUrl) 
+                                : `/assets/vat_tu/${imageUrl}`;
+                        }
                     }
                 }
                 
@@ -2061,8 +2083,9 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
 
-            // Show modal
-            elements.modal.style.display = 'block';
+            // Show modal with flexbox centering
+            elements.modal.style.display = 'flex';
+            elements.modal.classList.add('show');
             document.body.style.overflow = 'hidden';
 
             // Add event listeners for status update buttons
@@ -2154,6 +2177,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // Close modal
         function closeModal() {
             elements.modal.style.display = 'none';
+            elements.modal.classList.remove('show');
             document.body.style.overflow = '';
         }
 
