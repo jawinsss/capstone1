@@ -1661,9 +1661,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             statCards: document.querySelectorAll('.order-stat'),
             statTotal: document.getElementById('orderStatTotal'),
             statPending: document.getElementById('orderStatPending'),
-            statDelivering: document.getElementById('orderStatDelivering'),
+            statShipping: document.getElementById('orderStatShipping'),
             statCompleted: document.getElementById('orderStatCompleted'),
             statCancelled: document.getElementById('orderStatCancelled'),
+            statReturned: document.getElementById('orderStatReturned'),
             modal: document.getElementById('orderDetailModal'),
             modalOverlay: document.getElementById('orderDetailModalOverlay'),
             modalClose: document.getElementById('orderDetailModalClose'),
@@ -1694,7 +1695,8 @@ document.addEventListener('DOMContentLoaded', async () => {
                 'CONFIRMED': { text: 'Đã xác nhận', color: '#10b981', bg: '#d1fae5', icon: 'check' },
                 'SHIPPING': { text: 'Đang giao', color: '#3b82f6', bg: '#dbeafe', icon: 'truck-fast' },
                 'COMPLETED': { text: 'Hoàn thành', color: '#22c55e', bg: '#d1fae5', icon: 'check-circle' },
-                'CANCELLED': { text: 'Đã hủy', color: '#ef4444', bg: '#fee2e2', icon: 'times-circle' }
+                'CANCELLED': { text: 'Đã hủy', color: '#ef4444', bg: '#fee2e2', icon: 'times-circle' },
+                'RETURNED': { text: 'Đã hoàn trả', color: '#8b5cf6', bg: '#ede9fe', icon: 'rotate-left' }
             };
             const s = statusMap[status] || { text: status, color: '#64748b', bg: '#f1f5f9', icon: 'question-circle' };
             return `<span class="order-status-badge" style="background:${s.bg};color:${s.color};padding:4px 12px;border-radius:16px;font-size:0.75rem;font-weight:600;display:inline-flex;align-items:center;gap:4px;">
@@ -1745,9 +1747,10 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (elements.statTotal) elements.statTotal.textContent = orderManagementState.allOrders.length;
             if (elements.statPending) elements.statPending.textContent = counts['PENDING'] || 0;
-            if (elements.statDelivering) elements.statDelivering.textContent = counts['SHIPPING'] || 0;
+            if (elements.statShipping) elements.statShipping.textContent = counts['SHIPPING'] || 0;
             if (elements.statCompleted) elements.statCompleted.textContent = counts['COMPLETED'] || 0;
             if (elements.statCancelled) elements.statCancelled.textContent = counts['CANCELLED'] || 0;
+            if (elements.statReturned) elements.statReturned.textContent = counts['RETURNED'] || 0;
         }
 
         // Apply filters
@@ -4962,4 +4965,461 @@ document.addEventListener('DOMContentLoaded', async () => {
     window.editUser = editUser;
     window.toggleUserStatus = toggleUserStatus;
     window.deleteUser = deleteUser;
+
+    // ========================================
+    // RETURNS MANAGEMENT
+    // ========================================
+    
+    function initReturnsView() {
+        const view = document.querySelector('[data-view="returns"]');
+        if (!view) return;
+        
+        console.log('🔄 Initializing Returns Management View...');
+        
+        let returnsData = [];
+        let filteredReturns = [];
+        
+        // Load returns data
+        async function loadReturns() {
+            try {
+                console.log('📥 Loading return requests from /returns...');
+                const response = await window.apiService.get('/returns');
+                
+                console.log('📦 Returns API Response:', response);
+                console.log('📦 Response.success:', response?.success);
+                console.log('📦 Response.data:', response?.data);
+                console.log('📦 Is Array?:', Array.isArray(response?.data));
+                
+                if (response && response.success && response.data) {
+                    // Handle both direct array and nested structure
+                    let dataArray = response.data;
+                    if (!Array.isArray(dataArray) && dataArray.data && Array.isArray(dataArray.data)) {
+                        dataArray = dataArray.data;
+                    }
+                    
+                    returnsData = Array.isArray(dataArray) ? dataArray : [];
+                    console.log(`✅ Loaded ${returnsData.length} return requests`);
+                    console.log('📋 Return requests:', returnsData);
+                    
+                    updateStats();
+                    applyFilters();
+                } else {
+                    console.error('❌ Failed to load returns:', response);
+                    showEmptyState('Không thể tải dữ liệu yêu cầu hoàn trả');
+                }
+            } catch (error) {
+                console.error('❌ Error loading returns:', error);
+                showEmptyState('Lỗi khi tải dữ liệu: ' + error.message);
+            }
+        }
+        
+        // Update statistics
+        function updateStats() {
+            const stats = {
+                total: returnsData.length,
+                pending: returnsData.filter(r => r.status === 'PENDING').length,
+                approved: returnsData.filter(r => r.status === 'APPROVED').length,
+                rejected: returnsData.filter(r => r.status === 'REJECTED').length,
+            };
+            
+            document.getElementById('returnsTotalStat').textContent = stats.total;
+            document.getElementById('returnsPendingStat').textContent = stats.pending;
+            document.getElementById('returnsApprovedStat').textContent = stats.approved;
+            document.getElementById('returnsRejectedStat').textContent = stats.rejected;
+        }
+        
+        // Apply filters
+        function applyFilters() {
+            const searchTerm = document.getElementById('returnSearchInput')?.value.toLowerCase() || '';
+            const statusFilter = document.getElementById('returnStatusFilter')?.value || '';
+            
+            filteredReturns = returnsData.filter(returnReq => {
+                const matchesSearch = !searchTerm || 
+                    returnReq.order?.code?.toLowerCase().includes(searchTerm) ||
+                    returnReq.order?.user?.fullName?.toLowerCase().includes(searchTerm) ||
+                    returnReq.order?.user?.email?.toLowerCase().includes(searchTerm);
+                
+                const matchesStatus = !statusFilter || returnReq.status === statusFilter;
+                
+                return matchesSearch && matchesStatus;
+            });
+            
+            renderReturns();
+        }
+        
+        // Helper functions
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            const date = new Date(dateString);
+            return date.toLocaleDateString('vi-VN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+        }
+        
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('vi-VN', {
+                style: 'currency',
+                currency: 'VND'
+            }).format(amount);
+        }
+        
+        // Render returns table
+        function renderReturns() {
+            const tbody = document.getElementById('returnsTableBody');
+            if (!tbody) return;
+            
+            if (filteredReturns.length === 0) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            <i class="fa-solid fa-inbox" style="font-size: 48px; color: #ddd; margin-bottom: 16px;"></i>
+                            <p style="color: #999; margin: 0;">Không tìm thấy yêu cầu hoàn trả nào</p>
+                        </td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            tbody.innerHTML = filteredReturns.map(returnReq => {
+                const order = returnReq.order || {};
+                const user = order.user || {};
+                const orderCode = order.code || 'N/A';
+                const customerName = user.fullName || 'N/A';
+                const amount = Number(returnReq.refundAmount || order.totalAmount || 0);
+                const reason = returnReq.reason || 'Không có lý do';
+                const createdAt = new Date(returnReq.createdAt);
+                const statusBadge = getReturnStatusBadge(returnReq.status);
+                const actionButtons = getReturnActionButtons(returnReq);
+                
+                return `
+                    <tr>
+                        <td><strong>${orderCode}</strong></td>
+                        <td>${customerName}</td>
+                        <td><strong style="color: var(--primary-color);">${formatCurrency(amount)}</strong></td>
+                        <td style="max-width: 200px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="${reason}">
+                            ${reason}
+                        </td>
+                        <td>${formatDate(createdAt)}</td>
+                        <td>${statusBadge}</td>
+                        <td>${actionButtons}</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+        
+        // Get status badge HTML
+        function getReturnStatusBadge(status) {
+            const badges = {
+                'PENDING': '<span class="status-badge pending"><i class="fa-solid fa-clock"></i> Chờ xử lý</span>',
+                'APPROVED': '<span class="status-badge completed"><i class="fa-solid fa-check-circle"></i> Đã duyệt</span>',
+                'REJECTED': '<span class="status-badge cancelled"><i class="fa-solid fa-times-circle"></i> Đã từ chối</span>',
+            };
+            return badges[status] || status;
+        }
+        
+        // Get action buttons
+        function getReturnActionButtons(returnReq) {
+            const viewBtn = `<button class="btn-icon btn-view" onclick="viewReturnDetail('${returnReq.id}')" title="Xem chi tiết">
+                <i class="fa-solid fa-eye"></i>
+            </button>`;
+            
+            if (returnReq.status === 'PENDING') {
+                return `
+                    <div style="display: flex; gap: 8px;">
+                        ${viewBtn}
+                        <button class="btn-icon btn-success" onclick="approveReturn('${returnReq.id}')" title="Duyệt hoàn trả">
+                            <i class="fa-solid fa-check"></i>
+                        </button>
+                        <button class="btn-icon btn-danger" onclick="rejectReturn('${returnReq.id}')" title="Từ chối">
+                            <i class="fa-solid fa-times"></i>
+                        </button>
+                    </div>
+                `;
+            }
+            
+            return viewBtn;
+        }
+        
+        // View return detail
+        window.viewReturnDetail = async function(returnId) {
+            try {
+                console.log('📥 Fetching return detail for ID:', returnId);
+                const response = await window.apiService.get(`/returns/${returnId}`);
+                
+                console.log('📦 Return Detail API Response:', response);
+                
+                // Handle nested response structure
+                let actualData = response;
+                if (response.data && response.data.success) {
+                    actualData = response.data;
+                }
+                
+                if (!actualData || !actualData.success || !actualData.data) {
+                    console.error('❌ Invalid response structure:', actualData);
+                    alert('Không thể tải chi tiết yêu cầu');
+                    return;
+                }
+                
+                const returnReq = actualData.data;
+                console.log('📋 Return Request:', returnReq);
+                
+                const order = returnReq.order || {};
+                const user = order.user || {};
+                const items = order.items || [];
+                
+                // Construct address if fullAddress is not available
+                const userAddress = user.fullAddress || [
+                    user.street,
+                    user.wardName,
+                    user.district,
+                    user.provinceName
+                ].filter(Boolean).join(', ') || 'N/A';
+                
+                console.log('📦 Order:', order);
+                console.log('👤 User:', user);
+                console.log('📍 Address:', userAddress);
+                console.log('📦 Items:', items);
+                
+                const modal = document.getElementById('returnDetailModal');
+                const modalBody = document.getElementById('returnDetailBody');
+                
+                const itemsHTML = items.map(item => {
+                    const product = item.product || {};
+                    const image = product.images?.[0] || '/assets/Icon MatFlow.png';
+                    const name = product.name || 'Sản phẩm';
+                    const price = Number(item.price || product.price || 0);
+                    const qty = Number(item.quantity || 0);
+                    const subtotal = price * qty;
+                    
+                    return `
+                        <div style="display: flex; align-items: center; gap: 12px; padding: 12px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 8px;">
+                            <img src="${image}" alt="${name}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;" onerror="this.src='/assets/Icon MatFlow.png'">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 600; margin-bottom: 4px;">${name}</div>
+                                <div style="font-size: 0.875rem; color: #666;">${formatCurrency(price)} × ${qty}</div>
+                            </div>
+                            <div style="font-weight: 600; color: var(--primary-color);">
+                                ${formatCurrency(subtotal)}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                const actionButtons = returnReq.status === 'PENDING' ? `
+                    <div style="display: flex; gap: 12px; justify-content: flex-end; padding-top: 20px; border-top: 2px solid #e0e0e0; margin-top: 20px;">
+                        <button class="btn-secondary" onclick="closeReturnDetailModal()">Đóng</button>
+                        <button class="btn-danger" onclick="rejectReturnFromModal('${returnReq.id}')">
+                            <i class="fa-solid fa-times"></i> Từ chối
+                        </button>
+                        <button class="btn-primary" onclick="approveReturnFromModal('${returnReq.id}')">
+                            <i class="fa-solid fa-check"></i> Duyệt hoàn trả
+                        </button>
+                    </div>
+                ` : `
+                    <div style="display: flex; justify-content: flex-end; padding-top: 20px; border-top: 2px solid #e0e0e0; margin-top: 20px;">
+                        <button class="btn-secondary" onclick="closeReturnDetailModal()">Đóng</button>
+                    </div>
+                `;
+                
+                modalBody.innerHTML = `
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 24px;">
+                        <div>
+                            <h4 style="margin-bottom: 16px;"><i class="fa-solid fa-receipt"></i> Thông tin đơn hàng</h4>
+                            <div style="background: #f9f9f9; padding: 16px; border-radius: 8px;">
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.875rem; color: #666;">Mã đơn hàng</div>
+                                    <div style="font-weight: 600;">${order.code || 'N/A'}</div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.875rem; color: #666;">Tổng tiền</div>
+                                    <div style="font-weight: 600; color: var(--primary-color); font-size: 1.125rem;">
+                                        ${formatCurrency(Number(order.totalAmount || 0))}
+                                    </div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.875rem; color: #666;">Ngày đặt</div>
+                                    <div style="font-weight: 600;">${order.createdAt ? formatDate(order.createdAt) : 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.875rem; color: #666;">Trạng thái yêu cầu</div>
+                                    <div style="margin-top: 4px;">${getReturnStatusBadge(returnReq.status)}</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-bottom: 16px;"><i class="fa-solid fa-user"></i> Thông tin khách hàng</h4>
+                            <div style="background: #f9f9f9; padding: 16px; border-radius: 8px;">
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.875rem; color: #666;">Họ tên</div>
+                                    <div style="font-weight: 600;">${user.fullName || 'N/A'}</div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.875rem; color: #666;">Email</div>
+                                    <div>${user.email || 'N/A'}</div>
+                                </div>
+                                <div style="margin-bottom: 12px;">
+                                    <div style="font-size: 0.875rem; color: #666;">Số điện thoại</div>
+                                    <div>${user.phone || 'N/A'}</div>
+                                </div>
+                                <div>
+                                    <div style="font-size: 0.875rem; color: #666;">Địa chỉ</div>
+                                    <div>${userAddress}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="margin-bottom: 24px;">
+                        <h4 style="margin-bottom: 16px;"><i class="fa-solid fa-comment-dots"></i> Lý do hoàn trả</h4>
+                        <div style="background: #fff3cd; padding: 16px; border-radius: 8px; border-left: 4px solid #ffc107;">
+                            <p style="margin: 0; line-height: 1.6;">${returnReq.reason || 'Không có lý do'}</p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <h4 style="margin-bottom: 16px;"><i class="fa-solid fa-box"></i> Sản phẩm (${items.length})</h4>
+                        ${itemsHTML}
+                    </div>
+                    
+                    ${actionButtons}
+                `;
+                
+                modal.style.display = 'flex';
+                modal.classList.add('show');
+                document.body.style.overflow = 'hidden';
+            } catch (error) {
+                console.error('Error viewing return detail:', error);
+                alert('Lỗi khi tải chi tiết: ' + error.message);
+            }
+        };
+        
+        // Close modal
+        window.closeReturnDetailModal = function() {
+            const modal = document.getElementById('returnDetailModal');
+            modal.classList.remove('show');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 200);
+            document.body.style.overflow = '';
+        };
+        
+        // Approve return
+        window.approveReturn = async function(returnId) {
+            if (!confirm('⚠️ XÁC NHẬN DUYỆT HOÀN TRẢ\n\nBạn có chắc chắn muốn duyệt yêu cầu hoàn trả này?\n\n• Đơn hàng sẽ chuyển sang trạng thái ĐÃ HOÀN TRẢ\n• Kho hàng sẽ được CẬP NHẬT (hoàn trả stock)\n• Khách hàng sẽ được HOÀN TIỀN')) {
+                return;
+            }
+            
+            try {
+                const response = await window.apiService.post(`/returns/${returnId}/approve`);
+                
+                if (response && response.success) {
+                    alert('✅ ' + (response.message || 'Đã duyệt yêu cầu hoàn trả thành công!'));
+                    await loadReturns();
+                } else {
+                    alert('❌ Lỗi: ' + (response?.message || 'Không thể duyệt yêu cầu'));
+                }
+            } catch (error) {
+                console.error('Error approving return:', error);
+                alert('❌ Lỗi khi duyệt yêu cầu: ' + error.message);
+            }
+        };
+        
+        // Reject return
+        window.rejectReturn = async function(returnId) {
+            if (!confirm('⚠️ XÁC NHẬN TỪ CHỐI HOÀN TRẢ\n\nBạn có chắc chắn muốn từ chối yêu cầu hoàn trả này?\n\n• Đơn hàng sẽ quay về trạng thái HOÀN THÀNH\n• Khách hàng KHÔNG được hoàn tiền\n• Stock KHÔNG được khôi phục')) {
+                return;
+            }
+            
+            try {
+                const response = await window.apiService.post(`/returns/${returnId}/reject`);
+                
+                if (response && response.success) {
+                    alert('✅ ' + (response.message || 'Đã từ chối yêu cầu hoàn trả. Đơn hàng quay về trạng thái HOÀN THÀNH.'));
+                    await loadReturns();
+                } else {
+                    alert('❌ Lỗi: ' + (response?.message || 'Không thể từ chối yêu cầu'));
+                }
+            } catch (error) {
+                console.error('Error rejecting return:', error);
+                alert('❌ Lỗi khi từ chối: ' + error.message);
+            }
+        };
+        
+        // Approve from modal
+        window.approveReturnFromModal = async function(returnId) {
+            closeReturnDetailModal();
+            await approveReturn(returnId);
+        };
+        
+        // Reject from modal
+        window.rejectReturnFromModal = async function(returnId) {
+            closeReturnDetailModal();
+            await rejectReturn(returnId);
+        };
+        
+        // Show empty state
+        function showEmptyState(message) {
+            const tbody = document.getElementById('returnsTableBody');
+            if (tbody) {
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="7" style="text-align: center; padding: 40px;">
+                            <i class="fa-solid fa-exclamation-triangle" style="font-size: 48px; color: #ff9800; margin-bottom: 16px;"></i>
+                            <p style="color: #999; margin: 0;">${message}</p>
+                        </td>
+                    </tr>
+                `;
+            }
+        }
+        
+        // Event listeners
+        const refreshBtn = document.getElementById('refreshReturnsBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+                await loadReturns();
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i> Làm mới';
+            });
+        }
+        
+        const searchInput = document.getElementById('returnSearchInput');
+        if (searchInput) {
+            let searchTimeout;
+            searchInput.addEventListener('input', () => {
+                clearTimeout(searchTimeout);
+                searchTimeout = setTimeout(applyFilters, 300);
+            });
+        }
+        
+        const statusFilter = document.getElementById('returnStatusFilter');
+        if (statusFilter) {
+            statusFilter.addEventListener('change', applyFilters);
+        }
+        
+        const closeModalBtn = document.getElementById('closeReturnDetailModal');
+        if (closeModalBtn) {
+            closeModalBtn.addEventListener('click', closeReturnDetailModal);
+        }
+        
+        // Initial load
+        loadReturns();
+        
+        console.log('✅ Returns Management View initialized');
+    }
+    
+    // Auto-init when view becomes visible
+    document.addEventListener('DOMContentLoaded', () => {
+        const navItems = document.querySelectorAll('.nav-item[data-link="returns"]');
+        navItems.forEach(item => {
+            item.addEventListener('click', () => {
+                setTimeout(() => initReturnsView(), 100);
+            });
+        });
+    });
 });

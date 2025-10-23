@@ -21,24 +21,47 @@ document.addEventListener("DOMContentLoaded", () => {
   // Load user address from API
   const loadUserAddress = async () => {
     try {
+      console.log('🔍 [Checkout] Loading user address from API...');
       const response = await window.apiService.get('/users/profile');
+      console.log('📦 [Checkout] Profile API response:', response);
+      
       if (response.success && response.data) {
         const user = response.data;
+        console.log('👤 [Checkout] User data:', user);
+        console.log('📍 [Checkout] Address fields:', {
+          fullName: user.fullName,
+          street: user.street,
+          wardName: user.wardName,
+          provinceName: user.provinceName
+        });
+        
+        // Try to construct address from individual fields first
         if (user.fullName && user.street && user.wardName && user.provinceName) {
           const address = `${user.fullName} - ${user.street}, ${user.wardName}, ${user.provinceName}`;
+          console.log('✅ [Checkout] Address loaded successfully:', address);
           domCache.userAddress.textContent = address;
           saveSession("userAddress", address);
           
           // Update address options in modal
           updateAddressOptions(user);
-        } else {
+        } 
+        // Fallback: Use fullAddress if available
+        else if (user.fullAddress && user.fullAddress.trim() !== '') {
+          const address = user.fullName ? `${user.fullName} - ${user.fullAddress}` : user.fullAddress;
+          console.log('✅ [Checkout] Address loaded from fullAddress:', address);
+          domCache.userAddress.textContent = address;
+          saveSession("userAddress", address);
+        } 
+        else {
+          console.warn('⚠️ [Checkout] Missing required address fields!');
           domCache.userAddress.textContent = "Chưa có địa chỉ";
         }
       } else {
+        console.error('❌ [Checkout] Failed to load profile:', response);
         domCache.userAddress.textContent = "Không thể tải địa chỉ";
       }
     } catch (error) {
-      console.error('Error loading user address:', error);
+      console.error('❌ [Checkout] Error loading user address:', error);
       domCache.userAddress.textContent = "Lỗi tải địa chỉ";
     }
   };
@@ -63,12 +86,12 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   };
 
-  // Load user address on page load
+  // Load user address on page load (async - will update when ready)
   loadUserAddress();
-
-  const cachedAddress = getSession("userAddress");
-  if (cachedAddress) domCache.userAddress.textContent = cachedAddress;
-
+  
+  // Note: Don't overwrite with cached address - let API load fresh data
+  // This ensures we always get the latest address from database
+  
   const cachedPayment = getSession("userPayment");
   if (cachedPayment) domCache.paymentDisplay.textContent = cachedPayment;
 
@@ -334,16 +357,63 @@ document.addEventListener("DOMContentLoaded", () => {
     }
     
     // Kiểm tra địa chỉ giao hàng trước khi đặt hàng
-    const storedAddress = sessionStorage.getItem("userAddress");
+    console.log('🔍 Checking address before checkout...');
+    
     const addressEl = document.getElementById("userAddress");
     const addressText = addressEl ? (addressEl.textContent || "").trim() : "";
-    const hasAddress = !!(storedAddress && storedAddress.trim()) || (addressText && !addressText.includes("Chưa có địa chỉ"));
+    const storedAddress = sessionStorage.getItem("userAddress");
+    
+    console.log('📍 Address Element Text:', addressText);
+    console.log('📍 Stored Address:', storedAddress);
+    
+    // Strict address validation
+    const invalidAddressTexts = [
+      "Chưa có địa chỉ",
+      "Không thể tải địa chỉ",
+      "Lỗi tải địa chỉ",
+      "N/A"
+    ];
+    
+    // Check if address text is invalid
+    const isAddressInvalid = addressText === "" || 
+                              invalidAddressTexts.some(invalid => 
+                                addressText.toLowerCase() === invalid.toLowerCase()
+                              );
+    
+    const hasValidAddress = storedAddress && 
+                            storedAddress.trim() !== '' && 
+                            storedAddress.length > 10 && // Meaningful address (>10 chars)
+                            !isAddressInvalid && 
+                            addressText.length > 10;
 
-    if (!hasAddress) {
-      // Hiển thị modal thay vì alert
-      addressWarningModal.hidden = false;
+    console.log('🔍 Address validation details:', {
+      addressText,
+      addressTextLength: addressText.length,
+      storedAddress,
+      storedAddressLength: storedAddress?.length,
+      isAddressInvalid,
+      hasValidAddress
+    });
+
+    if (!hasValidAddress) {
+      console.error('❌ Invalid address detected!');
+      
+      // Hiển thị modal cảnh báo
+      const addressWarningModal = document.getElementById("addressWarningModal");
+      if (addressWarningModal) {
+        addressWarningModal.hidden = false;
+      } else {
+        alert(
+          '⚠️ THIẾU ĐỊA CHỈ GIAO HÀNG\n\n' +
+          'Vui lòng cập nhật địa chỉ giao hàng trong trang cá nhân trước khi đặt hàng.\n\n' +
+          'Bạn sẽ được chuyển đến trang cá nhân để cập nhật địa chỉ.'
+        );
+        window.location.href = "../userpage/user.html";
+      }
       return;
     }
+    
+    console.log('✅ Address validated successfully');
     
     // Get user info if logged in
     let userEmail = `guest-${Date.now()}@example.com`;

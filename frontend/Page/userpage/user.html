@@ -346,6 +346,15 @@
                                     <span class="stat-value" id="statCancelled">0</span>
                                 </div>
                             </div>
+                            <div class="stat-card" data-filter="RETURNED">
+                                <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
+                                    <i class="fa-solid fa-rotate-left"></i>
+                                </div>
+                                <div class="stat-info">
+                                    <span class="stat-label">Đã hoàn trả</span>
+                                    <span class="stat-value" id="statReturned">0</span>
+                                </div>
+                            </div>
                         </div>
 
                         <!-- Order Filters -->
@@ -358,6 +367,7 @@
                                 <option value="SHIPPING">Đang giao</option>
                                 <option value="COMPLETED">Hoàn thành</option>
                                 <option value="CANCELLED">Đã hủy</option>
+                                <option value="RETURNED">Đã hoàn trả</option>
                             </select>
                             <input type="date" class="date-input" id="orderDateFrom" placeholder="Từ ngày">
                             <input type="date" class="date-input" id="orderDateTo" placeholder="Đến ngày">

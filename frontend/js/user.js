@@ -398,7 +398,8 @@ function updateOrderStats() {
         'PENDING': 0,
         'SHIPPING': 0,
         'COMPLETED': 0,
-        'CANCELLED': 0
+        'CANCELLED': 0,
+        'RETURNED': 0
     };
     
     orders.forEach(order => {
@@ -413,12 +414,14 @@ function updateOrderStats() {
     const statShipping = document.getElementById('statShipping');
     const statCompleted = document.getElementById('statCompleted');
     const statCancelled = document.getElementById('statCancelled');
+    const statReturned = document.getElementById('statReturned');
     
     if (statAll) statAll.textContent = counts.all;
     if (statPending) statPending.textContent = counts.PENDING;
     if (statShipping) statShipping.textContent = counts.SHIPPING;
     if (statCompleted) statCompleted.textContent = counts.COMPLETED;
     if (statCancelled) statCancelled.textContent = counts.CANCELLED;
+    if (statReturned) statReturned.textContent = counts.RETURNED;
 }
 
 // Update profile order stats (for sidebar)
@@ -552,7 +555,8 @@ function getOrderStatusBadge(status) {
         'CONFIRMED': { text: 'Đã xác nhận', class: 'confirmed' },
         'SHIPPING': { text: 'Đang giao', class: 'shipping' },
         'COMPLETED': { text: 'Hoàn thành', class: 'completed' },
-        'CANCELLED': { text: 'Đã hủy', class: 'cancelled' }
+        'CANCELLED': { text: 'Đã hủy', class: 'cancelled' },
+        'RETURNED': { text: 'Đã hoàn trả', class: 'returned' }
     };
     
     const info = statusMap[status] || { text: status, class: 'pending' };
@@ -1052,11 +1056,17 @@ async function submitReturnRequest() {
     }
     
     try {
+        console.log('📤 Submitting return request for order:', order.id);
         const response = await userAPI.apiService.post(`/orders/${order.id}/return`, {
             reason: reason
         });
         
-        if (response.success) {
+        console.log('📥 Return request response:', response);
+        
+        // Handle nested response structure
+        const actualResponse = response.data && response.data.success ? response.data : response;
+        
+        if (actualResponse.success) {
             alert(
                 '✅ GỬI YÊU CẦU HOÀN TRẢ THÀNH CÔNG!\n\n' +
                 'Yêu cầu của bạn đã được ghi nhận.\n' +
@@ -1071,10 +1081,10 @@ async function submitReturnRequest() {
             // Reload orders
             await loadUserOrders();
         } else {
-            alert('❌ Lỗi: ' + (response.message || 'Không thể gửi yêu cầu'));
+            alert('❌ Lỗi: ' + (actualResponse.message || response.message || 'Không thể gửi yêu cầu'));
         }
     } catch (error) {
-        console.error('Error submitting return request:', error);
+        console.error('❌ Error submitting return request:', error);
         alert('❌ Lỗi khi gửi yêu cầu: ' + error.message);
     }
 }
@@ -1699,11 +1709,9 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     { id: "phoneNumber", type: "input" },
     { id: "email", type: "input" },
     { id: "gender", type: "select" },
-    // Keep the original combined address input and add finer fields so user can pick province/ward/street
     { id: "addressStreet", type: "input" },
-    { id: "provinceSelect", type: "select" },
-    { id: "wardSelect", type: "select" },
-    { id: "address", type: "input" }, // single full-address input (kept for validation/backwards compatibility)
+    // Note: provinceSelect and wardSelect are handled by SearchDropdown components
+    // They don't exist as regular HTML elements, so they're not included here
   ]
   
   // Data holders for JSON
@@ -1804,6 +1812,22 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       if (window.wardDropdown) {
         window.wardDropdown.disable();
       }
+      
+      // Populate with existing data if available
+      if (window.selectedProvince) {
+        const provinceName = window.selectedProvince.name_with_type || window.selectedProvince.name;
+        provinceDropdown.setValue(provinceName);
+        // Update ward dropdown URL
+        wardDropdown.options.apiUrl = `http://localhost:3000/locations/wards/${window.selectedProvince.code}`;
+        wardDropdown.loadInitialData();
+      }
+      
+      if (window.selectedWard) {
+        const wardName = window.selectedWard.name_with_type || window.selectedWard.name;
+        wardDropdown.setValue(wardName);
+      }
+      
+      console.log('✅ Address dropdowns populated with existing data');
     }, 100);
   })
   
@@ -1907,9 +1931,11 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       // Enable search dropdowns
       if (window.provinceDropdown) {
         window.provinceDropdown.enable();
+        console.log('📍 Province dropdown enabled with data:', window.selectedProvince);
       }
       if (window.wardDropdown) {
         window.wardDropdown.enable();
+        console.log('📍 Ward dropdown enabled with data:', window.selectedWard);
       }
   
       // Khi nhập tên, cập nhật hiển thị tức thì
@@ -1956,13 +1982,8 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       return
     }
   
-    // Phone validation (Vietnamese phone number)
-    // - Lưu ý: regex hiện tại đơn giản, có thể điều chỉnh theo chuẩn chính xác
-    const phoneRegex = /^(0[3|5|7|8|9])+([0-9]{8})$/
-    if (!phoneRegex.test(phoneNumber)) {
-      showModal("Lỗi", "Số điện thoại không hợp lệ!", null, null)
-      return
-    }
+    // Phone validation - REMOVED (allow any phone format)
+    // User can enter any phone number format
   
     // Address validation: check if we have at least street address
     if (!addressStreet.trim()) {
@@ -1996,27 +2017,36 @@ document.querySelectorAll(".nav-item").forEach((item) => {
             fullAddress: fullAddress,
             province: selectedProvince?.code || '',
             provinceName: selectedProvince?.name_with_type || selectedProvince?.name || '',
+            district: selectedWard?.parent_code || selectedProvince?.code || '', // Add district
             ward: selectedWard?.code || selectedWard?.id || '',
             wardName: selectedWard?.name_with_type || selectedWard?.name || '',
             street: addressStreet
           };
           
+          console.log('📤 Updating profile with data:', updateData);
+          
           // Call API to update profile
           const response = await userAPI.updateProfile(updateData);
           
           if (response.success) {
-        updateDisplayName()
-        syncUserName()
-  
-          showModal(
-            "Thành công",
-            "Cập nhật thông tin thành công!",
-            () => {
-              exitEditMode()
-            },
-            null,
-          )
+            console.log('✅ Profile updated successfully:', response);
+            
+            updateDisplayName()
+            syncUserName()
+            
+            // Reload profile to sync new data
+            await loadUserProfile();
+            
+            showModal(
+              "Thành công",
+              "Cập nhật thông tin thành công!",
+              () => {
+                exitEditMode()
+              },
+              null,
+            )
           } else {
+            console.error('❌ Failed to update profile:', response);
             showModal("Lỗi", response.message || "Có lỗi xảy ra khi cập nhật thông tin.", null, null)
           }
         } catch (error) {
