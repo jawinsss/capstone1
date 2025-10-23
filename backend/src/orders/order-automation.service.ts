@@ -9,22 +9,22 @@ export class OrderAutomationService {
   constructor(private readonly prisma: PrismaService) {}
 
   /**
-   * Auto-approve orders every 30 seconds
-   * PENDING (> 1 min) → CONFIRMED
-   * CONFIRMED (> 1 min) → SHIPPING
+  * Auto-approve orders every 2 minutes
+   * PENDING (> 5 minutes) → CONFIRMED
+   * CONFIRMED (> 5 minutes) → SHIPPING
    */
-  @Cron(CronExpression.EVERY_30_SECONDS)
+  @Cron(CronExpression.EVERY_MINUTE)
   async autoApproveOrders() {
     try {
       const now = new Date();
-      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000); // 1 minute ago
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000); // 5 minutes ago
 
-      // 1. Auto-approve PENDING orders (> 1 minute old)
+      // 1. Auto-approve PENDING orders (> 5 minutes old)
       const pendingOrders = await this.prisma.order.findMany({
         where: {
           status: 'PENDING',
           createdAt: {
-            lte: oneMinuteAgo,
+            lte: fiveMinutesAgo,
           },
         },
         select: {
@@ -56,7 +56,7 @@ export class OrderAutomationService {
         where: {
           status: 'CONFIRMED',
           updatedAt: {
-            lte: oneMinuteAgo,
+            lte: fiveMinutesAgo,
           },
         },
         select: {
@@ -151,19 +151,19 @@ export class OrderAutomationService {
   async getAutomationStats() {
     try {
       const now = new Date();
-      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000);
+      const fiveMinutesAgo = new Date(now.getTime() - 5 * 60 * 1000);
 
       const [pendingCount, confirmedCount] = await Promise.all([
         this.prisma.order.count({
           where: {
             status: 'PENDING',
-            createdAt: { lte: oneMinuteAgo },
+            createdAt: { lte: fiveMinutesAgo },
           },
         }),
         this.prisma.order.count({
           where: {
             status: 'CONFIRMED',
-            updatedAt: { lte: oneMinuteAgo },
+            updatedAt: { lte: fiveMinutesAgo },
           },
         }),
       ]);
@@ -173,7 +173,7 @@ export class OrderAutomationService {
         data: {
           pendingToConfirm: pendingCount,
           confirmedToShipping: confirmedCount,
-          nextRunIn: '30 seconds',
+          nextRunIn: '2 minutes',
           enabled: true,
         },
       };

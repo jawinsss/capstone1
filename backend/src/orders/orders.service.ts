@@ -1,7 +1,7 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuditService } from '../audit/audit.service';
-import { PaymentMethod } from '@prisma/client';
+import { PaymentMethod, PaymentStatus } from '@prisma/client';
 
 @Injectable()
 export class OrdersService {
@@ -246,7 +246,7 @@ export class OrdersService {
   async cancelOrder(id: string, userId: string) {
     const order = await this.prisma.order.findUnique({
       where: { id },
-      select: { id: true, userId: true, status: true, code: true }
+      select: { id: true, userId: true, status: true, code: true, paymentMethod: true }
     });
 
     if (!order) {
@@ -263,11 +263,36 @@ export class OrdersService {
       throw new BadRequestException('Cannot cancel order in current status');
     }
 
-    // Update status to CANCELLED
-    const updatedOrder = await this.prisma.order.update({
-      where: { id },
-      data: { status: 'CANCELLED' },
-      include: { items: { include: { product: true } } }
+    // Update order and payment in transaction
+    const updatedOrder = await this.prisma.$transaction(async (tx) => {
+      // 1. Update order status to CANCELLED
+      const cancelledOrder = await tx.order.update({
+        where: { id },
+        data: { status: 'CANCELLED', isPaid: false },
+        include: { items: { include: { product: true } } }
+      });
+
+      // 2. Update payment status to FAILED (if exists)
+      const payment = await tx.payment.findFirst({
+        where: { orderId: id }
+      });
+
+      if (payment && payment.status === PaymentStatus.PENDING) {
+        await tx.payment.update({
+          where: { id: payment.id },
+          data: {
+            status: PaymentStatus.FAILED,
+            metadata: JSON.stringify({
+              canceledAt: new Date().toISOString(),
+              cancelReason: 'Order canceled by user',
+              canceledBy: userId,
+              originalStatus: payment.status,
+            }),
+          },
+        });
+      }
+
+      return cancelledOrder;
     });
 
     return {
@@ -361,14 +386,19 @@ export class OrdersService {
       throw new NotFoundException('Order not found');
     }
 
-    // Use transaction to delete order and its items
+    // Use transaction to delete order, payments, and items
     await this.prisma.$transaction(async (tx) => {
-      // Delete order items first (foreign key constraint)
+      // 1. Delete payments first (foreign key constraint)
+      await tx.payment.deleteMany({
+        where: { orderId: id }
+      });
+
+      // 2. Delete order items
       await tx.orderItem.deleteMany({
         where: { orderId: id }
       });
 
-      // Delete order
+      // 3. Delete order
       await tx.order.delete({
         where: { id }
       });
