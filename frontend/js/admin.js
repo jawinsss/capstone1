@@ -1691,7 +1691,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         function getStatusBadge(status) {
             const statusMap = {
                 'PENDING': { text: 'Chờ xác nhận', color: '#f59e0b', bg: '#fef3c7', icon: 'clock' },
-                'DELIVERING': { text: 'Đang giao', color: '#3b82f6', bg: '#dbeafe', icon: 'truck-fast' },
+                'CONFIRMED': { text: 'Đã xác nhận', color: '#10b981', bg: '#d1fae5', icon: 'check' },
+                'SHIPPING': { text: 'Đang giao', color: '#3b82f6', bg: '#dbeafe', icon: 'truck-fast' },
                 'COMPLETED': { text: 'Hoàn thành', color: '#22c55e', bg: '#d1fae5', icon: 'check-circle' },
                 'CANCELLED': { text: 'Đã hủy', color: '#ef4444', bg: '#fee2e2', icon: 'times-circle' }
             };
@@ -1744,7 +1745,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
             if (elements.statTotal) elements.statTotal.textContent = orderManagementState.allOrders.length;
             if (elements.statPending) elements.statPending.textContent = counts['PENDING'] || 0;
-            if (elements.statDelivering) elements.statDelivering.textContent = counts['DELIVERING'] || 0;
+            if (elements.statDelivering) elements.statDelivering.textContent = counts['SHIPPING'] || 0;
             if (elements.statCompleted) elements.statCompleted.textContent = counts['COMPLETED'] || 0;
             if (elements.statCancelled) elements.statCancelled.textContent = counts['CANCELLED'] || 0;
         }
@@ -1984,12 +1985,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             }).join('');
 
             // Build status update buttons
-            const statusButtons = ['PENDING', 'DELIVERING', 'COMPLETED', 'CANCELLED']
+            const statusButtons = ['PENDING', 'CONFIRMED', 'SHIPPING', 'COMPLETED', 'CANCELLED']
                 .filter(status => status !== order.status)
                 .map(status => {
                     const statusInfo = {
                         'PENDING': { text: 'Chờ xác nhận', color: '#f59e0b', icon: 'clock' },
-                        'DELIVERING': { text: 'Đang giao', color: '#3b82f6', icon: 'truck-fast' },
+                        'CONFIRMED': { text: 'Xác nhận đơn', color: '#10b981', icon: 'check' },
+                        'SHIPPING': { text: 'Đang giao', color: '#3b82f6', icon: 'truck-fast' },
                         'COMPLETED': { text: 'Hoàn thành', color: '#22c55e', icon: 'check-circle' },
                         'CANCELLED': { text: 'Hủy đơn', color: '#ef4444', icon: 'times-circle' }
                     }[status];
@@ -2124,7 +2126,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             try {
                 const confirmMsg = {
                     'PENDING': 'Đặt lại về Chờ xác nhận?',
-                    'DELIVERING': 'Chuyển sang Đang giao?',
+                    'CONFIRMED': 'Xác nhận đơn hàng này?',
+                    'SHIPPING': 'Chuyển sang Đang giao?',
                     'COMPLETED': 'Đánh dấu đơn hàng đã Hoàn thành?',
                     'CANCELLED': 'Hủy đơn hàng này?'
                 }[newStatus] || 'Cập nhật trạng thái?';
