@@ -55,6 +55,7 @@ export class PaymentGatewayService {
       extraData,
       signature,
       lang: 'vi',
+      orderExpireTime: 3, // QR expires after 3 minutes
     };
 
     return new Promise((resolve, reject) => {
@@ -485,6 +486,34 @@ export class PaymentGatewayService {
             },
           });
         }
+
+        // ⚠️ CRITICAL: Update order status to CANCELLED
+        // When online payment fails, the order should be cancelled
+        const order = await tx.order.update({
+          where: { id: payload.orderId },
+          data: {
+            status: OrderStatus.CANCELLED,
+            isPaid: false,
+          },
+          include: {
+            items: true,
+          },
+        });
+
+        // 🔄 RESTORE STOCK: Return products to inventory
+        for (const item of order.items) {
+          await tx.product.update({
+            where: { id: item.productId },
+            data: {
+              stock: {
+                increment: item.quantity,
+              },
+            },
+          });
+          this.logger.log(`↩️ Restored ${item.quantity} units of product ${item.productId}`);
+        }
+
+        this.logger.log(`✅ Order ${payload.orderId} marked as CANCELLED due to failed payment`);
       });
 
       this.logger.log(`✅ Payment marked as failed for order: ${payload.orderId}`);

@@ -1,12 +1,16 @@
 // src/payment-gateway/payment-gateway.controller.ts
 import { Controller, Post, Body, Get, Param } from '@nestjs/common';
 import { PaymentGatewayService } from './payment-gateway.service';
+import { PaymentCleanupService } from './payment-cleanup.service';
 import { ApiTags, ApiOperation } from '@nestjs/swagger';
 
 @ApiTags('payment-gateway')
 @Controller('payment-gateway')
 export class PaymentGatewayController {
-  constructor(private readonly paymentService: PaymentGatewayService) {}
+  constructor(
+    private readonly paymentService: PaymentGatewayService,
+    private readonly cleanupService: PaymentCleanupService,
+  ) {}
 
   @Post('create-momo')
   @ApiOperation({ summary: 'Create MoMo payment URL' })
@@ -59,5 +63,11 @@ export class PaymentGatewayController {
     message: string;
   }) {
     return this.paymentService.failPaymentManual(body);
+  }
+
+  @Post('cleanup-expired')
+  @ApiOperation({ summary: 'Manual cleanup of expired payments (for testing)' })
+  manualCleanup() {
+    return this.cleanupService.manualCleanup();
   }
 }

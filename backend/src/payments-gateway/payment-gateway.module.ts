@@ -2,13 +2,14 @@
 import { Module } from '@nestjs/common';
 import { PaymentGatewayController } from './payment-gateway.controller';
 import { PaymentGatewayService } from './payment-gateway.service';
+import { PaymentCleanupService } from './payment-cleanup.service';
 import { HttpModule } from '@nestjs/axios';
 import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [HttpModule, PrismaModule],
   controllers: [PaymentGatewayController],
-  providers: [PaymentGatewayService],
-  exports: [PaymentGatewayService],
+  providers: [PaymentGatewayService, PaymentCleanupService],
+  exports: [PaymentGatewayService, PaymentCleanupService],
 })
 export class PaymentGatewayModule {}
