@@ -2880,28 +2880,44 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         // Mapbox Access Token - REPLACE WITH YOUR OWN TOKEN
         // Get free token at: https://account.mapbox.com/access-tokens/
-        const MAPBOX_TOKEN = ''; // TODO: Add your Mapbox token here
+        const MAPBOX_TOKEN = 'pk.eyJ1IjoiamF3aW5zcyIsImEiOiJjbWg0anE1YWUwMTg0MmtvOXhmNm43cXBhIn0.My70S_2wBwCUyvxdOYkwKg'; // TODO: Add your Mapbox token here
 
-        // Vietnam province coordinates (major cities)
+        // Vietnam province coordinates - SYNCED với province.json (codes 11-44)
         const PROVINCE_COORDS = {
-            '01': { name: 'Hà Nội', lat: 21.0285, lng: 105.8542 },
-            '79': { name: 'TP Hồ Chí Minh', lat: 10.8231, lng: 106.6297 },
-            '48': { name: 'Đà Nẵng', lat: 16.0544, lng: 108.2022 },
-            '92': { name: 'Cần Thơ', lat: 10.0452, lng: 105.7469 },
-            '31': { name: 'Hải Phòng', lat: 20.8449, lng: 106.6881 },
-            '26': { name: 'Vĩnh Phúc', lat: 21.3609, lng: 105.5474 },
-            '40': { name: 'Nghệ An', lat: 18.6739, lng: 105.6819 },
-            '68': { name: 'Lâm Đồng', lat: 11.9404, lng: 108.4583 },
-            '22': { name: 'Quảng Ninh', lat: 21.0064, lng: 107.2925 },
-            '49': { name: 'Quảng Nam', lat: 15.5394, lng: 108.0191 },
-            '44': { name: 'Thừa Thiên Huế', lat: 16.4637, lng: 107.5909 },
-            '56': { name: 'Khánh Hòa', lat: 12.2388, lng: 109.1967 },
-            '72': { name: 'Tây Ninh', lat: 11.3100, lng: 106.0983 },
-            '66': { name: 'Đắk Lắk', lat: 12.6667, lng: 108.0500 },
-            '95': { name: 'Bạc Liêu', lat: 9.2515, lng: 105.7221 },
-            '04': { name: 'Cao Bằng', lat: 22.6663, lng: 106.2520 },
-            '11': { name: 'Điện Biên', lat: 21.3833, lng: 103.0167 },
-            '19': { name: 'Thái Nguyên', lat: 21.5671, lng: 105.8252 }
+            '11': { name: 'Hà Nội', lat: 21.0285, lng: 105.8542 },
+            '12': { name: 'Hồ Chí Minh', lat: 10.8231, lng: 106.6297 },
+            '13': { name: 'Đà Nẵng', lat: 16.0544, lng: 108.2022 },
+            '14': { name: 'Hải Phòng', lat: 20.8449, lng: 106.6881 },
+            '15': { name: 'Cần Thơ', lat: 10.0452, lng: 105.7469 },
+            '16': { name: 'Huế', lat: 16.4637, lng: 107.5909 },
+            '17': { name: 'An Giang', lat: 10.5216, lng: 105.1258 },
+            '18': { name: 'Bắc Ninh', lat: 21.1861, lng: 106.0763 },
+            '19': { name: 'Cà Mau', lat: 9.1526, lng: 105.1960 },
+            '20': { name: 'Cao Bằng', lat: 22.6663, lng: 106.2520 },
+            '21': { name: 'Đắk Lắk', lat: 12.6667, lng: 108.0500 },
+            '22': { name: 'Điện Biên', lat: 21.3833, lng: 103.0167 },
+            '23': { name: 'Đồng Nai', lat: 10.9465, lng: 106.8340 },
+            '24': { name: 'Đồng Tháp', lat: 10.4938, lng: 105.6881 },
+            '25': { name: 'Gia Lai', lat: 13.9780, lng: 108.0006 },
+            '26': { name: 'Hà Tĩnh', lat: 18.3559, lng: 105.9069 },
+            '27': { name: 'Hưng Yên', lat: 20.6464, lng: 106.0511 },
+            '28': { name: 'Khánh Hòa', lat: 12.2388, lng: 109.1967 },
+            '29': { name: 'Lai Châu', lat: 22.3864, lng: 103.4702 },
+            '30': { name: 'Lâm Đồng', lat: 11.9404, lng: 108.4583 },
+            '31': { name: 'Lạng Sơn', lat: 21.8537, lng: 106.7610 },
+            '32': { name: 'Lào Cai', lat: 22.4856, lng: 103.9755 },
+            '33': { name: 'Nghệ An', lat: 18.6739, lng: 105.6819 },
+            '34': { name: 'Ninh Bình', lat: 20.2506, lng: 105.9745 },
+            '35': { name: 'Phú Thọ', lat: 21.4010, lng: 105.2045 },
+            '36': { name: 'Quảng Ngãi', lat: 15.1214, lng: 108.8044 },
+            '37': { name: 'Quảng Ninh', lat: 21.0064, lng: 107.2925 },
+            '38': { name: 'Quảng Trị', lat: 16.7943, lng: 107.1858 },
+            '39': { name: 'Sơn La', lat: 21.3256, lng: 103.9188 },
+            '40': { name: 'Tây Ninh', lat: 11.3100, lng: 106.0983 },
+            '41': { name: 'Thái Nguyên', lat: 21.5671, lng: 105.8252 },
+            '42': { name: 'Thanh Hóa', lat: 19.8067, lng: 105.7851 },
+            '43': { name: 'Tuyên Quang', lat: 21.8234, lng: 105.2144 },
+            '44': { name: 'Vĩnh Long', lat: 10.2397, lng: 105.9571 }
         };
 
         // Helper functions
@@ -2960,7 +2976,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 };
                 document.getElementById('productsSoldSubtitle').textContent = subtitles[range];
 
-                // Create chart
+                
                 const ctx = document.getElementById('productsSoldChart').getContext('2d');
                 const gradient = ctx.createLinearGradient(0, 0, 0, 400);
                 gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
@@ -3250,36 +3266,48 @@ document.addEventListener('DOMContentLoaded', async () => {
                 // Add navigation controls
                 map.addControl(new mapboxgl.NavigationControl(), 'top-right');
 
-                // Wait for map to load
-                map.on('load', () => {
-                    // Add markers for each location
-                    const locations = data.locations || [];
+                // Add markers for each location (don't wait for load event)
+                const locations = data.locations || [];
+                console.log('📍 Location data from API:', locations);
+                
+                if (locations.length === 0) {
+                    console.warn('⚠️ No location data found!');
+                }
+                
+                locations.forEach(location => {
+                    console.log(`🔍 Processing location:`, location);
                     
-                    locations.forEach(location => {
-                        const coords = PROVINCE_COORDS[location.code];
-                        if (!coords) return;
+                    const coords = PROVINCE_COORDS[location.code];
+                    if (!coords) {
+                        console.warn(`❌ No coordinates found for province code: ${location.code} (${location.name})`);
+                        return;
+                    }
 
-                        // Create marker element
-                        const el = document.createElement('div');
-                        el.className = 'custom-marker';
-                        el.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${location.count}`;
+                    console.log(`✅ Found coordinates for ${location.name}:`, coords);
 
-                        // Create popup
-                        const popup = new mapboxgl.Popup({ offset: 25 })
-                            .setHTML(`
-                                <div class="map-popup-content">
-                                    <h4>${location.name || 'Không xác định'}</h4>
-                                    <div class="popup-count">${location.count}</div>
-                                    <p class="popup-label">Đơn hàng</p>
-                                </div>
-                            `);
+                    // Create marker element
+                    const el = document.createElement('div');
+                    el.className = 'custom-marker';
+                    el.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${location.count}`;
+                    el.style.cursor = 'pointer';
 
-                        // Add marker to map
-                        new mapboxgl.Marker(el)
-                            .setLngLat([coords.lng, coords.lat])
-                            .setPopup(popup)
-                            .addTo(map);
-                    });
+                    // Create popup
+                    const popup = new mapboxgl.Popup({ offset: 25 })
+                        .setHTML(`
+                            <div class="map-popup-content">
+                                <h4>${location.name || 'Không xác định'}</h4>
+                                <div class="popup-count">${location.count}</div>
+                                <p class="popup-label">Đơn hàng</p>
+                            </div>
+                        `);
+
+                    // Add marker to map
+                    const marker = new mapboxgl.Marker(el)
+                        .setLngLat([coords.lng, coords.lat])
+                        .setPopup(popup)
+                        .addTo(map);
+                    
+                    console.log(`✅ Marker added for ${location.name}`);
                 });
 
                 // Render location stats below map
