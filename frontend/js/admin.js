@@ -302,7 +302,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (route === 'returns') initReturnsView();
             if (route === 'feedbacks') initFeedbacksView();
             if (route === 'reports') initReportsView();
-            if (route === 'banner') initBannerView();
             if (route === 'audit') initializeAuditLog();
             inited.add(route);
         }
@@ -1611,7 +1610,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const res = await window.apiService.get('/dashboard/overview');
                 if (!res?.success) return;
 
-                const data = res.data || {};
+                    const data = res.data || {};
 
                 // Update Revenue Card
                 document.getElementById('totalRevenue').textContent = formatVND(data.totalRevenue);
@@ -2863,7 +2862,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initReportsView() {
         const view = document.querySelector('[data-view="reports"]');
         if (!view) return;
-
+        
         // Chart instances
         let productsSoldChart = null;
         let ordersChart = null;
