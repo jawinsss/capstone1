@@ -1115,66 +1115,71 @@
                     </div>
                 </section>
 
-                <!-- Charts Grid: Pie Chart & Map -->
-                <section class="reports-grid-2">
-                    <!-- Chart: Category Distribution (Pie Chart) -->
-                    <div class="reports-chart-panel">
-                        <div class="chart-header">
-                            <div>
-                                <h3 class="chart-title">
-                                    <i class="fa-solid fa-chart-pie" style="color: #ec4899;"></i>
-                                    Phân bố theo danh mục
-                                </h3>
-                                <p class="chart-subtitle">Top danh mục bán chạy nhất</p>
+                <!-- NEW LAYOUT: Map bên trái, 2 Charts bên phải -->
+                <section class="reports-map-layout">
+                    <!-- LEFT: Map -->
+                    <div class="reports-map-section">
+                        <div class="reports-chart-panel" style="height: 100%;">
+                            <div class="chart-header">
+                                <div>
+                                    <h3 class="chart-title">
+                                        <i class="fa-solid fa-map-location-dot" style="color: #8b5cf6;"></i>
+                                        Phân bố theo địa lý
+                                    </h3>
+                                    <p class="chart-subtitle">Số đơn hàng theo tỉnh thành</p>
+                                </div>
                             </div>
-                        </div>
-                        <div class="chart-container" style="min-height: 400px;">
-                            <canvas id="categoriesChart"></canvas>
+                            <div id="ordersMap" class="map-container" style="height: calc(100% - 80px); border-radius: 12px; overflow: hidden; min-height: 600px;">
+                                <div class="loading-placeholder">
+                                    <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #cbd5e1;"></i>
+                                    <p style="margin-top: 12px; color: #94a3b8;">Đang tải bản đồ...</p>
+                                </div>
+                            </div>
+                            <!-- Location Stats -->
+                            <div id="locationStats" class="location-stats">
+                                <!-- Will be populated by JS -->
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Map: Orders by Location -->
-                    <div class="reports-chart-panel">
-                        <div class="chart-header">
-                            <div>
-                                <h3 class="chart-title">
-                                    <i class="fa-solid fa-map-location-dot" style="color: #8b5cf6;"></i>
-                                    Phân bố theo địa lý
-                                </h3>
-                                <p class="chart-subtitle">Số đơn hàng theo tỉnh thành</p>
+                    <!-- RIGHT: 2 Charts stacked -->
+                    <div class="reports-charts-stack">
+                        <!-- Chart: Category Distribution (Pie Chart) -->
+                        <div class="reports-chart-panel">
+                            <div class="chart-header">
+                                <div>
+                                    <h3 class="chart-title">
+                                        <i class="fa-solid fa-chart-pie" style="color: #ec4899;"></i>
+                                        Phân bố theo danh mục
+                                    </h3>
+                                    <p class="chart-subtitle">Top danh mục bán chạy nhất</p>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="min-height: 350px;">
+                                <canvas id="categoriesChart"></canvas>
                             </div>
                         </div>
-                        <div id="ordersMap" class="map-container" style="height: 400px; border-radius: 12px; overflow: hidden;">
-                            <div class="loading-placeholder">
-                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #cbd5e1;"></i>
-                                <p style="margin-top: 12px; color: #94a3b8;">Đang tải bản đồ...</p>
-                            </div>
-                        </div>
-                        <!-- Location Stats -->
-                        <div id="locationStats" class="location-stats">
-                            <!-- Will be populated by JS -->
-                        </div>
-                    </div>
-                </section>
 
-                <!-- Chart: User Registrations (Area Chart) -->
-                <section class="reports-chart-panel">
-                    <div class="chart-header">
-                        <div>
-                            <h3 class="chart-title">
-                                <i class="fa-solid fa-user-plus" style="color: #10b981;"></i>
-                                Người dùng đăng ký mới
-                            </h3>
-                            <p class="chart-subtitle" id="registrationsSubtitle">30 ngày qua</p>
+                        <!-- Chart: User Registrations (Area Chart) -->
+                        <div class="reports-chart-panel">
+                            <div class="chart-header">
+                                <div>
+                                    <h3 class="chart-title">
+                                        <i class="fa-solid fa-user-plus" style="color: #10b981;"></i>
+                                        Người dùng đăng ký mới
+                                    </h3>
+                                    <p class="chart-subtitle" id="registrationsSubtitle">30 ngày qua</p>
+                                </div>
+                                <div class="chart-filters">
+                                    <button class="filter-btn active" data-chart="registrations" data-range="day">Ngày</button>
+                                    <button class="filter-btn" data-chart="registrations" data-range="month">Tháng</button>
+                                    <button class="filter-btn" data-chart="registrations" data-range="year">Năm</button>
+                                </div>
+                            </div>
+                            <div class="chart-container" style="min-height: 300px;">
+                                <canvas id="registrationsChart"></canvas>
+                            </div>
                         </div>
-                        <div class="chart-filters">
-                            <button class="filter-btn active" data-chart="registrations" data-range="day">Ngày</button>
-                            <button class="filter-btn" data-chart="registrations" data-range="month">Tháng</button>
-                            <button class="filter-btn" data-chart="registrations" data-range="year">Năm</button>
-                        </div>
-                    </div>
-                    <div class="chart-container">
-                        <canvas id="registrationsChart"></canvas>
                     </div>
                 </section>
             </section>
