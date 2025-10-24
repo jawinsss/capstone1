@@ -1553,80 +1553,368 @@ document.addEventListener('DOMContentLoaded', async () => {
         const view = document.querySelector('[data-view="overview"]');
         if (!view) return;
 
-        // Elements
-        const kpiCards = view.querySelectorAll('.kpis .kpi');
-        const revenuePanel = view.querySelector('.panel.panel-lg .panel-placeholder');
-        const tabs = view.querySelectorAll('.kpi-tabs .tab');
+        // Chart instance
+        let revenueChartInstance = null;
+        let currentRange = 'day';
 
+        // Helper functions
         function formatVND(v) {
             const n = Number(v || 0);
-            return n.toLocaleString('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 });
+            return n.toLocaleString('vi-VN') + ' đ';
         }
 
-        async function loadOverview() {
+        function formatNumber(v) {
+            return Number(v || 0).toLocaleString('vi-VN');
+        }
+
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit' });
+        }
+
+        function formatDateTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(minutes / 60);
+            const days = Math.floor(hours / 24);
+
+            if (minutes < 60) return `${minutes} phút trước`;
+            if (hours < 24) return `${hours} giờ trước`;
+            return `${days} ngày trước`;
+        }
+
+        function getStatusBadgeHTML(status) {
+            const statusMap = {
+                'PENDING': '<span class="status-badge pending"><i class="fa-solid fa-clock"></i> Chờ xác nhận</span>',
+                'CONFIRMED': '<span class="status-badge confirmed"><i class="fa-solid fa-check"></i> Đã xác nhận</span>',
+                'SHIPPING': '<span class="status-badge shipping"><i class="fa-solid fa-truck"></i> Đang giao</span>',
+                'COMPLETED': '<span class="status-badge completed"><i class="fa-solid fa-check-circle"></i> Hoàn thành</span>',
+                'CANCELLED': '<span class="status-badge cancelled"><i class="fa-solid fa-times-circle"></i> Đã hủy</span>',
+                'RETURNED': '<span class="status-badge returned"><i class="fa-solid fa-undo"></i> Đã hoàn trả</span>',
+            };
+            return statusMap[status] || status;
+        }
+
+        function updateLastUpdate() {
+            const el = document.getElementById('overviewLastUpdate');
+            if (el) {
+                const now = new Date();
+                el.textContent = `Cập nhật lúc ${now.toLocaleTimeString('vi-VN')}`;
+            }
+        }
+
+        // Load Overview KPIs
+        async function loadOverviewData() {
             try {
                 const res = await window.apiService.get('/dashboard/overview');
-                if (res?.success) {
-                    const data = res.data || {};
-                    // Expect order: GMV, Pending orders, Pending products, Open tickets
-                    if (kpiCards[0]) kpiCards[0].querySelector('.kpi-value').textContent = formatVND(data.gmv);
-                    if (kpiCards[1]) kpiCards[1].querySelector('.kpi-value').textContent = String(data.pendingOrders || 0);
-                    if (kpiCards[2]) kpiCards[2].querySelector('.kpi-value').textContent = String(data.pendingProducts || 0);
-                    if (kpiCards[3]) kpiCards[3].querySelector('.kpi-value').textContent = String(data.openTickets || 0);
-                }
-            } catch (e) {
-                // ignore
+                if (!res?.success) return;
+
+                const data = res.data || {};
+
+                // Update Revenue Card
+                document.getElementById('totalRevenue').textContent = formatVND(data.totalRevenue);
+                document.getElementById('todayRevenue').textContent = `Hôm nay: ${formatVND(data.todayRevenue)}`;
+                
+                const revenueTrend = document.getElementById('revenueTrend');
+                const growth = data.revenueGrowth || 0;
+                revenueTrend.className = `kpi-trend ${growth >= 0 ? 'positive' : 'negative'}`;
+                revenueTrend.innerHTML = `
+                    <i class="fa-solid fa-arrow-${growth >= 0 ? 'up' : 'down'}"></i>
+                    <span>${Math.abs(growth).toFixed(1)}%</span>
+                `;
+
+                // Update Orders Card
+                document.getElementById('totalOrders').textContent = formatNumber(data.totalOrders);
+                document.getElementById('todayOrders').textContent = `Hôm nay: ${data.todayOrders || 0} đơn`;
+                document.getElementById('pendingOrdersBadge').textContent = data.pendingOrders || 0;
+
+                // Update Products Card
+                document.getElementById('totalProducts').textContent = formatNumber(data.totalProducts);
+                document.getElementById('lowStockBadge').textContent = data.lowStockProducts || 0;
+                document.getElementById('lowStockText').textContent = `Sắp hết: ${data.lowStockProducts || 0} sản phẩm`;
+
+                // Update Users Card
+                document.getElementById('totalUsers').textContent = formatNumber(data.totalUsers);
+                document.getElementById('activeUsersCount').textContent = data.activeUsers || 0;
+                document.getElementById('activeUsersText').textContent = `Hoạt động: ${data.activeUsers || 0}`;
+
+                // Load other data
+                await Promise.all([
+                    loadRevenueChart(currentRange),
+                    loadTopCategories(),
+                    loadRecentOrders(data.recentOrders),
+                    loadOrderDistribution()
+                ]);
+
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Error loading overview:', error);
             }
         }
 
-        async function loadRevenue(range) {
+        // Load Revenue Chart
+        async function loadRevenueChart(range = 'day') {
             try {
-                const endpoint = range === 'day' ? '/dashboard/revenue' : `/dashboard/revenue?range=${range}`;
+                const endpoint = `/dashboard/revenue?range=${range}`;
                 const res = await window.apiService.get(endpoint);
-                if (res?.success && Array.isArray(res.data) && revenuePanel) {
-                    const series = res.data.map(d => ({ key: d.date || d.key, amount: Number(d.amount || 0) }));
-                    const max = Math.max(1, ...series.map(s => s.amount));
-                    const wrap = document.createElement('div');
-                    wrap.style.display = 'grid';
-                    wrap.style.gridTemplateColumns = `repeat(${series.length}, 1fr)`;
-                    wrap.style.gap = '8px';
-                    series.forEach(s => {
-                        const barWrap = document.createElement('div');
-                        barWrap.style.display = 'flex';
-                        barWrap.style.flexDirection = 'column';
-                        barWrap.style.alignItems = 'center';
-                        const bar = document.createElement('div');
-                        bar.style.height = Math.max(6, Math.round(80 * (s.amount / max))) + 'px';
-                        bar.style.width = '100%';
-                        bar.style.background = '#60a5fa';
-                        bar.style.borderRadius = '4px';
-                        const cap = document.createElement('div');
-                        cap.textContent = (s.amount).toLocaleString('vi-VN');
-                        cap.style.fontSize = '12px';
-                        cap.style.color = '#6b7280';
-                        cap.style.marginTop = '4px';
-                        barWrap.appendChild(bar);
-                        barWrap.appendChild(cap);
-                        wrap.appendChild(barWrap);
-                    });
-                    revenuePanel.innerHTML = '';
-                    revenuePanel.appendChild(wrap);
+                
+                if (!res?.success || !Array.isArray(res.data)) return;
+
+                const data = res.data;
+                const labels = data.map(d => {
+                    if (range === 'day') return formatDate(d.key || d.date);
+                    return d.key || d.date;
+                });
+                const values = data.map(d => d.amount || 0);
+
+                const ctx = document.getElementById('revenueChart');
+                if (!ctx) return;
+
+                // Destroy old chart
+                if (revenueChartInstance) {
+                    revenueChartInstance.destroy();
                 }
-            } catch (e) {
-                // ignore
+
+                // Create gradient
+                const gradient = ctx.getContext('2d').createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(102, 126, 234, 0.8)');
+                gradient.addColorStop(1, 'rgba(118, 75, 162, 0.2)');
+
+                // Create new chart
+                revenueChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: labels,
+                        datasets: [{
+                            label: 'Doanh thu',
+                            data: values,
+                            borderColor: '#667eea',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: '#fff',
+                            pointBorderColor: '#667eea',
+                            pointBorderWidth: 3,
+                            pointHoverBackgroundColor: '#667eea',
+                            pointHoverBorderColor: '#fff',
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleFont: { size: 14, weight: 'bold' },
+                                bodyFont: { size: 13 },
+                                callbacks: {
+                                    label: function(context) {
+                                        return 'Doanh thu: ' + formatVND(context.parsed.y);
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatVND(value);
+                                    },
+                                    font: { size: 11 },
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    color: '#f1f5f9',
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                ticks: {
+                                    font: { size: 11 },
+                                    color: '#64748b'
+                                },
+                                grid: {
+                                    display: false,
+                                    drawBorder: false
+                                }
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+
+                // Update subtitle
+                const subtitleMap = {
+                    'day': '7 ngày qua',
+                    'week': '8 tuần qua',
+                    'month': '12 tháng qua'
+                };
+                const subtitle = document.getElementById('revenueChartSubtitle');
+                if (subtitle) subtitle.textContent = subtitleMap[range] || '7 ngày qua';
+
+            } catch (error) {
+                console.error('Error loading revenue chart:', error);
             }
         }
 
-        loadOverview();
-        loadRevenue('day');
+        // Load Top Categories
+        async function loadTopCategories() {
+            try {
+                const res = await window.apiService.get('/dashboard/top-categories?limit=5');
+                
+                if (!res?.success || !Array.isArray(res.data)) {
+                    showEmptyState('topCategoriesContainer', 'Chưa có dữ liệu');
+                    return;
+                }
 
-        // Tab switching
-        tabs.forEach((t, idx) => t.addEventListener('click', () => {
-            tabs.forEach(x => x.classList.remove('active'));
-            t.classList.add('active');
-            const ranges = ['day','week','month'];
-            loadRevenue(ranges[idx] || 'day');
-        }));
+                const categories = res.data;
+                const container = document.getElementById('topCategoriesContainer');
+                if (!container) return;
+
+                if (categories.length === 0) {
+                    showEmptyState('topCategoriesContainer', 'Chưa có danh mục nào');
+                    return;
+                }
+
+                const rankEmojis = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+                
+                container.innerHTML = categories.map((cat, index) => `
+                    <div class="top-category-item">
+                        <div class="category-rank">${rankEmojis[index] || (index + 1)}</div>
+                        <div class="category-info">
+                            <div class="category-name">${cat.name}</div>
+                            <div class="category-stats">${cat.uniqueProducts} sản phẩm • ${formatVND(cat.revenue)}</div>
+                        </div>
+                        <div>
+                            <div class="category-sold">${formatNumber(cat.productsSold)}</div>
+                            <div class="category-sold-label">sản phẩm bán</div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (error) {
+                console.error('Error loading top categories:', error);
+                showEmptyState('topCategoriesContainer', 'Lỗi tải dữ liệu');
+            }
+        }
+
+        // Load Recent Orders
+        async function loadRecentOrders(orders) {
+            const container = document.getElementById('recentOrdersContainer');
+            if (!container) return;
+
+            if (!orders || orders.length === 0) {
+                container.innerHTML = '<div class="empty-state-text">Chưa có đơn hàng nào</div>';
+                return;
+            }
+
+            container.innerHTML = orders.map(order => `
+                <div class="recent-order-item" onclick="window.location.hash='#orders'">
+                    <div class="recent-order-info">
+                        <h4>${order.code}</h4>
+                        <p>${order.customerName} • ${order.itemCount} sản phẩm</p>
+                    </div>
+                    <div class="recent-order-meta">
+                        <div class="recent-order-amount">${formatVND(order.totalAmount)}</div>
+                        <div class="recent-order-time">${formatDateTime(order.createdAt)}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Load Order Distribution
+        async function loadOrderDistribution() {
+            try {
+                const res = await window.apiService.get('/dashboard/order-distribution');
+                
+                if (!res?.success || !Array.isArray(res.data)) {
+                    showEmptyState('orderDistributionContainer', 'Chưa có dữ liệu');
+                    return;
+                }
+
+                const distribution = res.data;
+                const container = document.getElementById('orderDistributionContainer');
+                if (!container) return;
+
+                const statusConfig = {
+                    'PENDING': { icon: 'fa-clock', label: 'Chờ xác nhận', class: 'pending' },
+                    'CONFIRMED': { icon: 'fa-check', label: 'Đã xác nhận', class: 'confirmed' },
+                    'SHIPPING': { icon: 'fa-truck', label: 'Đang giao', class: 'shipping' },
+                    'COMPLETED': { icon: 'fa-check-circle', label: 'Hoàn thành', class: 'completed' },
+                    'CANCELLED': { icon: 'fa-times-circle', label: 'Đã hủy', class: 'cancelled' },
+                    'RETURNED': { icon: 'fa-undo', label: 'Đã hoàn trả', class: 'returned' }
+                };
+
+                container.innerHTML = distribution.map(item => {
+                    const config = statusConfig[item.status] || { icon: 'fa-question', label: item.status, class: '' };
+                    return `
+                        <div class="distribution-item ${config.class}">
+                            <div class="distribution-label">
+                                <div class="distribution-icon">
+                                    <i class="fa-solid ${config.icon}"></i>
+                                </div>
+                                ${config.label}
+                            </div>
+                            <div class="distribution-value">${item.count || 0}</div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading order distribution:', error);
+                showEmptyState('orderDistributionContainer', 'Lỗi tải dữ liệu');
+            }
+        }
+
+        function showEmptyState(containerId, message) {
+            const container = document.getElementById(containerId);
+            if (container) {
+                container.innerHTML = `
+                    <div class="loading-placeholder">
+                        <i class="fa-solid fa-inbox empty-state-icon"></i>
+                        <p class="empty-state-text">${message}</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Tab switching for revenue chart
+        const tabs = view.querySelectorAll('.kpi-tabs .tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentRange = tab.dataset.range || 'day';
+                loadRevenueChart(currentRange);
+            });
+        });
+
+        // Refresh button
+        const refreshBtn = document.getElementById('overviewRefreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', () => {
+                loadOverviewData();
+            });
+        }
+
+        // Initial load
+        loadOverviewData();
+
+        // Make loadOverviewData accessible globally for auto-refresh
+        window.loadOverviewData = loadOverviewData;
     }
 
     // ====== VIEW ORDERS - COMPREHENSIVE MANAGEMENT ======

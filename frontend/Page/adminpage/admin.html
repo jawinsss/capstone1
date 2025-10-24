@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../../styles/upload.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/auth-context.js" defer></script>
@@ -102,68 +103,177 @@
         <!-- tong quan -->
         <main class="content">
             <section id="view-overview" data-view="overview">
-                <h1>Tổng quan</h1>
-                <p class="muted">Theo dõi các chỉ số quan trọng và hiệu suất hệ thống</p>
-
-                <div class="kpi-tabs">
-                    <button class="tab active">Ngày</button>
-                    <button class="tab">Tuần</button>
-                    <button class="tab">Tháng</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: #1e293b;">📊 Tổng quan</h1>
+                        <p class="muted" style="margin-top: 8px;">Theo dõi các chỉ số quan trọng và hiệu suất hệ thống • <span id="overviewLastUpdate">Đang tải...</span></p>
+                    </div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="overviewRefreshBtn" class="btn" style="background: #3b82f6; color: #fff; border-color: #2563eb;">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span class="hide-sm">Làm mới</span>
+                        </button>
+                    </div>
                 </div>
 
-                <section class="kpis">
-                    <article class="kpi">
-                        <div class="kpi-icon kpi-blue"><i class="fa-solid fa-box"></i></div>
-                        <div class="kpi-body">
-                            <div class="kpi-title">GMV</div>
-                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
-                            <div class="kpi-sub">Nhận dữ liệu từ back end</div>
+                <!-- KPI Tabs -->
+                <div class="kpi-tabs">
+                    <button class="tab active" data-range="day">Ngày</button>
+                    <button class="tab" data-range="week">Tuần</button>
+                    <button class="tab" data-range="month">Tháng</button>
+                </div>
+
+                <!-- Main KPI Cards Grid -->
+                <section class="overview-kpis">
+                    <!-- Revenue Card -->
+                    <article class="overview-kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="kpi-header">
+                            <div class="kpi-icon-modern">
+                                <i class="fa-solid fa-coins"></i>
+                            </div>
+                            <div class="kpi-trend" id="revenueTrend">
+                                <i class="fa-solid fa-arrow-up"></i>
+                                <span>0%</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Tổng doanh thu</div>
+                            <div class="kpi-value-modern" id="totalRevenue">0 đ</div>
+                            <div class="kpi-sub-modern" id="todayRevenue">Hôm nay: 0 đ</div>
                         </div>
                     </article>
-                    <article class="kpi">
-                        <div class="kpi-icon kpi-yellow"><i class="fa-solid fa-receipt"></i></div>
-                        <div class="kpi-body">
-                            <div class="kpi-title">Đơn hàng chờ</div>
-                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
-                            <div class="kpi-sub">Nhận dữ liệu từ backend</div>
+
+                    <!-- Orders Card -->
+                    <article class="overview-kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="kpi-header">
+                            <div class="kpi-icon-modern">
+                                <i class="fa-solid fa-shopping-cart"></i>
+                            </div>
+                            <div class="kpi-badge">
+                                <i class="fa-solid fa-clock"></i>
+                                <span id="pendingOrdersBadge">0</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Tổng đơn hàng</div>
+                            <div class="kpi-value-modern" id="totalOrders">0</div>
+                            <div class="kpi-sub-modern" id="todayOrders">Hôm nay: 0 đơn</div>
                         </div>
                     </article>
-                    <article class="kpi">
-                        <div class="kpi-icon kpi-green"><i class="fa-solid fa-circle-check"></i></div>
-                        <div class="kpi-body">
-                            <div class="kpi-title">Sản phẩm chờ duyệt</div>
-                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
-                            <div class="kpi-sub">Nhận dữ liệu từ backend</div>
+
+                    <!-- Products Card -->
+                    <article class="overview-kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="kpi-header">
+                            <div class="kpi-icon-modern">
+                                <i class="fa-solid fa-box"></i>
+                            </div>
+                            <div class="kpi-badge warning">
+                                <i class="fa-solid fa-exclamation-triangle"></i>
+                                <span id="lowStockBadge">0</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Sản phẩm</div>
+                            <div class="kpi-value-modern" id="totalProducts">0</div>
+                            <div class="kpi-sub-modern" id="lowStockText">Sắp hết: 0 sản phẩm</div>
                         </div>
                     </article>
-                    <article class="kpi">
-                        <div class="kpi-icon kpi-pink"><i class="fa-regular fa-message"></i></div>
-                        <div class="kpi-body">
-                            <div class="kpi-title">Ticket mở</div>
-                            <div class="kpi-value">Nhận dữ liệu từ backend</div>
-                            <div class="kpi-sub">Nhận dữ liệu từ backend</div>
+
+                    <!-- Users Card -->
+                    <article class="overview-kpi-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="kpi-header">
+                            <div class="kpi-icon-modern">
+                                <i class="fa-solid fa-users"></i>
+                            </div>
+                            <div class="kpi-info">
+                                <i class="fa-solid fa-circle" style="color: #10b981; font-size: 8px;"></i>
+                                <span id="activeUsersCount">0</span>
+                            </div>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Người dùng</div>
+                            <div class="kpi-value-modern" id="totalUsers">0</div>
+                            <div class="kpi-sub-modern" id="activeUsersText">Hoạt động: 0</div>
                         </div>
                     </article>
                 </section>
 
-                <section class="grid">
-                    <div class="panel panel-lg">
-                        <div class="panel-title">
-                            Doanh thu theo ngày
-                            <span class="legend"><span class="dot"></span>Doanh thu</span>
+                <!-- Charts Grid -->
+                <section class="overview-charts-grid">
+                    <!-- Revenue Chart -->
+                    <div class="overview-chart-panel">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">
+                                    <i class="fa-solid fa-chart-line" style="color: #3b82f6;"></i>
+                                    Doanh thu theo thời gian
+                                </h3>
+                                <p class="chart-subtitle" id="revenueChartSubtitle">7 ngày qua</p>
+                            </div>
+                            <div class="chart-legend">
+                                <span class="legend-item">
+                                    <span class="dot" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></span>
+                                    Doanh thu
+                                </span>
+                            </div>
                         </div>
-                        <div class="panel-placeholder"></div>
-                        <div class="panel-foot muted">7 ngày qua</div>
+                        <div class="chart-container">
+                            <canvas id="revenueChart"></canvas>
+                        </div>
                     </div>
-                    <div class="panel">
-                        <div class="panel-title">Top danh mục</div>
-                        <div class="panel-placeholder small"></div>
+
+                    <!-- Top Categories -->
+                    <div class="overview-chart-panel">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">
+                                    <i class="fa-solid fa-trophy" style="color: #f59e0b;"></i>
+                                    Top danh mục bán chạy
+                                </h3>
+                                <p class="chart-subtitle">Theo số lượng sản phẩm bán ra</p>
+                            </div>
+                        </div>
+                        <div class="chart-container" id="topCategoriesContainer">
+                            <div class="loading-placeholder">
+                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #cbd5e1;"></i>
+                                <p style="margin-top: 12px; color: #94a3b8;">Đang tải...</p>
+                            </div>
+                        </div>
                     </div>
-                    <div class="panel panel-row">
-                        <div class="panel-title">Tỉ lệ hoàn/hủy đơn</div>
-                        <div class="legend legned-row">
-                            <span class="legend-item"><span class="dot dot-red"></span> Tỉ lệ hoàn hàng</span>
-                            <span class="legend-item"><span class="dot dot-orange"></span> Tỉ lệ hủy đơn</span>
+                </section>
+
+                <!-- Recent Orders & Quick Stats -->
+                <section class="overview-bottom-grid">
+                    <!-- Recent Orders -->
+                    <div class="overview-panel">
+                        <div class="panel-header-modern">
+                            <h3 class="panel-title-modern">
+                                <i class="fa-solid fa-clock-rotate-left" style="color: #8b5cf6;"></i>
+                                Đơn hàng gần đây
+                            </h3>
+                            <a href="#orders" class="view-all-link">Xem tất cả <i class="fa-solid fa-arrow-right"></i></a>
+                        </div>
+                        <div id="recentOrdersContainer" class="recent-orders-list">
+                            <div class="loading-placeholder">
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                <p>Đang tải...</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Order Status Distribution -->
+                    <div class="overview-panel">
+                        <div class="panel-header-modern">
+                            <h3 class="panel-title-modern">
+                                <i class="fa-solid fa-chart-pie" style="color: #ec4899;"></i>
+                                Phân bố đơn hàng
+                            </h3>
+                        </div>
+                        <div id="orderDistributionContainer" class="order-distribution-grid">
+                            <div class="loading-placeholder">
+                                <i class="fa-solid fa-spinner fa-spin"></i>
+                                <p>Đang tải...</p>
+                            </div>
                         </div>
                     </div>
                 </section>

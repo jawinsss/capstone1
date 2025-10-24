@@ -6,18 +6,123 @@ export class DashboardService {
   constructor(private readonly prisma: PrismaService) {}
 
   async getOverview() {
-    const [totalRevenue, pendingOrders, pendingProducts, openTickets] = await Promise.all([
-      this.prisma.payment.aggregate({ where: { status: 'CONFIRMED' }, _sum: { amount: true } }),
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const startOfYesterday = new Date(startOfToday);
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+
+    // Get all metrics in parallel
+    const [
+      totalRevenue,
+      todayRevenue,
+      yesterdayRevenue,
+      totalOrders,
+      pendingOrders,
+      shippingOrders,
+      completedOrders,
+      todayOrders,
+      totalProducts,
+      lowStockProducts,
+      totalUsers,
+      activeUsers,
+      openTickets,
+      recentOrders,
+    ] = await Promise.all([
+      // Revenue metrics
+      this.prisma.payment.aggregate({
+        where: { status: 'CONFIRMED' },
+        _sum: { amount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: { status: 'CONFIRMED', createdAt: { gte: startOfToday } },
+        _sum: { amount: true },
+      }),
+      this.prisma.payment.aggregate({
+        where: {
+          status: 'CONFIRMED',
+          createdAt: { gte: startOfYesterday, lt: startOfToday },
+        },
+        _sum: { amount: true },
+      }),
+      
+      // Order metrics
+      this.prisma.order.count(),
       this.prisma.order.count({ where: { status: 'PENDING' } }),
-      this.prisma.product.count({ where: { isActive: false } }),
+      this.prisma.order.count({ where: { status: 'SHIPPING' } }),
+      this.prisma.order.count({ where: { status: 'COMPLETED' } }),
+      this.prisma.order.count({ where: { createdAt: { gte: startOfToday } } }),
+      
+      // Product metrics
+      this.prisma.product.count({ where: { isActive: true } }),
+      this.prisma.product.count({ where: { stock: { lte: 10 }, isActive: true } }),
+      
+      // User metrics
+      this.prisma.user.count(),
+      this.prisma.user.count({ where: { isActive: true } }),
+      
+      // Ticket metrics
       this.prisma.ticket.count({ where: { status: 'OPEN' } }),
+      
+      // Recent orders
+      this.prisma.order.findMany({
+        take: 5,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: { fullName: true, email: true },
+          },
+          items: {
+            include: {
+              product: {
+                select: { name: true },
+              },
+            },
+          },
+        },
+      }),
     ]);
 
+    // Calculate growth percentages
+    const todayRev = todayRevenue._sum.amount || 0;
+    const yesterdayRev = yesterdayRevenue._sum.amount || 0;
+    const revenueGrowth = yesterdayRev > 0 
+      ? ((todayRev - yesterdayRev) / yesterdayRev) * 100 
+      : 0;
+
     return {
-      gmv: totalRevenue._sum.amount || 0,
+      // Revenue
+      totalRevenue: totalRevenue._sum.amount || 0,
+      todayRevenue: todayRev,
+      revenueGrowth: Math.round(revenueGrowth * 10) / 10,
+      
+      // Orders
+      totalOrders,
       pendingOrders,
-      pendingProducts,
+      shippingOrders,
+      completedOrders,
+      todayOrders,
+      
+      // Products
+      totalProducts,
+      lowStockProducts,
+      
+      // Users
+      totalUsers,
+      activeUsers,
+      
+      // Tickets
       openTickets,
+      
+      // Recent activity
+      recentOrders: recentOrders.map(order => ({
+        id: order.id,
+        code: order.code,
+        customerName: order.user.fullName,
+        totalAmount: order.totalAmount,
+        status: order.status,
+        itemCount: order.items.length,
+        createdAt: order.createdAt,
+      })),
     };
   }
 
@@ -44,6 +149,109 @@ export class DashboardService {
       map.set(key, (map.get(key) || 0) + p.amount);
     }
     return Array.from(map.entries()).map(([date, amount]) => ({ date, amount }));
+  }
+
+  async getTopCategories(limit: number = 10) {
+    // Get order items with category information
+    const orderItems = await this.prisma.orderItem.findMany({
+      include: {
+        product: {
+          include: {
+            category: true,
+          },
+        },
+        order: {
+          select: {
+            status: true,
+          },
+        },
+      },
+      where: {
+        order: {
+          status: {
+            in: ['COMPLETED', 'SHIPPING', 'CONFIRMED'],
+          },
+        },
+      },
+    });
+
+    // Group by category and count products sold
+    const categoryMap = new Map<string, { 
+      id: string; 
+      name: string; 
+      totalQuantity: number;
+      totalRevenue: number;
+      productCount: Set<string>;
+    }>();
+
+    for (const item of orderItems) {
+      const category = item.product.category;
+      if (!categoryMap.has(category.id)) {
+        categoryMap.set(category.id, {
+          id: category.id,
+          name: category.name,
+          totalQuantity: 0,
+          totalRevenue: 0,
+          productCount: new Set(),
+        });
+      }
+      const cat = categoryMap.get(category.id);
+      cat.totalQuantity += item.quantity;
+      cat.totalRevenue += item.price * item.quantity;
+      cat.productCount.add(item.product.id);
+    }
+
+    // Convert to array and sort by quantity sold
+    const topCategories = Array.from(categoryMap.values())
+      .map(cat => ({
+        id: cat.id,
+        name: cat.name,
+        productsSold: cat.totalQuantity,
+        uniqueProducts: cat.productCount.size,
+        revenue: cat.totalRevenue,
+      }))
+      .sort((a, b) => b.productsSold - a.productsSold)
+      .slice(0, limit);
+
+    return topCategories;
+  }
+
+  async getRevenueByHour() {
+    const now = new Date();
+    const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const payments = await this.prisma.payment.findMany({
+      where: {
+        status: 'CONFIRMED',
+        createdAt: { gte: startOfToday },
+      },
+      select: { amount: true, createdAt: true },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    // Group by hour
+    const hourlyRevenue = new Array(24).fill(0);
+    for (const p of payments) {
+      const hour = p.createdAt.getHours();
+      hourlyRevenue[hour] += p.amount;
+    }
+
+    return hourlyRevenue.map((amount, hour) => ({
+      hour: `${hour.toString().padStart(2, '0')}:00`,
+      amount,
+    }));
+  }
+
+  async getOrderStatusDistribution() {
+    const statusCounts = await this.prisma.order.groupBy({
+      by: ['status'],
+      _count: true,
+    });
+
+    return statusCounts.map(s => ({
+      status: s.status,
+      count: s._count,
+    }));
   }
 
   async revenueByRange(range: 'day'|'week'|'month' = 'day') {
