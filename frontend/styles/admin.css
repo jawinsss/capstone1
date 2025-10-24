@@ -2955,3 +2955,304 @@ box-shadow: 0 2px 8px rgba(37,99,235,.15);
 .overview-kpi-card:nth-child(2) { animation-delay: 0.2s; }
 .overview-kpi-card:nth-child(3) { animation-delay: 0.3s; }
 .overview-kpi-card:nth-child(4) { animation-delay: 0.4s; }
+
+/* ========================================
+   REPORTS & ANALYTICS STYLES
+   ======================================== */
+
+/* Reports KPI Cards */
+.reports-kpis {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  margin-bottom: 32px;
+}
+
+.reports-kpi-card {
+  border-radius: 16px;
+  padding: 24px;
+  color: white;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.reports-kpi-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Reports Chart Panels */
+.reports-chart-panel {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  margin-bottom: 32px;
+  transition: all 0.3s ease;
+}
+
+.reports-chart-panel:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Chart Filters */
+.chart-filters {
+  display: flex;
+  gap: 8px;
+}
+
+.filter-btn {
+  padding: 8px 16px;
+  border: 2px solid #e2e8f0;
+  background: white;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #64748b;
+  transition: all 0.2s ease;
+}
+
+.filter-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+  background: #eff6ff;
+}
+
+.filter-btn.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
+  color: white;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Reports Grid for Pie Chart & Map */
+.reports-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 32px;
+  margin-bottom: 32px;
+}
+
+/* Map Container */
+.map-container {
+  position: relative;
+  background: #f1f5f9;
+  border: 2px solid #e2e8f0;
+}
+
+.map-container canvas {
+  border-radius: 12px;
+}
+
+/* Mapbox Popup Custom Styles */
+.mapboxgl-popup-content {
+  background: white;
+  padding: 16px;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  min-width: 200px;
+}
+
+.mapboxgl-popup-close-button {
+  font-size: 20px;
+  padding: 8px;
+  color: #64748b;
+}
+
+.mapboxgl-popup-close-button:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+/* Location Stats */
+.location-stats {
+  margin-top: 20px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.location-stat-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+  border-left: 4px solid #3b82f6;
+  transition: all 0.2s ease;
+}
+
+.location-stat-item:hover {
+  background: #f1f5f9;
+  transform: translateX(4px);
+}
+
+.location-name {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 0.9375rem;
+}
+
+.location-count {
+  font-weight: 700;
+  color: #3b82f6;
+  font-size: 1.125rem;
+}
+
+/* Map Marker Styles */
+.custom-marker {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  padding: 8px 12px;
+  border-radius: 20px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.custom-marker:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.5);
+}
+
+.custom-marker i {
+  font-size: 1rem;
+}
+
+/* Popup Content */
+.map-popup-content {
+  text-align: center;
+}
+
+.map-popup-content h4 {
+  margin: 0 0 8px 0;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.map-popup-content .popup-count {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #3b82f6;
+  margin: 8px 0;
+}
+
+.map-popup-content .popup-label {
+  font-size: 0.875rem;
+  color: #64748b;
+  margin: 0;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1400px) {
+  .reports-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1024px) {
+  .reports-kpis {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .reports-kpis {
+    grid-template-columns: 1fr;
+  }
+  
+  .reports-chart-panel {
+    padding: 20px;
+  }
+  
+  .chart-filters {
+    flex-direction: column;
+  }
+  
+  .filter-btn {
+    width: 100%;
+  }
+  
+  .location-stats {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Chart Container Improvements */
+.reports-chart-panel .chart-container {
+  position: relative;
+  min-height: 350px;
+  padding: 16px 0;
+}
+
+.reports-chart-panel .chart-container canvas {
+  max-height: 400px;
+}
+
+/* Loading State for Charts */
+.chart-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 350px;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.chart-loading i {
+  font-size: 2.5rem;
+  color: #cbd5e1;
+}
+
+.chart-loading p {
+  color: #94a3b8;
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Export Button Special Styling */
+#reportsExportBtn:hover {
+  background: #16a34a !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(34, 197, 94, 0.3);
+}
+
+/* Animation for Reports Page */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reports-kpi-card,
+.reports-chart-panel {
+  animation: fadeInUp 0.5s ease-out backwards;
+}
+
+.reports-kpi-card:nth-child(1) { animation-delay: 0.05s; }
+.reports-kpi-card:nth-child(2) { animation-delay: 0.1s; }
+.reports-kpi-card:nth-child(3) { animation-delay: 0.15s; }
+.reports-kpi-card:nth-child(4) { animation-delay: 0.2s; }
+.reports-kpi-card:nth-child(5) { animation-delay: 0.25s; }
+
+.reports-chart-panel:nth-child(1) { animation-delay: 0.3s; }
+.reports-chart-panel:nth-child(2) { animation-delay: 0.35s; }
+.reports-chart-panel:nth-child(3) { animation-delay: 0.4s; }
+.reports-chart-panel:nth-child(4) { animation-delay: 0.45s; }

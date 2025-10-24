@@ -18,6 +18,7 @@ import { NotificationsModule } from './notifications/notifications.module';
 import { AuditModule } from './audit/audit.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module';
+import { ReportsModule } from './reports/reports.module';
 
 @Module({
   imports: [
@@ -41,6 +42,7 @@ import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module'
     AuditModule,
     PaymentsModule,
     PaymentGatewayModule,
+    ReportsModule,
   ],
   controllers: [HealthController],
 })

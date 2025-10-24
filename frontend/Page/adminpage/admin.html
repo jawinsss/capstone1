@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="../../styles/admin.css" />
     <link rel="stylesheet" href="../../styles/upload.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet">
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/auth-context.js" defer></script>
@@ -999,32 +1001,182 @@
             </section>
 
             <!-- =========== reports ========= -->
+            <!-- =========== REPORTS & ANALYTICS ========= -->
             <section id="view-reports" data-view="reports" hidden>
-                <h1>báo cáo</h1>
-                <section class="tiles">
-                    <div class="tile">
-                        <div class="icon"><i class="fa-solid fa-chart-column"></i></div>
-                        <div>chart bars</div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <div>
+                        <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: #1e293b;">📊 Báo cáo & Thống kê</h1>
+                        <p class="muted" style="margin-top: 8px;">Phân tích chi tiết và insights kinh doanh • <span id="reportsLastUpdate">Đang tải...</span></p>
                     </div>
-                    <div class="tile">
-                        <div class="icon"><i class="fa-solid fa-chart-line"></i></div>
-                        <div>Analytics</div>
+                    <div style="display: flex; gap: 12px;">
+                        <button id="reportsRefreshBtn" class="btn" style="background: #3b82f6; color: #fff; border-color: #2563eb;">
+                            <i class="fa-solid fa-rotate"></i>
+                            <span class="hide-sm">Làm mới</span>
+                        </button>
+                        <button id="reportsExportBtn" class="btn" style="background: #22c55e; color: #fff; border-color: #16a34a;">
+                            <i class="fa-solid fa-download"></i>
+                            <span class="hide-sm">Xuất báo cáo</span>
+                        </button>
                     </div>
-                    <div class="tile">
-                        <div class="icon"><i class="fa-solid fa-chart-pie"></i></div>
-                        <div>Pie chart</div>
+                </div>
+
+                <!-- Summary KPIs -->
+                <section class="reports-kpis">
+                    <article class="reports-kpi-card" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div class="kpi-icon-modern">
+                            <i class="fa-solid fa-box-open"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Sản phẩm đã bán</div>
+                            <div class="kpi-value-modern" id="reportsTotalProducts">0</div>
+                        </div>
+                    </article>
+
+                    <article class="reports-kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
+                        <div class="kpi-icon-modern">
+                            <i class="fa-solid fa-shopping-bag"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Tổng đơn hàng</div>
+                            <div class="kpi-value-modern" id="reportsTotalOrders">0</div>
+                        </div>
+                    </article>
+
+                    <article class="reports-kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
+                        <div class="kpi-icon-modern">
+                            <i class="fa-solid fa-coins"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Tổng doanh thu</div>
+                            <div class="kpi-value-modern" id="reportsTotalRevenue">0 đ</div>
+                        </div>
+                    </article>
+
+                    <article class="reports-kpi-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
+                        <div class="kpi-icon-modern">
+                            <i class="fa-solid fa-users"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Người dùng</div>
+                            <div class="kpi-value-modern" id="reportsTotalUsers">0</div>
+                        </div>
+                    </article>
+
+                    <article class="reports-kpi-card" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
+                        <div class="kpi-icon-modern">
+                            <i class="fa-solid fa-tags"></i>
+                        </div>
+                        <div class="kpi-content">
+                            <div class="kpi-label">Danh mục</div>
+                            <div class="kpi-value-modern" id="reportsActiveCategories">0</div>
+                        </div>
+                    </article>
+                </section>
+
+                <!-- Chart: Products Sold (Line Chart) -->
+                <section class="reports-chart-panel">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">
+                                <i class="fa-solid fa-chart-line" style="color: #3b82f6;"></i>
+                                Số lượng sản phẩm đã bán (Đã thanh toán)
+                            </h3>
+                            <p class="chart-subtitle" id="productsSoldSubtitle">7 ngày qua</p>
+                        </div>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" data-chart="products-sold" data-range="day">Ngày</button>
+                            <button class="filter-btn" data-chart="products-sold" data-range="month">Tháng</button>
+                            <button class="filter-btn" data-chart="products-sold" data-range="year">Năm</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="productsSoldChart"></canvas>
                     </div>
                 </section>
-                <h2 style="margin-top: 20px;">Thống Kê</h2>
-                <section class="panel" style="max-width: 600px;">
-                    <div class="panel-title">
-                        <i class="fa-regular fa-file-lines"></i>Report
+
+                <!-- Chart: Orders (Bar Chart) -->
+                <section class="reports-chart-panel">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">
+                                <i class="fa-solid fa-chart-bar" style="color: #f59e0b;"></i>
+                                Số lượng đơn hàng (Đã xác nhận)
+                            </h3>
+                            <p class="chart-subtitle" id="ordersSubtitle">7 ngày qua • Bao gồm: Đã xác nhận, Đang giao, Hoàn thành, Hoàn trả</p>
+                        </div>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" data-chart="orders" data-range="day">Ngày</button>
+                            <button class="filter-btn" data-chart="orders" data-range="month">Tháng</button>
+                            <button class="filter-btn" data-chart="orders" data-range="year">Năm</button>
+                        </div>
                     </div>
-                    <div class="list-sub">Tích hợp AI</div>
+                    <div class="chart-container">
+                        <canvas id="ordersChart"></canvas>
+                    </div>
                 </section>
-                <button class="btn" style="background: #dbeafe; border-color: #bfdbfe">
-                    Tạo báo cáo mới
-                  </button>
+
+                <!-- Charts Grid: Pie Chart & Map -->
+                <section class="reports-grid-2">
+                    <!-- Chart: Category Distribution (Pie Chart) -->
+                    <div class="reports-chart-panel">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">
+                                    <i class="fa-solid fa-chart-pie" style="color: #ec4899;"></i>
+                                    Phân bố theo danh mục
+                                </h3>
+                                <p class="chart-subtitle">Top danh mục bán chạy nhất</p>
+                            </div>
+                        </div>
+                        <div class="chart-container" style="min-height: 400px;">
+                            <canvas id="categoriesChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Map: Orders by Location -->
+                    <div class="reports-chart-panel">
+                        <div class="chart-header">
+                            <div>
+                                <h3 class="chart-title">
+                                    <i class="fa-solid fa-map-location-dot" style="color: #8b5cf6;"></i>
+                                    Phân bố theo địa lý
+                                </h3>
+                                <p class="chart-subtitle">Số đơn hàng theo tỉnh thành</p>
+                            </div>
+                        </div>
+                        <div id="ordersMap" class="map-container" style="height: 400px; border-radius: 12px; overflow: hidden;">
+                            <div class="loading-placeholder">
+                                <i class="fa-solid fa-spinner fa-spin" style="font-size: 2rem; color: #cbd5e1;"></i>
+                                <p style="margin-top: 12px; color: #94a3b8;">Đang tải bản đồ...</p>
+                            </div>
+                        </div>
+                        <!-- Location Stats -->
+                        <div id="locationStats" class="location-stats">
+                            <!-- Will be populated by JS -->
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Chart: User Registrations (Area Chart) -->
+                <section class="reports-chart-panel">
+                    <div class="chart-header">
+                        <div>
+                            <h3 class="chart-title">
+                                <i class="fa-solid fa-user-plus" style="color: #10b981;"></i>
+                                Người dùng đăng ký mới
+                            </h3>
+                            <p class="chart-subtitle" id="registrationsSubtitle">30 ngày qua</p>
+                        </div>
+                        <div class="chart-filters">
+                            <button class="filter-btn active" data-chart="registrations" data-range="day">Ngày</button>
+                            <button class="filter-btn" data-chart="registrations" data-range="month">Tháng</button>
+                            <button class="filter-btn" data-chart="registrations" data-range="year">Năm</button>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="registrationsChart"></canvas>
+                    </div>
+                </section>
             </section>
 
             <!-- =========== banner ========= -->

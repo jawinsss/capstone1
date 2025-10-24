@@ -2863,28 +2863,617 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function initReportsView() {
         const view = document.querySelector('[data-view="reports"]');
         if (!view) return;
-        
-        const refreshBtn = document.getElementById('btnReports');
-        if (refreshBtn) {
-            refreshBtn.addEventListener('click', loadReportsData);
-        }
-        
-        async function loadReportsData() {
+
+        // Chart instances
+        let productsSoldChart = null;
+        let ordersChart = null;
+        let categoriesChart = null;
+        let registrationsChart = null;
+        let map = null;
+
+        // Current filter states
+        const filters = {
+            productsSold: 'day',
+            orders: 'day',
+            registrations: 'day'
+        };
+
+        // Mapbox Access Token - REPLACE WITH YOUR OWN TOKEN
+        // Get free token at: https://account.mapbox.com/access-tokens/
+        const MAPBOX_TOKEN = ''; // TODO: Add your Mapbox token here
+
+        // Vietnam province coordinates (major cities)
+        const PROVINCE_COORDS = {
+            '01': { name: 'Hà Nội', lat: 21.0285, lng: 105.8542 },
+            '79': { name: 'TP Hồ Chí Minh', lat: 10.8231, lng: 106.6297 },
+            '48': { name: 'Đà Nẵng', lat: 16.0544, lng: 108.2022 },
+            '92': { name: 'Cần Thơ', lat: 10.0452, lng: 105.7469 },
+            '31': { name: 'Hải Phòng', lat: 20.8449, lng: 106.6881 },
+            '26': { name: 'Vĩnh Phúc', lat: 21.3609, lng: 105.5474 },
+            '40': { name: 'Nghệ An', lat: 18.6739, lng: 105.6819 },
+            '68': { name: 'Lâm Đồng', lat: 11.9404, lng: 108.4583 },
+            '22': { name: 'Quảng Ninh', lat: 21.0064, lng: 107.2925 },
+            '49': { name: 'Quảng Nam', lat: 15.5394, lng: 108.0191 },
+            '44': { name: 'Thừa Thiên Huế', lat: 16.4637, lng: 107.5909 },
+            '56': { name: 'Khánh Hòa', lat: 12.2388, lng: 109.1967 },
+            '72': { name: 'Tây Ninh', lat: 11.3100, lng: 106.0983 },
+            '66': { name: 'Đắk Lắk', lat: 12.6667, lng: 108.0500 },
+            '95': { name: 'Bạc Liêu', lat: 9.2515, lng: 105.7221 },
+            '04': { name: 'Cao Bằng', lat: 22.6663, lng: 106.2520 },
+            '11': { name: 'Điện Biên', lat: 21.3833, lng: 103.0167 },
+            '19': { name: 'Thái Nguyên', lat: 21.5671, lng: 105.8252 }
+        };
+
+        // Helper functions
+        const formatVND = (amount) => {
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND' }).format(amount);
+        };
+
+        const formatNumber = (num) => {
+            return new Intl.NumberFormat('vi-VN').format(num);
+        };
+
+        const updateLastUpdate = () => {
+            const el = document.getElementById('reportsLastUpdate');
+            if (el) {
+                el.textContent = `Cập nhật lúc ${new Date().toLocaleTimeString('vi-VN')}`;
+            }
+        };
+
+        const showError = (message) => {
+            console.error('Reports error:', message);
+            alert(message || 'Có lỗi xảy ra khi tải dữ liệu báo cáo');
+        };
+
+        // ========== LOAD SUMMARY KPIS ==========
+        async function loadSummary() {
             try {
-                const [salesRes, productsRes, usersRes] = await Promise.all([
-                    window.apiService.get('/dashboard/overview'),
-                    window.apiService.get('/products/stats'),
-                    window.apiService.get('/users/stats')
-                ]);
-                
-                // Update report data in UI
-                console.log('Reports data loaded:', { salesRes, productsRes, usersRes });
-            } catch (e) {
-                console.error('Load reports error:', e);
+                const res = await window.apiService.get('/reports/summary');
+                const data = res.data || res;
+
+                document.getElementById('reportsTotalProducts').textContent = formatNumber(data.totalProductsSold || 0);
+                document.getElementById('reportsTotalOrders').textContent = formatNumber(data.totalOrders || 0);
+                document.getElementById('reportsTotalRevenue').textContent = formatVND(data.totalRevenue || 0);
+                document.getElementById('reportsTotalUsers').textContent = formatNumber(data.totalUsers || 0);
+                document.getElementById('reportsActiveCategories').textContent = formatNumber(data.activeCategories || 0);
+            } catch (error) {
+                console.error('Load summary error:', error);
             }
         }
-        
-        loadReportsData();
+
+        // ========== LINE CHART: PRODUCTS SOLD ==========
+        async function loadProductsSoldChart(range = 'day') {
+            try {
+                const res = await window.apiService.get(`/reports/products-sold?range=${range}`);
+                const data = res.data || res;
+
+                // Destroy previous chart
+                if (productsSoldChart) {
+                    productsSoldChart.destroy();
+                }
+
+                // Update subtitle
+                const subtitles = {
+                    day: '7 ngày qua',
+                    month: '12 tháng qua',
+                    year: '5 năm qua'
+                };
+                document.getElementById('productsSoldSubtitle').textContent = subtitles[range];
+
+                // Create chart
+                const ctx = document.getElementById('productsSoldChart').getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(59, 130, 246, 0.3)');
+                gradient.addColorStop(1, 'rgba(59, 130, 246, 0.01)');
+
+                productsSoldChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Sản phẩm đã bán',
+                            data: data.data || [],
+                            borderColor: '#3b82f6',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 6,
+                            pointHoverRadius: 8,
+                            pointBackgroundColor: '#3b82f6',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2,
+                            pointHoverBackgroundColor: '#2563eb',
+                            pointHoverBorderColor: '#ffffff'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                titleColor: '#fff',
+                                bodyColor: '#fff',
+                                borderColor: '#3b82f6',
+                                borderWidth: 1,
+                                displayColors: false,
+                                callbacks: {
+                                    label: function(context) {
+                                        const idx = context.dataIndex;
+                                        const products = context.parsed.y;
+                                        const revenue = data.revenues?.[idx] || 0;
+                                        return [
+                                            `Sản phẩm: ${formatNumber(products)}`,
+                                            `Doanh thu: ${formatVND(revenue)}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatNumber(value);
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Load products sold chart error:', error);
+                showError('Không thể tải biểu đồ sản phẩm đã bán');
+            }
+        }
+
+        // ========== BAR CHART: ORDERS ==========
+        async function loadOrdersChart(range = 'day') {
+            try {
+                const res = await window.apiService.get(`/reports/orders?range=${range}`);
+                const data = res.data || res;
+
+                // Destroy previous chart
+                if (ordersChart) {
+                    ordersChart.destroy();
+                }
+
+                // Update subtitle
+                const subtitles = {
+                    day: '7 ngày qua • Bao gồm: Đã xác nhận, Đang giao, Hoàn thành, Hoàn trả',
+                    month: '12 tháng qua • Bao gồm: Đã xác nhận, Đang giao, Hoàn thành, Hoàn trả',
+                    year: '5 năm qua • Bao gồm: Đã xác nhận, Đang giao, Hoàn thành, Hoàn trả'
+                };
+                document.getElementById('ordersSubtitle').textContent = subtitles[range];
+
+                // Create chart
+                const ctx = document.getElementById('ordersChart').getContext('2d');
+                ordersChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Số đơn hàng',
+                            data: data.orderCounts || [],
+                            backgroundColor: 'rgba(245, 158, 11, 0.8)',
+                            borderColor: '#f59e0b',
+                            borderWidth: 2,
+                            borderRadius: 8,
+                            borderSkipped: false
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                callbacks: {
+                                    label: function(context) {
+                                        const idx = context.dataIndex;
+                                        const revenue = data.revenues?.[idx] || 0;
+                                        return [
+                                            `Số đơn: ${formatNumber(context.parsed.y)}`,
+                                            `Doanh thu: ${formatVND(revenue)}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatNumber(value);
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Load orders chart error:', error);
+                showError('Không thể tải biểu đồ đơn hàng');
+            }
+        }
+
+        // ========== PIE CHART: CATEGORIES ==========
+        async function loadCategoriesChart() {
+            try {
+                const res = await window.apiService.get('/reports/categories');
+                const data = res.data || res;
+
+                // Destroy previous chart
+                if (categoriesChart) {
+                    categoriesChart.destroy();
+                }
+
+                // Create chart
+                const ctx = document.getElementById('categoriesChart').getContext('2d');
+                
+                // Generate vibrant colors for categories
+                const colors = [
+                    '#3b82f6', '#ec4899', '#f59e0b', '#10b981', '#8b5cf6',
+                    '#ef4444', '#06b6d4', '#f97316', '#14b8a6', '#6366f1', '#84cc16'
+                ];
+
+                categoriesChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            data: data.data || [],
+                            backgroundColor: colors,
+                            borderColor: '#ffffff',
+                            borderWidth: 3,
+                            hoverOffset: 10
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 15,
+                                    font: {
+                                        size: 13,
+                                        weight: '600'
+                                    },
+                                    generateLabels: function(chart) {
+                                        const datasets = chart.data.datasets;
+                                        return chart.data.labels.map((label, i) => {
+                                            const value = datasets[0].data[i];
+                                            return {
+                                                text: `${label}: ${formatNumber(value)}`,
+                                                fillStyle: datasets[0].backgroundColor[i],
+                                                hidden: false,
+                                                index: i
+                                            };
+                                        });
+                                    }
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                callbacks: {
+                                    label: function(context) {
+                                        const label = context.label || '';
+                                        const value = context.parsed;
+                                        const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                        const percentage = ((value / total) * 100).toFixed(1);
+                                        const revenue = data.revenues?.[context.dataIndex] || 0;
+                                        return [
+                                            `${label}`,
+                                            `Số lượng: ${formatNumber(value)}`,
+                                            `Tỷ lệ: ${percentage}%`,
+                                            `Doanh thu: ${formatVND(revenue)}`
+                                        ];
+                                    }
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Load categories chart error:', error);
+                showError('Không thể tải biểu đồ danh mục');
+            }
+        }
+
+        // ========== MAPBOX: ORDERS BY LOCATION ==========
+        async function loadOrdersMap() {
+            try {
+                const res = await window.apiService.get('/reports/locations');
+                const data = res.data || res;
+
+                // Check if Mapbox token is provided
+                if (!MAPBOX_TOKEN) {
+                    console.warn('Mapbox token not provided. Map will not be displayed.');
+                    document.getElementById('ordersMap').innerHTML = `
+                        <div class="loading-placeholder" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px;">
+                            <i class="fa-solid fa-map-location-dot" style="font-size: 3rem; margin-bottom: 16px;"></i>
+                            <h4 style="margin: 0 0 12px 0; font-size: 1.25rem;">Bản đồ chưa được kích hoạt</h4>
+                            <p style="margin: 0; font-size: 0.9rem; opacity: 0.9;">
+                                Để hiển thị bản đồ, bạn cần tạo <strong>FREE Mapbox Token</strong>.<br>
+                                <a href="https://account.mapbox.com/access-tokens/" target="_blank" style="color: #fbbf24; text-decoration: underline;">
+                                    👉 Tạo token miễn phí tại đây
+                                </a>
+                            </p>
+                        </div>
+                    `;
+                    // Still render location stats
+                    renderLocationStats(data.locations || []);
+                    return;
+                }
+
+                // Initialize Mapbox
+                mapboxgl.accessToken = MAPBOX_TOKEN;
+
+                if (map) {
+                    map.remove();
+                }
+
+                map = new mapboxgl.Map({
+                    container: 'ordersMap',
+                    style: 'mapbox://styles/mapbox/light-v11',
+                    center: [106.6297, 16.0], // Center of Vietnam
+                    zoom: 5.2,
+                    projection: 'mercator'
+                });
+
+                // Add navigation controls
+                map.addControl(new mapboxgl.NavigationControl(), 'top-right');
+
+                // Wait for map to load
+                map.on('load', () => {
+                    // Add markers for each location
+                    const locations = data.locations || [];
+                    
+                    locations.forEach(location => {
+                        const coords = PROVINCE_COORDS[location.code];
+                        if (!coords) return;
+
+                        // Create marker element
+                        const el = document.createElement('div');
+                        el.className = 'custom-marker';
+                        el.innerHTML = `<i class="fa-solid fa-location-dot"></i> ${location.count}`;
+
+                        // Create popup
+                        const popup = new mapboxgl.Popup({ offset: 25 })
+                            .setHTML(`
+                                <div class="map-popup-content">
+                                    <h4>${location.name || 'Không xác định'}</h4>
+                                    <div class="popup-count">${location.count}</div>
+                                    <p class="popup-label">Đơn hàng</p>
+                                </div>
+                            `);
+
+                        // Add marker to map
+                        new mapboxgl.Marker(el)
+                            .setLngLat([coords.lng, coords.lat])
+                            .setPopup(popup)
+                            .addTo(map);
+                    });
+                });
+
+                // Render location stats below map
+                renderLocationStats(data.locations || []);
+
+            } catch (error) {
+                console.error('Load orders map error:', error);
+                document.getElementById('ordersMap').innerHTML = `
+                    <div class="loading-placeholder">
+                        <i class="fa-solid fa-triangle-exclamation" style="font-size: 2rem; color: #ef4444;"></i>
+                        <p style="margin-top: 12px; color: #64748b;">Không thể tải bản đồ</p>
+                    </div>
+                `;
+            }
+        }
+
+        function renderLocationStats(locations) {
+            const container = document.getElementById('locationStats');
+            if (!container) return;
+
+            if (locations.length === 0) {
+                container.innerHTML = '<p style="color: #94a3b8; text-align: center;">Chưa có dữ liệu</p>';
+                return;
+            }
+
+            const html = locations.slice(0, 10).map(loc => `
+                <div class="location-stat-item">
+                    <div class="location-name">${loc.name}</div>
+                    <div class="location-count">${loc.count}</div>
+                </div>
+            `).join('');
+
+            container.innerHTML = html;
+        }
+
+        // ========== AREA CHART: USER REGISTRATIONS ==========
+        async function loadRegistrationsChart(range = 'day') {
+            try {
+                const res = await window.apiService.get(`/reports/user-registrations?range=${range}`);
+                const data = res.data || res;
+
+                // Destroy previous chart
+                if (registrationsChart) {
+                    registrationsChart.destroy();
+                }
+
+                // Update subtitle
+                const subtitles = {
+                    day: '30 ngày qua',
+                    month: '12 tháng qua',
+                    year: '5 năm qua'
+                };
+                document.getElementById('registrationsSubtitle').textContent = subtitles[range];
+
+                // Create chart
+                const ctx = document.getElementById('registrationsChart').getContext('2d');
+                const gradient = ctx.createLinearGradient(0, 0, 0, 400);
+                gradient.addColorStop(0, 'rgba(16, 185, 129, 0.3)');
+                gradient.addColorStop(1, 'rgba(16, 185, 129, 0.01)');
+
+                registrationsChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels || [],
+                        datasets: [{
+                            label: 'Người dùng đăng ký',
+                            data: data.totalRegistrations || [],
+                            borderColor: '#10b981',
+                            backgroundColor: gradient,
+                            borderWidth: 3,
+                            fill: true,
+                            tension: 0.4,
+                            pointRadius: 5,
+                            pointHoverRadius: 7,
+                            pointBackgroundColor: '#10b981',
+                            pointBorderColor: '#ffffff',
+                            pointBorderWidth: 2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                                padding: 12,
+                                callbacks: {
+                                    label: function(context) {
+                                        const idx = context.dataIndex;
+                                        const total = context.parsed.y;
+                                        const users = data.userRegistrations?.[idx] || 0;
+                                        const admins = data.adminRegistrations?.[idx] || 0;
+                                        return [
+                                            `Tổng: ${formatNumber(total)}`,
+                                            `Người dùng: ${formatNumber(users)}`,
+                                            `Quản trị viên: ${formatNumber(admins)}`
+                                        ];
+                                    }
+                                }
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    callback: function(value) {
+                                        return formatNumber(value);
+                                    }
+                                },
+                                grid: {
+                                    color: 'rgba(0, 0, 0, 0.05)'
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Load registrations chart error:', error);
+                showError('Không thể tải biểu đồ người dùng đăng ký');
+            }
+        }
+
+        // ========== FILTER HANDLERS ==========
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', async () => {
+                const chartType = btn.dataset.chart;
+                const range = btn.dataset.range;
+
+                // Update active state
+                const siblings = btn.parentElement.querySelectorAll('.filter-btn');
+                siblings.forEach(s => s.classList.remove('active'));
+                btn.classList.add('active');
+
+                // Update filter and reload chart
+                if (chartType === 'products-sold') {
+                    filters.productsSold = range;
+                    await loadProductsSoldChart(range);
+                } else if (chartType === 'orders') {
+                    filters.orders = range;
+                    await loadOrdersChart(range);
+                } else if (chartType === 'registrations') {
+                    filters.registrations = range;
+                    await loadRegistrationsChart(range);
+                }
+            });
+        });
+
+        // ========== REFRESH BUTTON ==========
+        const refreshBtn = document.getElementById('reportsRefreshBtn');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.disabled = true;
+                refreshBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Đang tải...';
+                
+                await loadAllData();
+                
+                refreshBtn.disabled = false;
+                refreshBtn.innerHTML = '<i class="fa-solid fa-rotate"></i><span class="hide-sm">Làm mới</span>';
+            });
+        }
+
+        // ========== EXPORT BUTTON (PLACEHOLDER) ==========
+        const exportBtn = document.getElementById('reportsExportBtn');
+        if (exportBtn) {
+            exportBtn.addEventListener('click', () => {
+                alert('Chức năng xuất báo cáo sẽ được phát triển trong phiên bản tiếp theo!\n\nBạn có thể sử dụng screenshot hoặc in trang này.');
+            });
+        }
+
+        // ========== LOAD ALL DATA ==========
+        async function loadAllData() {
+            try {
+                await Promise.all([
+                    loadSummary(),
+                    loadProductsSoldChart(filters.productsSold),
+                    loadOrdersChart(filters.orders),
+                    loadCategoriesChart(),
+                    loadOrdersMap(),
+                    loadRegistrationsChart(filters.registrations)
+                ]);
+                updateLastUpdate();
+            } catch (error) {
+                console.error('Load all reports data error:', error);
+            }
+        }
+
+        // Initial load
+        loadAllData();
     }
 
     // ====== VIEW BANNER ======
