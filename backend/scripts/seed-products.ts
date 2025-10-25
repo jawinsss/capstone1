@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { readdirSync, existsSync } from 'fs';
 import { join, extname } from 'path';
+import 'dotenv/config'
 
 const prisma = new PrismaClient();
 
