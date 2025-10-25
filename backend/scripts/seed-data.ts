@@ -1,7 +1,5 @@
 /**
- *  CẢNH BÁO:
- * - Script này sẽ TẠO THÊM data vào database, KHÔNG XÓA data cũ
- * - Nếu muốn reset database: npx prisma migrate reset
+ * - Để reset: npx prisma migrate reset
  */
 
 import { PrismaClient } from '@prisma/client';
@@ -118,13 +116,13 @@ async function main() {
   console.log(`📦 Found ${allProducts.length} products\n`);
 
   // ============================================
-  // 1. CREATE USERS
+  // 1. CREATE USERS (Optimized: 30 users instead of 80)
   // ============================================
   console.log('👥 Creating users...');
   const hashedPassword = await bcrypt.hash('123456', 10);
   const users: any[] = [];
 
-  for (let i = 0; i < 80; i++) {
+  for (let i = 0; i < 30; i++) {
     const lastName = randomElement(lastNames);
     const firstName = randomElement(firstNames);
     const fullName = `${lastName} ${firstName}`;
@@ -171,14 +169,14 @@ async function main() {
   const endDate = new Date();
   const totalDays = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
-  // Calculate orders per day (5-25 orders randomly distributed)
+  // Calculate orders per day (Optimized: 3-12 orders, max 18 on peak days)
   const ordersPerDay: { [key: string]: number } = {};
   for (let day = 0; day < totalDays; day++) {
     const dateKey = new Date(startDate.getTime() + day * 24 * 60 * 60 * 1000).toISOString().split('T')[0];
-    // Most days have 5-15 orders, some peak days have up to 25 orders
-    const baseOrders = randomInt(5, 15);
-    const isPeakDay = Math.random() > 0.85; // 15% chance of peak day
-    ordersPerDay[dateKey] = isPeakDay ? randomInt(20, 25) : baseOrders;
+    // Most days have 3-8 orders, some peak days have up to 12-15 orders
+    const baseOrders = randomInt(3, 8);
+    const isPeakDay = Math.random() > 0.90; // 10% chance of peak day
+    ordersPerDay[dateKey] = isPeakDay ? randomInt(10, 15) : baseOrders;
   }
 
   let orderCounter = 1;
@@ -228,14 +226,14 @@ async function main() {
           : randomElement(['PENDING', 'FAILED']);
       }
 
-      // Generate order items (2-4 items per order)
-      const itemCount = randomInt(2, 4);
+      // Generate order items (1-3 items per order, optimized)
+      const itemCount = randomInt(1, 3);
       const orderItems: { productId: string; quantity: number; price: number }[] = [];
       let totalAmount = 0;
 
       for (let j = 0; j < itemCount; j++) {
         const product = randomElement(allProducts);
-        const quantity = randomInt(1, 3);
+        const quantity = randomInt(1, 2);
         const price = product.price;
         orderItems.push({
           productId: product.id,
@@ -303,7 +301,7 @@ async function main() {
   console.log(`✅ Created ${totalOrders} orders with payments\n`);
 
   // ============================================
-  // 3. CREATE RETURN REQUESTS
+  // 3. CREATE RETURN REQUESTS (Optimized: 8 requests instead of 15)
   // ============================================
   console.log('↩️  Creating return requests...');
 
@@ -312,7 +310,7 @@ async function main() {
       status: 'COMPLETED',
       receivedAt: { not: null },
     },
-    take: 25,
+    take: 15,
   });
 
   const returnReasons = [
@@ -325,7 +323,7 @@ async function main() {
   ];
 
   let returnCount = 0;
-  for (let i = 0; i < 15; i++) {
+  for (let i = 0; i < Math.min(8, completedOrders.length); i++) {
     const order = randomElement(completedOrders);
     const returnStatus = randomElement(['PENDING', 'APPROVED', 'REJECTED']);
 
@@ -353,7 +351,7 @@ async function main() {
   console.log(`✅ Created ${returnCount} return requests\n`);
 
   // ============================================
-  // 4. CREATE REVIEWS
+  // 4. CREATE REVIEWS (Optimized: ~20-30 reviews instead of 50-100)
   // ============================================
   console.log('⭐ Creating product reviews...');
 
@@ -365,7 +363,7 @@ async function main() {
       items: { include: { product: true } },
       user: true,
     },
-    take: 50,
+    take: 25,
   });
 
   const reviewContents = [
@@ -381,8 +379,8 @@ async function main() {
 
   let reviewCount = 0;
   for (const order of ordersForReview) {
-    // Review 1-2 products per order
-    const itemsToReview = order.items.slice(0, randomInt(1, 2));
+    // Review only 1 product per order
+    const itemsToReview = order.items.slice(0, 1);
 
     for (const item of itemsToReview) {
       const rating = randomInt(3, 5); // Mostly positive reviews
@@ -405,7 +403,7 @@ async function main() {
   console.log(`✅ Created ${reviewCount} reviews\n`);
 
   // ============================================
-  // 5. CREATE SUPPORT TICKETS
+  // 5. CREATE SUPPORT TICKETS (Optimized: 12 tickets instead of 30)
   // ============================================
   console.log('🎫 Creating support tickets...');
 
@@ -430,7 +428,7 @@ async function main() {
   ];
 
   let ticketCount = 0;
-  for (let i = 0; i < 30; i++) {
+  for (let i = 0; i < 12; i++) {
     const user = randomElement(users);
     const ticketStatus = randomElement(['OPEN', 'IN_PROGRESS', 'CLOSED']);
 

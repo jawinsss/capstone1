@@ -1,110 +1,212 @@
 <!DOCTYPE html>
+
 <html lang="vi">
 
+
+
 <head>
+
     <meta charset="UTF-8" />
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
     <title>MatFlow Admin</title>
+
     <link rel="stylesheet" href="../../styles/admin.css" />
+
     <link rel="stylesheet" href="../../styles/upload.css" />
+
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+
     <link href="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.css" rel="stylesheet">
     <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <script src="https://api.mapbox.com/mapbox-gl-js/v3.0.0/mapbox-gl.js"></script>
     <script src="../../js/config.js" defer></script>
+
     <script src="../../js/apiService.js" defer></script>
+
     <script src="../../js/auth-context.js" defer></script>
+
     <script src="../../js/admin-avatar.js" defer></script>
+
     <script src="../../js/upload.js" defer></script>
+
     <script src="../../js/admin.js" defer></script>
+
     <script src="../../js/categories.js" defer></script>
+
     <style>
+
         [hidden] {
+
             display: none !important
+
         }
+
     </style>
+
 </head>
 
+
+
 <body>
+
     <!-- SIDEBAR -->
+
     <aside class="sidebar" id="sidebar">
+
         <div class="brand">
+
             <div class="brand-logo" id="adminAvatar">
+
                 <span id="adminInitials">A</span>
+
             </div>
+
             <div class="brand-meta">
+
                 <div class="brand-name" id="adminFullName">Admin</div>
+
                 <div class="brand-sub" id="adminRole">Quản trị hệ thống</div>
+
             </div>
+
         </div>
 
+
+
         <nav class="nav" id="nav">
+
             <a class="nav-item" href="../../Page/homepage/homepage.html" id="homepageLink">
+
                 <i class="fa-solid fa-home"></i><span>Trang chủ</span>
+
             </a>
+
             <a class="nav-item" href="#overview" data-link="overview">
+
                 <i class="fa-solid fa-gauge"></i><span>Tổng quan</span>
+
             </a>
+
             <a class="nav-item" href="#orders" data-link="orders">
+
                 <i class="fa-solid fa-bag-shopping"></i><span>Đơn hàng</span>
+
             </a>
+
             <a class="nav-item" href="#returns" data-link="returns">
+
                 <i class="fa-regular fa-rectangle-xmark"></i><span>Trả hàng/Hoàntiền</span>
+
             </a>
+
             <a class="nav-item" href="#products" data-link="products">
+
                 <i class="fa-solid fa-box"></i><span>Sản phẩm</span>
+
             </a>
+
             <a class="nav-item" href="#categories" data-link="categories">
+
                 <i class="fa-solid fa-tags"></i><span>Quản lý danh mục sản phẩm</span>
+
             </a>
+
             <a class="nav-item" href="#feedbacks" data-link="feedbacks">
+
                 <i class="fa-solid fa-message"></i><span>Hỗ trợ & Khiếu nại</span>
+
             </a>
+
             <a class="nav-item" href="#users" data-link="users">
+
                 <i class="fa-solid fa-users"></i><span>Quản lý người dùng</span>
+
             </a>
+
             <a class="nav-item" href="#payments" data-link="payments">
+
                 <i class="fa-solid fa-shield"></i><span>Quản lý thanh toán</span>
+
             </a>
+
             <a class="nav-item" href="#reports" data-link="reports">
+
                 <i class="fa-solid fa-chart-line"></i><span>Báo cáo & Thống kê</span>
+
             </a>
+
             <!-- <a class="nav-item" href="#banner" data-link="banner">
                 <i class="fa-solid fa-flag"></i><span>Banner quảng cáo</span>
+
             </a> -->
             <a class="nav-item" href="#audit" data-link="audit">
+
                 <i class="fa-solid fa-clipboard-list"></i><span>Audit Log</span>
+
             </a>
+
         </nav>
+
     </aside>
 
+
+
     <!-- MAIN -->
+
     <div class="main">
+
         <header class="topbar">
+
             <button class="btn-icon" id="sidebarToggle" aria-label="Toggle sidebar">
+
                 <i class="fa-solid fa-bars"></i>
+
             </button>
+
             <div class="search">
+
                 <i class="fa-solid fa-magnifying-glass"></i>
+
                 <input id="globalSearch" type="text" placeholder="Tìm kiếm..." />
+
             </div>
+
             <div class="spacer"></div>
+
             <div id="topbarActions">
+
                 <button id="createUserBtn" class="btn" style="background: #22c55e; color: #fff; border-color: #16a34a; margin-right: 8px;">
+
                     <i class="fa-solid fa-user-plus"></i>
+
                     <span class="hide-sm">Tạo người dùng</span>
+
                 </button>
+
             </div>
+
             <button id="logoutBtn" class="btn btn-logout" title="Log OUt">
+
                 <i class="fa-solid fa-arrow-right-from-bracket"></i>
+
                 <span class="hide-sm">Đăng xuất</span>
+
             </button>
+
         </header>
 
+
+
         <!-- tong quan -->
+
         <main class="content">
+
             <section id="view-overview" data-view="overview">
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div>
                         <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: #1e293b;">📊 Tổng quan</h1>
@@ -120,10 +222,13 @@
 
                 <!-- KPI Tabs -->
                 <div class="kpi-tabs">
+
                     <button class="tab active" data-range="day">Ngày</button>
                     <button class="tab" data-range="week">Tuần</button>
                     <button class="tab" data-range="month">Tháng</button>
                 </div>
+
+
 
                 <!-- Main KPI Cards Grid -->
                 <section class="overview-kpis">
@@ -143,7 +248,9 @@
                             <div class="kpi-value-modern" id="totalRevenue">0 đ</div>
                             <div class="kpi-sub-modern" id="todayRevenue">Hôm nay: 0 đ</div>
                         </div>
+
                     </article>
+
 
                     <!-- Orders Card -->
                     <article class="overview-kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
@@ -161,7 +268,9 @@
                             <div class="kpi-value-modern" id="totalOrders">0</div>
                             <div class="kpi-sub-modern" id="todayOrders">Hôm nay: 0 đơn</div>
                         </div>
+
                     </article>
+
 
                     <!-- Products Card -->
                     <article class="overview-kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
@@ -179,7 +288,9 @@
                             <div class="kpi-value-modern" id="totalProducts">0</div>
                             <div class="kpi-sub-modern" id="lowStockText">Sắp hết: 0 sản phẩm</div>
                         </div>
+
                     </article>
+
 
                     <!-- Users Card -->
                     <article class="overview-kpi-card" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
@@ -197,8 +308,12 @@
                             <div class="kpi-value-modern" id="totalUsers">0</div>
                             <div class="kpi-sub-modern" id="activeUsersText">Hoạt động: 0</div>
                         </div>
+
                     </article>
+
                 </section>
+
+
 
                 <!-- Charts Grid -->
                 <section class="overview-charts-grid">
@@ -211,14 +326,17 @@
                                     Doanh thu theo thời gian
                                 </h3>
                                 <p class="chart-subtitle" id="revenueChartSubtitle">7 ngày qua</p>
-                            </div>
+                        </div>
+
                             <div class="chart-legend">
                                 <span class="legend-item">
                                     <span class="dot" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);"></span>
                                     Doanh thu
                                 </span>
-                            </div>
-                        </div>
+                    </div>
+
+                    </div>
+
                         <div class="chart-container">
                             <canvas id="revenueChart"></canvas>
                         </div>
@@ -277,15 +395,23 @@
                                 <p>Đang tải...</p>
                             </div>
                         </div>
+
                     </div>
+
                 </section>
+
             </section>
 
+
+
             <!-- =====ORDERS ===== -->
+
             <section id="view-orders" data-view="orders" hidden>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div>
-                        <h1>Quản lý đơn hàng</h1>
+                <h1>Quản lý đơn hàng</h1>
+
                         <p class="muted">Theo dõi và quản lý tất cả đơn hàng trong hệ thống • <span id="orderLastUpdate">Đang tải...</span></p>
                     </div>
                     <div style="display: flex; gap: 8px;">
@@ -300,40 +426,49 @@
                     </div>
                 </div>
 
+
                 <section class="order-stats">
+
                     <div class="order-stat" data-status="all">
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                             <i class="fa-solid fa-shopping-cart"></i>
                         </div>
                         <div class="order-stat-content">
-                            <div class="order-stat-title">Tổng đơn hàng</div>
+                        <div class="order-stat-title">Tổng đơn hàng</div>
+
                             <div class="order-stat-value" id="orderStatTotal">0</div>
-                        </div>
+                    </div>
+
                     </div>
                     <div class="order-stat" data-status="PENDING">
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                             <i class="fa-solid fa-clock"></i>
                         </div>
                         <div class="order-stat-content">
-                            <div class="order-stat-title">Chờ xác nhận</div>
+                        <div class="order-stat-title">Chờ xác nhận</div>
+
                             <div class="order-stat-value" id="orderStatPending">0</div>
-                        </div>
+                    </div>
+
                     </div>
                     <div class="order-stat" data-status="SHIPPING">
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                             <i class="fa-solid fa-truck-fast"></i>
                         </div>
                         <div class="order-stat-content">
-                            <div class="order-stat-title">Đang giao</div>
+                        <div class="order-stat-title">Đang giao</div>
+
                             <div class="order-stat-value" id="orderStatShipping">0</div>
-                        </div>
+                    </div>
+
                     </div>
                     <div class="order-stat" data-status="COMPLETED">
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);">
                             <i class="fa-solid fa-check-circle"></i>
                         </div>
                         <div class="order-stat-content">
-                            <div class="order-stat-title">Hoàn thành</div>
+                        <div class="order-stat-title">Hoàn thành</div>
+
                             <div class="order-stat-value" id="orderStatCompleted">0</div>
                         </div>
                     </div>
@@ -355,9 +490,13 @@
                             <div class="order-stat-value" id="orderStatReturned">0</div>
                         </div>
                     </div>
+
                 </section>
 
+
+
                 <section class="order-filter panel">
+
                     <div class="panel-title">
                         <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
                             <span><i class="fa-solid fa-filter"></i> Bộ lọc</span>
@@ -365,7 +504,9 @@
                         </div>
                     </div>
                     <div class="filter-grid">
+
                         <div class="filter-field">
+
                             <label><i class="fa-solid fa-circle-info"></i> Trạng thái</label>
                             <select class="select" id="orderFilterStatus">
                                 <option value="">Tất cả</option>
@@ -376,21 +517,32 @@
                                 <option value="CANCELLED">Đã hủy</option>
                                 <option value="RETURNED">Đã hoàn trả</option>
                             </select>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label><i class="fa-solid fa-calendar"></i> Từ ngày</label>
                             <input type="date" class="input" id="orderFilterDateFrom" />
                         </div>
+
                         <div class="filter-field">
+
                             <label><i class="fa-solid fa-calendar"></i> Đến ngày</label>
                             <input type="date" class="input" id="orderFilterDateTo" />
                         </div>
+
                         <div class="filter-field">
+
                             <label><i class="fa-solid fa-search"></i> Tìm kiếm</label>
                             <input type="text" class="input" id="orderSearchInput" placeholder="Tìm mã đơn, tên khách..." />
                         </div>
+
                     </div>
+
                 </section>
+
+
 
                 <section class="panel" id="orderListPanel">
                     <div class="panel-title" style="display: flex; justify-content: space-between; align-items: center;">
@@ -407,7 +559,9 @@
                         </div>
                     </div>
                 </section>
+
             </section>
+
 
             <!-- Order Detail Modal -->
             <div id="orderDetailModal" class="modal" style="display: none;">
@@ -425,46 +579,61 @@
                 </div>
             </div>
 
+
             <!-- ===== trả hàng/ hủy đơn ===== -->
+
             <section id="view-returns" data-view="returns" hidden>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
                     <div>
                         <h1>Quản lý trả hàng & hoàn tiền</h1>
-                        <p class="muted">Xử lý các yêu cầu trả hàng và hoàn tiền từ khách hàng</p>
+                <p class="muted">Xử lý các yêu cầu trả hàng và hoàn tiền từ khách hàng</p>
+
                     </div>
                     <button class="btn-secondary" id="refreshReturnsBtn">
                         <i class="fa-solid fa-rotate"></i> Làm mới
                     </button>
                 </div>
 
+
                 <!-- Statistics -->
                 <div class="order-stats" style="margin-bottom: 24px;">
                     <div class="order-stat">
+
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                             <i class="fa-solid fa-box-open"></i>
                         </div>
                         <div class="order-stat-info">
-                            <div class="order-stat-title">Tổng yêu cầu</div>
+                        <div class="order-stat-title">Tổng yêu cầu</div>
+
                             <div class="order-stat-value" id="returnsTotalStat">0</div>
                         </div>
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                             <i class="fa-solid fa-clock"></i>
                         </div>
                         <div class="order-stat-info">
-                            <div class="order-stat-title">Chờ xử lý</div>
+                        <div class="order-stat-title">Chờ xử lý</div>
+
                             <div class="order-stat-value" id="returnsPendingStat">0</div>
-                        </div>
                     </div>
+
+                    </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                             <i class="fa-solid fa-check-circle"></i>
                         </div>
                         <div class="order-stat-info">
-                            <div class="order-stat-title">Đã duyệt</div>
+                        <div class="order-stat-title">Đã duyệt</div>
+
                             <div class="order-stat-value" id="returnsApprovedStat">0</div>
-                        </div>
+                    </div>
+
                     </div>
                     <div class="order-stat">
                         <div class="order-stat-icon" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
@@ -521,6 +690,7 @@
                 </div>
             </section>
 
+
             <!-- Return Detail Modal -->
             <div id="returnDetailModal" class="modal" style="display: none;">
                 <div class="modal-content" style="max-width: 800px;">
@@ -536,288 +706,570 @@
                 </div>
             </div>
 
+
             <!-- ======== products ====== -->
+
             <section id="view-products"  data-view="products" hidden>
+
                 <h1>Quản lý sản phẩm</h1>
+
                 <div class ="tabs">Danh sách sản ph
+
                     <button class="tab-btn active">Danh sách sản phẩm</button>
+
                     <button class="tab-btn">Thêm sản phẩm</button>
+
                 </div>
+
                 <section class="order-stats">
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Tổng sản phẩm</div>
+
                         <div class="order-stat-value">5</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Đang bán</div>
+
                         <div class="order-stat-value">4</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Hết hàng</div>
+
                         <div class="order-stat-value">1</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Đã bán</div>
+
                         <div class="order-stat-value">2.953</div>
+
                     </div>
-                </section>
-                <section class="order-filter panel">
-                    <div class="panel-title">
-                        Bộ lọc <a class="link-reset" href="#products">Đặt lại</a>
-                    </div>
-                    <div class="filter-grid">
-                        <div class="filter-field">
-                            <label>Danh mục</label>
-                            <select class="select">
-                                <option>Tất cả</option>
-                            </select>
-                        </div>
-                        <div class="filter-field">
-                            <label>Trạng thái</label>
-                            <select class="select">
-                                <option>Tất cả</option>
-                            </select>
-                        </div>
-                        <div class="filter-field">
-                            <label>Sắp xếp theo</label>
-                            <select class="select">
-                                <option>Mới nhất</option>
-                            </select>
-                        </div>
-                        <div class="filter-field">
-                            <label>Thứ tự</label>
-                            <select class="select">
-                                <option>giảm dần</option>
-                            </select>
-                        </div>
-                    </div>
+
                 </section>
 
-                <section class="panel">
-                    <div class="panel-title">Danh sách</div>
-                    <div class="panel-placeholder small"></div>
+                <section class="order-filter panel">
+
+                    <div class="panel-title">
+
+                        Bộ lọc <a class="link-reset" href="#products">Đặt lại</a>
+
+                    </div>
+
+                    <div class="filter-grid">
+
+                        <div class="filter-field">
+
+                            <label>Danh mục</label>
+
+                            <select class="select">
+
+                                <option>Tất cả</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="filter-field">
+
+                            <label>Trạng thái</label>
+
+                            <select class="select">
+
+                                <option>Tất cả</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="filter-field">
+
+                            <label>Sắp xếp theo</label>
+
+                            <select class="select">
+
+                                <option>Mới nhất</option>
+
+                            </select>
+
+                        </div>
+
+                        <div class="filter-field">
+
+                            <label>Thứ tự</label>
+
+                            <select class="select">
+
+                                <option>giảm dần</option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
                 </section>
+
+
+
+                <section class="panel">
+
+                    <div class="panel-title">Danh sách</div>
+
+                    <div class="panel-placeholder small"></div>
+
+                </section>
+
+
 
                 <h2 style="margin: top 20px;">Thêm sản phẩm mới</h2>
+
                 <section class="panel">
+
                     <div class="filter-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr;">
+
                         <div class="filter-field">
+
                             <label>Tên sản phẩm *</label>
+
                             <input class="input" placeholder="nhập tên sản phẩm..."/>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Giá bán (VND)</label>
+
                             <input class="input" value="0"/>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Danh mục *</label>
+
                             <select class="select" id="mainCategorySelect">
+
                                 <option value="">Chọn danh mục sản phẩm</option>
+
                             </select>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Danh mục con</label>
+
                             <select class="select" id="subCategorySelect" disabled>
+
                                 <option value="">Chọn danh mục con</option>
+
                             </select>
+
                         </div>
+
                     </div>
+
                     <div class="filter-grid" style="grid-template-columns: 1fr 1fr 1fr 1fr; margin-top: 12px;">
+
                         <div class="filter-field">
+
                             <label>Số lượng</label>
+
                             <input class="input" id="inputStock" type="number" min="0" value="0"/>
+
                         </div>
+
                         <div class="filter-field">
+
                             <!-- Empty field for spacing -->
+
                         </div>
+
                         <div class="filter-field">
+
                             <!-- Empty field for spacing -->
+
                         </div>
+
                         <div class="filter-field">
+
                             <!-- Empty field for spacing -->
+
                         </div>
+
                     </div>
+
                     <div class="filter-field" style="margin-top:12px">
+
                         <label>Mô tả sản phẩm *</label>
+
                         <textarea class="textarea" row="5" placeholder="Mô tả..."></textarea>
+
                     </div>
+
                     <div class="upload-zone" id="productImageUpload">
+
                         <!-- Upload zone will be populated by JavaScript -->
+
                     </div>
+
                     <div class="split-right" style="margin-top:12px">
+
                         <div class="list-title">Thông tin hiển thị</div>
+
                         <div class="list-sub">Tên sản phẩm: Chưa nhập</div>
+
                         <div class="list-sub">Giá bán: Chưa nhập</div>
+
                         <div class="list-sub">Số lượng: 0</div>
+
                         <div class="list-sub">Danh mục: Chưa chọn</div>
+
                         <div class="list-sub">Hình ảnh: 0 ảnh</div>
+
                         <div style="margin-top: 12px">
+
                             <button class="btn" id="addProductBtn" style="background:#22c55e; color:#fff;border-color:#16a34a" onclick="addProduct()">
+
                                 Thêm sản phẩm
+
                             </button>
+
                             <button class="btn" style="margin-left:8px">Hủy bỏ</button>
+
                         </div>
+
                     </div>
+
                 </section>
+
             </section>
+
+
 
             <!-- ========== CATEGORIES MANAGEMENT ========= -->
+
             <section id="view-categories" data-view="categories" hidden>
+
                 <h1>Quản lý danh mục sản phẩm</h1>
+
                 <p class="muted">Quản lý danh mục chính và danh mục con của sản phẩm</p>
 
+
+
                 <div class="tabs">
+
                     <button class="tab-btn active" id="categoriesListTab">Danh sách danh mục</button>
+
                     <button class="tab-btn" id="addCategoryTab">Thêm danh mục</button>
+
                 </div>
 
+
+
                 <section class="order-stats">
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Tổng danh mục</div>
+
                         <div class="order-stat-value" id="totalCategories">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Danh mục chính</div>
+
                         <div class="order-stat-value" id="mainCategories">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Danh mục con</div>
+
                         <div class="order-stat-value" id="subCategories">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Đang hoạt động</div>
+
                         <div class="order-stat-value" id="activeCategories">0</div>
+
                     </div>
+
                 </section>
+
+
 
                 <!-- Categories List View -->
+
                 <div id="categoriesListView">
+
                     <section class="panel">
+
                         <div class="panel-title">
+
                             Danh sách danh mục
+
                             <button class="btn" id="refreshCategories" style="margin-left: auto;">
+
                                 <i class="fa-solid fa-refresh"></i> Làm mới
+
                             </button>
+
                         </div>
+
                         <div class="categories-tree" id="categoriesTree">
+
                             <!-- Categories will be loaded here -->
+
                         </div>
+
                     </section>
+
                 </div>
+
+
 
                 <!-- Add Category View -->
+
                 <div id="addCategoryView" style="display: none;">
+
                     <section class="panel">
+
                         <div class="panel-title">Thêm danh mục mới</div>
+
                         <form id="addCategoryForm">
+
                             <div class="filter-grid" style="grid-template-columns: 1fr 1fr;">
+
                                 <div class="filter-field">
+
                                     <label>Tên danh mục *</label>
+
                                     <input type="text" id="categoryName" class="input" placeholder="Nhập tên danh mục...">
+
                                 </div>
+
                                 <div class="filter-field">
+
                                     <label>Danh mục cha</label>
+
                                     <select id="parentCategory" class="select">
+
                                         <option value="">Chọn danh mục cha (để trống nếu là danh mục chính)</option>
+
                                     </select>
+
                                 </div>
+
                             </div>
+
                             <div class="filter-field" style="margin-top: 12px;">
+
                                 <label>Mô tả</label>
+
                                 <textarea id="categoryDescription" class="textarea" rows="3" placeholder="Nhập mô tả danh mục..."></textarea>
+
                             </div>
+
                             <div class="split-right" style="margin-top: 12px;">
+
                                 <button type="submit" class="btn" style="background:#22c55e; color:#fff; border-color:#16a34a">
+
                                     <i class="fa-solid fa-plus"></i> Thêm danh mục
+
                                 </button>
+
                                 <button type="button" class="btn" id="cancelAddCategory" style="margin-left: 8px;">
+
                                     <i class="fa-solid fa-times"></i> Hủy bỏ
+
                                 </button>
+
                             </div>
+
                         </form>
+
                     </section>
+
                 </div>
+
             </section>
+
+
 
             <!-- ========== feedback======== -->
+
             <section id="view-feedbacks" data-view="feedbacks" hidden>
+
                 <h1>Hỗ trợ & Khiếu nại</h1>
+
                 <div class="tabs">
+
                     <button class="tab-btn active">Tin nhắn</button>
+
                     <button class="tab-btn">Đánh giá</button>
+
                     <button class="tab-btn">Tickets</button>
+
                 </div>
 
+
+
                 <div class="split">
+
                     <section class="panel">
+
                         <div class="list"></div>
+
                     </section>
+
                     <section class="split-right">
+
                         <div class="list-title"></div>
+
                         <div class="list-sub"></div>
+
                         <div class="list-sub"></div>
+
                         <div class="list-sub"></div>
+
                     </section>
+
                 </div>
+
             </section>
+
+
 
             <!-- =========== user ========= -->
+
             <section id="view-users" data-view="users" hidden>
+
                 <h1>Quản lý người dùng</h1>
+
                 <p class="muted">Quản lý tài khoản người dùng trong hệ thống</p>
+
                 
+
                 <div class="tabs">
+
                     <button class="tab-btn active" data-tab="all">Tất cả</button>
+
                     <button class="tab-btn" data-tab="active">Đang hoạt động</button>
+
                     <button class="tab-btn" data-tab="inactive">Đã khóa</button>
+
                     <button class="tab-btn" data-tab="admin">Quản trị viên</button>
+
                 </div>
+
+
 
                 <section class="order-stats">
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Tổng người dùng</div>
+
                         <div class="order-stat-value" id="totalUsers">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Đang hoạt động</div>
+
                         <div class="order-stat-value" id="activeUsers">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Đã khóa</div>
+
                         <div class="order-stat-value" id="inactiveUsers">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Quản trị viên</div>
+
                         <div class="order-stat-value" id="adminUsers">0</div>
+
                     </div>
+
                 </section>
 
+
+
                 <div class="split">
+
                     <section class="panel">
+
                         <div class="panel-title">
+
                             Danh sách người dùng
+
                             <button class="btn" id="refreshUsers" style="margin-left: auto;">
+
                                 <i class="fa-solid fa-refresh"></i> Làm mới
+
                             </button>
+
                         </div>
+
                         <div class="users-list" id="usersList">
+
                             <!-- Users will be loaded here -->
+
                         </div>
+
                     </section>
+
                     <section class="split-right" id="userDetails">
+
                         <div class="user-details-placeholder">
+
                             <div class="placeholder-icon">
+
                                 <i class="fa-solid fa-user"></i>
+
                             </div>
+
                             <div class="placeholder-text">Chọn một người dùng để xem chi tiết</div>
+
                         </div>
+
                     </section>
+
                 </div>
+
             </section>
 
+
+
             <!-- =========== payments ========= -->
+
             <!-- =========== PAYMENT MANAGEMENT ========= -->
             <section id="view-payments" data-view="payments" hidden>
+
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                     <div>
                         <h1 style="margin:0;font-size:2rem;font-weight:700;color:#1e293b;">💰 Quản lý Thanh toán</h1>
@@ -831,6 +1283,8 @@
                     </div>
                 </div>
 
+
+
                 <!-- KPI Cards -->
                 <div class="payment-kpis" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; margin-bottom: 32px;">
                     <!-- Total Revenue -->
@@ -838,20 +1292,24 @@
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                             <i class="fa-solid fa-coins" style="font-size: 2rem; opacity: 0.9;"></i>
                             <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">Tổng</span>
-                        </div>
+                    </div>
+
                         <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 4px;">Tổng Doanh Thu</div>
                         <div id="paymentKpiTotalRevenue" style="font-size: 2rem; font-weight: 700;">0 đ</div>
                     </div>
+
 
                     <!-- Pending COD -->
                     <div class="payment-kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
                         <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
                             <i class="fa-solid fa-clock" style="font-size: 2rem; opacity: 0.9;"></i>
                             <span style="background: rgba(255,255,255,0.2); padding: 6px 12px; border-radius: 8px; font-size: 0.75rem; font-weight: 600;">COD</span>
-                        </div>
+                    </div>
+
                         <div style="font-size: 0.875rem; opacity: 0.9; margin-bottom: 4px;">Chờ Xác Nhận</div>
                         <div id="paymentKpiPendingCOD" style="font-size: 2rem; font-weight: 700;">0</div>
                     </div>
+
 
                     <!-- Confirmed Payments -->
                     <div class="payment-kpi-card" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); border-radius: 16px; padding: 24px; color: white; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
@@ -998,7 +1456,9 @@
                     </div>
                 </div>
 
-            </section>
+                </section>
+
+
 
             <!-- =========== reports ========= -->
             <!-- =========== REPORTS & ANALYTICS ========= -->
@@ -1007,7 +1467,8 @@
                     <div>
                         <h1 style="margin: 0; font-size: 2rem; font-weight: 700; color: #1e293b;">📊 Báo cáo & Thống kê</h1>
                         <p class="muted" style="margin-top: 8px;">Phân tích chi tiết và insights kinh doanh • <span id="reportsLastUpdate">Đang tải...</span></p>
-                    </div>
+                        </div>
+
                     <div style="display: flex; gap: 12px;">
                         <button id="reportsRefreshBtn" class="btn" style="background: #3b82f6; color: #fff; border-color: #2563eb;">
                             <i class="fa-solid fa-rotate"></i>
@@ -1032,10 +1493,12 @@
                         </div>
                     </article>
 
+
                     <article class="reports-kpi-card" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                         <div class="kpi-icon-modern">
                             <i class="fa-solid fa-shopping-bag"></i>
                         </div>
+
                         <div class="kpi-content">
                             <div class="kpi-label">Tổng đơn hàng</div>
                             <div class="kpi-value-modern" id="reportsTotalOrders">0</div>
@@ -1071,7 +1534,9 @@
                             <div class="kpi-value-modern" id="reportsActiveCategories">0</div>
                         </div>
                     </article>
+
                 </section>
+
 
                 <!-- Chart: Products Sold (Line Chart) -->
                 <section class="reports-chart-panel">
@@ -1092,7 +1557,9 @@
                     <div class="chart-container">
                         <canvas id="productsSoldChart"></canvas>
                     </div>
-                </section>
+            </section>
+
+
 
                 <!-- Chart: Orders (Bar Chart) -->
                 <section class="reports-chart-panel">
@@ -1103,17 +1570,21 @@
                                 Số lượng đơn hàng (Đã xác nhận)
                             </h3>
                             <p class="chart-subtitle" id="ordersSubtitle">7 ngày qua • Bao gồm: Đã xác nhận, Đang giao, Hoàn thành, Hoàn trả</p>
-                        </div>
+                    </div>
+
                         <div class="chart-filters">
                             <button class="filter-btn active" data-chart="orders" data-range="day">Ngày</button>
                             <button class="filter-btn" data-chart="orders" data-range="month">Tháng</button>
                             <button class="filter-btn" data-chart="orders" data-range="year">Năm</button>
-                        </div>
+                    </div>
+
                     </div>
                     <div class="chart-container">
                         <canvas id="ordersChart"></canvas>
                     </div>
+
                 </section>
+
 
                 <!-- NEW LAYOUT: Map bên trái, 2 Charts bên phải -->
                 <section class="reports-map-layout">
@@ -1127,7 +1598,8 @@
                                         Phân bố theo địa lý
                                     </h3>
                                     <p class="chart-subtitle">Số đơn hàng theo tỉnh thành</p>
-                                </div>
+                    </div>
+
                             </div>
                             <div id="ordersMap" class="map-container" style="height: calc(100% - 80px); border-radius: 12px; overflow: hidden; min-height: 600px;">
                                 <div class="loading-placeholder">
@@ -1182,948 +1654,1893 @@
                         </div>
                     </div>
                 </section>
+
             </section>
+
+
 
             <!-- =========== banner ========= -->
+
             <section id="view-banner" data-view="banner" hidden>
+
                 <h1>Banner</h1>
+
                 <section class="thumb-grid">
+
                     <div class="thumb"></div>
+
                     <div class="thumb"></div>
+
                     <div class="thumb"></div>
+
                     <div class="thumb"></div>
+
                 </section>
+
+
 
                 <h2 style="margin-top:20px">Promotion</h2>
+
                 <section class="panel" style="max-width: 600px;">
+
                     <div class="panel-title"><i class="fa-solid fa-gift"></i> Khuyến mại nhân dịp đại lễ 2/9</div>
+
                     <div class="list-sub">Giảm tới 29%</div>
+
                 </section>
+
             </section>
+
+
 
             <!-- =========== audit log ========= -->
+
             <section id="view-audit" data-view="audit" hidden>
+
                 <h1>Audit Log</h1>
+
                 <p class="muted">Theo dõi và quản lý nhật ký hoạt động hệ thống</p>
 
+
+
                 <!-- Audit Stats -->
+
                 <section class="order-stats">
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Tổng số log</div>
+
                         <div class="order-stat-value" id="totalAuditLogs">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Hôm nay</div>
+
                         <div class="order-stat-value" id="todayAuditLogs">0</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Hoạt động phổ biến</div>
+
                         <div class="order-stat-value" id="topAction">-</div>
+
                     </div>
+
                     <div class="order-stat">
+
                         <div class="order-stat-title">Tài nguyên phổ biến</div>
+
                         <div class="order-stat-value" id="topResource">-</div>
+
                     </div>
+
                 </section>
+
+
 
                 <!-- Filters -->
+
                 <section class="order-filter panel">
+
                     <div class="panel-title">
+
                         Bộ lọc <a class="link-reset" href="#" id="resetAuditFilters">Đặt lại</a>
+
                     </div>
+
                     <div class="filter-grid">
+
                         <div class="filter-field">
+
                             <label>Người dùng</label>
+
                             <select class="select" id="auditUserFilter">
+
                                 <option value="">Tất cả người dùng</option>
+
                             </select>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Hành động</label>
+
                             <select class="select" id="auditActionFilter">
+
                                 <option value="">Tất cả hành động</option>
+
                                 <option value="CREATE">Tạo mới</option>
+
                                 <option value="UPDATE">Cập nhật</option>
+
                                 <option value="DELETE">Xóa</option>
+
                                 <option value="LOGIN">Đăng nhập</option>
+
                                 <option value="LOGOUT">Đăng xuất</option>
+
                                 <option value="VIEW">Xem</option>
+
                             </select>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Tài nguyên</label>
+
                             <select class="select" id="auditResourceFilter">
+
                                 <option value="">Tất cả tài nguyên</option>
+
                                 <option value="USER">Người dùng</option>
+
                                 <option value="PRODUCT">Sản phẩm</option>
+
                                 <option value="ORDER">Đơn hàng</option>
+
                                 <option value="CATEGORY">Danh mục</option>
+
                                 <option value="PAYMENT">Thanh toán</option>
+
                             </select>
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Tìm kiếm</label>
+
                             <input type="text" class="input" id="auditSearchInput" placeholder="Tìm kiếm...">
+
                         </div>
+
                     </div>
+
                     <div class="filter-grid" style="margin-top: 12px;">
+
                         <div class="filter-field">
+
                             <label>Từ ngày</label>
+
                             <input type="date" class="input" id="auditStartDate">
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Đến ngày</label>
+
                             <input type="date" class="input" id="auditEndDate">
+
                         </div>
+
                         <div class="filter-field">
+
                             <label>Số lượng hiển thị</label>
+
                             <select class="select" id="auditLimitSelect">
+
                                 <option value="20">20</option>
+
                                 <option value="50">50</option>
+
                                 <option value="100">100</option>
+
                             </select>
+
                         </div>
+
                         <div class="filter-field">
+
                             <button class="btn" id="applyAuditFilters" style="background: #3b82f6; color: white; border-color: #2563eb;">
+
                                 <i class="fa-solid fa-filter"></i> Áp dụng bộ lọc
+
                             </button>
+
                         </div>
+
                     </div>
+
                 </section>
+
+
 
                 <!-- Audit Logs List -->
+
                 <section class="panel">
+
                     <div class="panel-title">
+
                         Danh sách Audit Log
+
                         <button class="btn" id="refreshAuditLogs" style="margin-left: auto;">
+
                             <i class="fa-solid fa-refresh"></i> Làm mới
+
                         </button>
+
                     </div>
+
                     <div class="audit-logs-container" id="auditLogsContainer">
+
                         <!-- Audit logs will be loaded here -->
+
                     </div>
+
                     <div class="audit-pagination" id="auditPagination">
+
                         <!-- Pagination will be loaded here -->
+
                     </div>
+
                 </section>
 
+
+
                 <!-- Audit Log Details Modal -->
+
                 <div id="auditLogDetailsModal" class="modal" style="display: none;">
+
                     <div class="modal-content">
+
                         <div class="modal-header">
+
                             <h3>Chi tiết Audit Log</h3>
+
                             <button class="modal-close" id="closeAuditDetailsModal">&times;</button>
+
                         </div>
+
                         <div class="modal-body" id="auditLogDetailsContent">
+
                             <!-- Details will be loaded here -->
+
                         </div>
+
                     </div>
+
                 </div>
+
             </section>
+
         </main>
+
     </div>
+
+
 
     <!-- Edit Product Modal -->
+
     <div id="editProductModal" class="modal" style="display: none;">
+
         <div class="modal-content">
+
             <div class="modal-header">
+
                 <h3>Chỉnh sửa sản phẩm</h3>
+
                 <button class="modal-close" id="closeEditModal">&times;</button>
+
             </div>
+
             <div class="modal-body">
+
                 <form id="editProductForm">
+
                     <div class="form-grid">
+
                         <div class="form-field">
+
                             <label>Tên sản phẩm *</label>
+
                             <input type="text" id="editProductName" class="input" placeholder="Nhập tên sản phẩm..." required>
+
                         </div>
+
                         <div class="form-field">
+
                             <label>Giá bán (VND) *</label>
+
                             <input type="number" id="editProductPrice" class="input" placeholder="Nhập giá bán..." min="0" required>
+
                         </div>
+
                         <div class="form-field">
+
                             <label>Danh mục *</label>
+
                             <select id="editMainCategory" class="select" required>
+
                                 <option value="">Chọn danh mục sản phẩm</option>
+
                             </select>
+
                         </div>
+
                         <div class="form-field">
+
                             <label>Danh mục con</label>
+
                             <select id="editSubCategory" class="select" disabled>
+
                                 <option value="">Chọn danh mục con</option>
+
                             </select>
+
                         </div>
+
                         <div class="form-field">
+
                             <label>Số lượng *</label>
+
                             <input type="number" id="editProductStock" class="input" placeholder="Nhập số lượng..." min="0" required>
+
                         </div>
+
                         <div class="form-field">
+
                             <label>Trạng thái</label>
+
                             <select id="editProductStatus" class="select">
+
                                 <option value="true">Đang bán</option>
+
                                 <option value="false">Ẩn</option>
+
                             </select>
+
                         </div>
+
                     </div>
+
                     <div class="form-field">
+
                         <label>Mô tả sản phẩm *</label>
+
                         <textarea id="editProductDescription" class="textarea" rows="4" placeholder="Nhập mô tả sản phẩm..." required></textarea>
+
                     </div>
+
                 </form>
+
             </div>
+
             <div class="modal-footer">
+
                 <button type="button" class="btn" id="cancelEdit">Hủy</button>
+
                 <button type="button" class="btn" id="saveEdit" style="background:#22c55e;color:#fff;border-color:#16a34a">Lưu thay đổi</button>
+
             </div>
+
         </div>
+
     </div>
 
 
+
+
+
     <style>
+
         .modal {
+
             position: fixed;
+
             top: 0;
+
             left: 0;
+
             width: 100%;
+
             height: 100%;
+
             background-color: rgba(0, 0, 0, 0.5);
+
             z-index: 1000;
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
         }
+
+
 
         .modal-content {
+
             background: white;
+
             border-radius: 12px;
+
             width: 90%;
+
             max-width: 600px;
+
             max-height: 90vh;
+
             overflow-y: auto;
+
             box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
         }
+
+
 
         .modal-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             padding: 20px 24px;
+
             border-bottom: 1px solid #e5e7eb;
+
         }
+
+
 
         .modal-header h3 {
+
             margin: 0;
+
             font-size: 1.25rem;
+
             font-weight: 600;
+
             color: #111827;
+
         }
+
+
 
         .modal-close {
+
             background: none;
+
             border: none;
+
             font-size: 1.5rem;
+
             cursor: pointer;
+
             color: #6b7280;
+
             padding: 0;
+
             width: 32px;
+
             height: 32px;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             border-radius: 6px;
+
         }
+
+
 
         .modal-close:hover {
+
             background-color: #f3f4f6;
+
             color: #374151;
+
         }
 
+
+
         .modal-body {
+
             padding: 24px;
+
         }
+
+
 
         .form-grid {
+
             display: grid;
+
             grid-template-columns: 1fr 1fr;
+
             gap: 16px;
+
             margin-bottom: 16px;
+
         }
+
+
 
         .form-field {
+
             display: flex;
+
             flex-direction: column;
+
         }
+
+
 
         .form-field label {
+
             font-weight: 500;
+
             color: #374151;
+
             margin-bottom: 6px;
+
             font-size: 0.875rem;
+
         }
+
+
 
         .form-field input,
+
         .form-field select,
+
         .form-field textarea {
+
             padding: 8px 12px;
+
             border: 1px solid #d1d5db;
+
             border-radius: 6px;
+
             font-size: 0.875rem;
+
             transition: border-color 0.2s;
+
         }
+
+
 
         .form-field input:focus,
+
         .form-field select:focus,
+
         .form-field textarea:focus {
+
             outline: none;
+
             border-color: #3b82f6;
+
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
         }
+
+
 
         .form-field textarea {
+
             resize: vertical;
+
             min-height: 80px;
+
         }
+
+
 
         .modal-footer {
+
             display: flex;
+
             justify-content: flex-end;
+
             gap: 12px;
+
             padding: 20px 24px;
+
             border-top: 1px solid #e5e7eb;
+
         }
+
+
 
         .modal-footer .btn {
+
             padding: 8px 16px;
+
             border-radius: 6px;
+
             font-size: 0.875rem;
+
             font-weight: 500;
+
             cursor: pointer;
+
             transition: all 0.2s;
+
         }
+
+
 
         .modal-footer .btn:not([style*="background"]) {
+
             background: #f3f4f6;
+
             color: #374151;
+
             border: 1px solid #d1d5db;
+
         }
+
+
 
         .modal-footer .btn:not([style*="background"]):hover {
+
             background: #e5e7eb;
+
         }
+
+
 
         /* Categories Tree Styles */
+
         .categories-tree {
+
             padding: 16px;
+
         }
+
+
 
         .category-item {
+
             display: flex;
+
             align-items: center;
+
             padding: 12px 16px;
+
             margin: 4px 0;
+
             background: #f9fafb;
+
             border: 1px solid #e5e7eb;
+
             border-radius: 8px;
+
             transition: all 0.2s;
+
         }
+
+
 
         .category-item:hover {
+
             background: #f3f4f6;
+
             border-color: #d1d5db;
+
         }
+
+
 
         .category-item.main-category {
+
             background: #eff6ff;
+
             border-color: #bfdbfe;
+
             font-weight: 600;
+
         }
+
+
 
         .category-item.sub-category {
+
             margin-left: 32px;
+
             background: #f0fdf4;
+
             border-color: #bbf7d0;
+
         }
+
+
 
         .category-info {
+
             flex: 1;
+
         }
+
+
 
         .category-name {
+
             font-weight: 500;
+
             color: #111827;
+
             margin-bottom: 4px;
+
         }
+
+
 
         .category-description {
+
             font-size: 0.875rem;
+
             color: #6b7280;
+
         }
+
+
 
         .category-actions {
+
             display: flex;
+
             gap: 8px;
+
         }
+
+
 
         .category-actions .btn {
+
             padding: 6px 12px;
+
             font-size: 0.75rem;
+
         }
+
+
 
         .category-children {
+
             margin-left: 16px;
+
             border-left: 2px solid #e5e7eb;
+
             padding-left: 16px;
+
         }
 
+
+
         .empty-state {
+
             text-align: center;
+
             padding: 48px 24px;
+
             color: #6b7280;
+
         }
+
+
 
         .empty-state i {
+
             font-size: 3rem;
+
             margin-bottom: 16px;
+
             color: #d1d5db;
+
         }
+
+
 
         .category-stats {
+
             display: flex;
+
             gap: 16px;
+
             margin-bottom: 24px;
+
         }
+
+
 
         .stat-item {
+
             background: #f9fafb;
+
             padding: 16px;
+
             border-radius: 8px;
+
             text-align: center;
+
             flex: 1;
+
         }
+
+
 
         .stat-value {
+
             font-size: 1.5rem;
+
             font-weight: 600;
+
             color: #111827;
+
         }
+
+
 
         .stat-label {
+
             font-size: 0.875rem;
+
             color: #6b7280;
+
             margin-top: 4px;
+
         }
 
+
+
     </style>
+
+
 
     <!-- Edit Category Modal -->
+
     <div id="editCategoryModal" class="modal" style="display: none;">
+
         <div class="modal-content">
+
             <div class="modal-header">
+
                 <h3>Chỉnh sửa danh mục</h3>
+
                 <button class="modal-close" onclick="closeEditModal()">&times;</button>
+
             </div>
+
             <form id="editCategoryForm">
+
                 <div class="form-group">
+
                     <label for="editCategoryName">Tên danh mục *</label>
+
                     <input type="text" id="editCategoryName" name="name">
+
                 </div>
+
                 <div class="form-group">
+
                     <label for="editCategoryDescription">Mô tả</label>
+
                     <textarea id="editCategoryDescription" name="description" rows="3"></textarea>
+
                 </div>
+
                 <div class="form-group">
+
                     <label for="editParentCategory">Danh mục cha</label>
+
                     <select id="editParentCategory" name="parentId">
+
                         <option value="">Chọn danh mục cha (để trống nếu là danh mục chính)</option>
+
                     </select>
+
                 </div>
+
                 <div class="form-actions">
+
                     <button type="button" class="btn btn-secondary" onclick="closeEditModal()">Hủy</button>
+
                     <button type="submit" class="btn btn-primary">Cập nhật</button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
+
+
 
     <!-- Delete Category Modal -->
+
     <div id="deleteCategoryModal" class="modal" style="display: none;">
+
         <div class="modal-content">
+
             <div class="modal-header">
+
                 <h3>Xác nhận xóa danh mục</h3>
+
                 <button class="modal-close" onclick="closeDeleteModal()">&times;</button>
+
             </div>
+
             <div class="modal-body">
+
                 <p>Bạn có chắc chắn muốn xóa danh mục <strong id="deleteCategoryName"></strong>?</p>
+
                 <p class="text-danger">Hành động này không thể hoàn tác!</p>
+
             </div>
+
             <div class="form-actions">
+
                 <button type="button" class="btn btn-secondary" onclick="closeDeleteModal()">Hủy</button>
+
                 <button type="button" class="btn btn-danger" onclick="confirmDeleteCategory()">Xóa</button>
+
             </div>
+
         </div>
+
     </div>
 
+
+
     <!-- Modal Styles -->
+
     <style>
+
         .modal {
+
             position: fixed;
+
             top: 0;
+
             left: 0;
+
             width: 100%;
+
             height: 100%;
+
             background-color: rgba(0, 0, 0, 0.5);
+
             z-index: 1000;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
         }
+
+
 
         .modal-content {
+
             background: white;
+
             border-radius: 8px;
+
             box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+
             max-width: 500px;
+
             width: 90%;
+
             max-height: 90vh;
+
             overflow-y: auto;
+
             position: relative;
+
             display: flex;
+
             flex-direction: column;
+
         }
+
+
 
         .modal-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             padding: 20px;
+
             border-bottom: 1px solid #e5e7eb;
+
         }
+
+
 
         .modal-header h3 {
+
             margin: 0;
+
             color: #111827;
+
         }
+
+
 
         .modal-close {
+
             background: none;
+
             border: none;
+
             font-size: 24px;
+
             cursor: pointer;
+
             color: #6b7280;
+
             padding: 0;
+
             width: 30px;
+
             height: 30px;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
         }
+
+
 
         .modal-close:hover {
+
             color: #374151;
+
         }
+
+
 
         .modal-body {
+
             padding: 20px;
+
             flex: 1;
+
         }
+
+
 
         .form-group {
+
             margin-bottom: 16px;
+
         }
+
+
 
         .form-group label {
+
             display: block;
+
             margin-bottom: 6px;
+
             font-weight: 500;
+
             color: #374151;
+
         }
+
+
 
         .form-group input,
+
         .form-group textarea,
+
         .form-group select {
+
             width: 100%;
+
             padding: 8px 12px;
+
             border: 1px solid #d1d5db;
+
             border-radius: 6px;
+
             font-size: 14px;
+
         }
+
+
 
         .form-group input:focus,
+
         .form-group textarea:focus,
+
         .form-group select:focus {
+
             outline: none;
+
             border-color: #3b82f6;
+
             box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+
         }
+
+
 
         .form-actions {
+
             display: flex;
+
             gap: 12px;
+
             justify-content: flex-end;
+
             padding: 20px;
+
             border-top: 1px solid #e5e7eb;
+
             margin-top: auto;
+
             flex-shrink: 0;
+
         }
+
+
 
         .btn {
+
             padding: 8px 16px;
+
             border: none;
+
             border-radius: 6px;
+
             cursor: pointer;
+
             font-size: 14px;
+
             font-weight: 500;
+
             transition: all 0.2s;
+
         }
+
+
 
         .btn-secondary {
+
             background: #f3f4f6;
+
             color: #374151;
+
         }
+
+
 
         .btn-secondary:hover {
+
             background: #e5e7eb;
+
         }
+
+
 
         .btn-primary {
+
             background: #3b82f6;
+
             color: white;
+
         }
+
+
 
         .btn-primary:hover {
+
             background: #2563eb;
+
         }
+
+
 
         .btn-danger {
+
             background: #ef4444;
+
             color: white;
+
         }
 
+
+
         .btn-danger:hover {
+
             background: #dc2626;
+
         }
+
+
 
         .text-danger {
+
             color: #ef4444;
+
             font-size: 14px;
+
             margin-top: 8px;
+
         }
+
+
 
         /* Product List Styles */
+
         .products-list {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 12px;
+
         }
+
+
 
         .product-item {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             padding: 16px;
+
             border: 1px solid #e5e7eb;
+
             border-radius: 8px;
+
             background: white;
+
             transition: all 0.2s;
+
         }
+
+
 
         .product-item:hover {
+
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+
         }
+
+
 
         .product-info h3 {
+
             margin: 0 0 8px 0;
+
             color: #111827;
+
             font-size: 16px;
+
         }
+
+
 
         .product-info p {
+
             margin: 4px 0;
+
             color: #6b7280;
+
             font-size: 14px;
+
         }
+
+
 
         .product-actions {
+
             display: flex;
+
             gap: 8px;
+
         }
 
+
+
         .btn-sm {
+
             padding: 6px 12px;
+
             font-size: 12px;
+
         }
+
+
 
         .btn-danger {
+
             background: #ef4444;
+
             color: white;
+
             border: none;
+
         }
+
+
 
         .btn-danger:hover {
+
             background: #dc2626;
+
         }
+
+
 
         .empty-state {
+
             text-align: center;
+
             color: #6b7280;
+
             padding: 40px;
+
             font-style: italic;
+
         }
+
+
 
         /* User Management Styles */
+
         .users-list {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 8px;
+
             max-height: 600px;
+
             overflow-y: auto;
+
         }
+
+
 
         .user-item {
+
             display: flex;
+
             align-items: center;
+
             padding: 12px 16px;
+
             border: 1px solid #e5e7eb;
+
             border-radius: 8px;
+
             background: white;
+
             transition: all 0.2s;
+
             cursor: pointer;
+
         }
+
+
 
         .user-item:hover {
+
             background: #f9fafb;
+
             border-color: #d1d5db;
+
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+
         }
+
+
 
         .user-item.selected {
+
             background: #eff6ff;
+
             border-color: #3b82f6;
+
         }
+
+
 
         .user-avatar {
+
             width: 40px;
+
             height: 40px;
+
             border-radius: 50%;
+
             background: #e5e7eb;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             margin-right: 12px;
+
             font-weight: 600;
+
             color: #6b7280;
+
             font-size: 14px;
+
         }
+
+
 
         .user-avatar img {
+
             width: 100%;
+
             height: 100%;
+
             border-radius: 50%;
+
             object-fit: cover;
+
         }
+
+
 
         .user-info {
+
             flex: 1;
+
             min-width: 0;
+
         }
+
+
 
         .user-name {
+
             font-weight: 600;
+
             color: #111827;
+
             margin-bottom: 4px;
+
             white-space: nowrap;
+
             overflow: hidden;
+
             text-overflow: ellipsis;
+
         }
+
+
 
         .user-email {
+
             font-size: 14px;
+
             color: #6b7280;
+
             white-space: nowrap;
+
             overflow: hidden;
+
             text-overflow: ellipsis;
+
         }
+
+
 
         .user-role {
+
             display: inline-block;
+
             padding: 2px 8px;
+
             border-radius: 12px;
+
             font-size: 12px;
+
             font-weight: 500;
+
             margin-left: 8px;
+
         }
+
+
 
         .user-role.ADMIN {
+
             background: #fef3c7;
+
             color: #92400e;
+
         }
+
+
 
         .user-role.USER {
+
             background: #dbeafe;
+
             color: #1e40af;
+
         }
+
+
 
         .user-status {
+
             display: flex;
+
             align-items: center;
+
             gap: 8px;
+
         }
+
+
 
         .status-dot {
+
             width: 8px;
+
             height: 8px;
+
             border-radius: 50%;
+
         }
+
+
 
         .status-dot.active {
+
             background: #10b981;
+
         }
+
+
 
         .status-dot.inactive {
+
             background: #ef4444;
+
         }
+
+
 
         .user-actions {
+
             display: flex;
+
             gap: 4px;
+
             margin-left: 12px;
+
         }
+
+
 
         .btn-sm {
+
             padding: 4px 8px;
+
             font-size: 12px;
+
             border-radius: 4px;
+
         }
+
+
 
         .user-details-placeholder {
+
             display: flex;
+
             flex-direction: column;
+
             align-items: center;
+
             justify-content: center;
+
             height: 300px;
+
             color: #6b7280;
+
         }
+
+
 
         .placeholder-icon {
+
             font-size: 48px;
+
             margin-bottom: 16px;
+
             color: #d1d5db;
+
         }
+
+
 
         .placeholder-text {
+
             font-size: 16px;
+
         }
+
+
 
         .user-details {
+
             padding: 20px;
+
         }
+
+
 
         .user-details-header {
+
             display: flex;
+
             align-items: center;
+
             margin-bottom: 20px;
+
             padding-bottom: 16px;
+
             border-bottom: 1px solid #e5e7eb;
+
         }
+
+
 
         .user-details-avatar {
+
             width: 60px;
+
             height: 60px;
+
             border-radius: 50%;
+
             background: #e5e7eb;
+
             display: flex;
+
             align-items: center;
+
             justify-content: center;
+
             margin-right: 16px;
+
             font-weight: 600;
+
             color: #6b7280;
+
             font-size: 24px;
+
         }
+
+
 
         .user-details-avatar img {
+
             width: 100%;
+
             height: 100%;
+
             border-radius: 50%;
+
             object-fit: cover;
+
         }
+
+
 
         .user-details-info h3 {
+
             margin: 0 0 4px 0;
+
             color: #111827;
+
             font-size: 18px;
+
         }
+
+
 
         .user-details-info p {
+
             margin: 0;
+
             color: #6b7280;
+
             font-size: 14px;
+
         }
+
+
 
         .user-details-content {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 16px;
+
         }
+
+
 
         .detail-group {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 8px;
+
         }
+
+
 
         .detail-label {
+
             font-weight: 500;
+
             color: #374151;
+
             font-size: 14px;
+
         }
+
+
 
         .detail-value {
+
             color: #6b7280;
+
             font-size: 14px;
+
         }
+
+
 
         .user-details-actions {
+
             display: flex;
+
             gap: 8px;
+
             margin-top: 20px;
+
             padding-top: 16px;
+
             border-top: 1px solid #e5e7eb;
+
         }
+
+
 
         .loading-spinner {
+
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
             padding: 40px;
+
         }
+
+
 
         .spinner {
+
             width: 32px;
+
             height: 32px;
+
             border: 3px solid #e5e7eb;
+
             border-top: 3px solid #3b82f6;
+
             border-radius: 50%;
+
             animation: spin 1s linear infinite;
+
         }
+
+
 
         @keyframes spin {
+
             0% { transform: rotate(0deg); }
+
             100% { transform: rotate(360deg); }
+
         }
+
+
 
         .empty-users {
+
             text-align: center;
+
             padding: 40px;
+
             color: #6b7280;
+
         }
+
+
 
         .empty-users i {
+
             font-size: 48px;
+
             margin-bottom: 16px;
+
             color: #d1d5db;
+
         }
+
     </style>
 
+
+
 </body>
+
+
 
 </html>
