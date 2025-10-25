@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Giới thiệu | MatFlow</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+  <link rel="stylesheet" href="../../styles/homepage.css">
+  <link rel="stylesheet" href="../../styles/about.css">
+  <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+  <script src="../../js/config.js" defer></script>
+  <script src="../../js/performance-optimizer.js" defer></script>
+  <script src="../../js/apiService.js" defer></script>
+  <script src="../../js/auth-context.js" defer></script>
+  <script src="../../js/header-avatar.js" defer></script>
+  <script src="../../js/avatar-loader.js" defer></script>
+  <script src="../../js/cartUtils.js" defer></script>
+  <script src="../../js/search.js" defer></script>
+  <script src="../../js/homepage.js" defer></script>
+  <script src="../../js/backToTop.js" defer></script>
+  <style>[hidden]{display:none!important}</style>
+</head>
+<body>
+  <div class="hp-topbar">
+    <div class="hp-topbar-inner">
+      <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+      <div class="hp-top-actions">
+        <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
+        
+        <!-- User Avatar (shown when logged in) -->
+        <div id="hpUserAvatar" class="hp-user-avatar" hidden>
+          <div class="hp-avatar-circle">
+            <span id="hpUserInitials">U</span>
+          </div>
+          <a id="hpUserName" class="hp-user-name" href="../userpage/user.html" style="text-decoration: none; color: inherit; cursor: pointer;"></a>
+        </div>
+        
+        <!-- Login/Logout Links -->
+        <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+        <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+        <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+      </div>
+    </div>
+  </div>
+
+  <header class="hp-header">
+    <div class="hp-header-container">
+      <a href="../homepage/homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
+      <div class="hp-search">
+        <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
+        <div id="searchSuggestions" class="suggestions-dropdown"></div>
+        <div id="searchResults" class="search-results"></div>
+      </div>
+      <nav class="hp-nav">
+        <a href="../homepage/homepage.html">
+          <i class="fa-solid fa-house"></i> Trang chủ</a>
+        <div class="nav-dropdown">
+          <a href="../homepage/products.html" class="nav-dropdown-toggle">
+            <i class="fa-solid fa-tag"></i> Sản Phẩm <i class="fa-solid fa-chevron-down"></i>
+          </a>
+          <div class="nav-dropdown-menu" id="productsDropdown">
+            <!-- Categories will be loaded here -->
+          </div>
+        </div>
+        <a href="../homepage/contact.html">
+          <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
+      </nav>
+      <div class="hp-user">
+        <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+      </div>
+    </div>
+  </header>
+  <section class="about-hero">
+     <img src="../../assets/Icon MatFlow.png" alt="MatFlow logo" class="hero-logo">
+    <h1></h1>
+    <p class="brand-tagline">Bạn đồng hành của các công trình</p>
+  </section>
+
+  <main class="about-wrap">
+
+  <!-- Tổng quan ngắn gọn + USP -->
+  <section class="about-section">
+    <div class="intro-card">
+      <h2>MatFlow là ai?</h2>
+      <p>
+        MatFlow cung cấp vật tư xây dựng cho công trình dân dụng & công nghiệp:
+        từ phần thô (xi măng, thép, gạch, đá) đến hoàn thiện (gạch men, thiết bị vệ sinh) và
+        vật tư phụ trợ. Chúng tôi cam kết <strong>đúng chất lượng — đúng tiến độ — đúng chi phí</strong>.
+      </p>
+
+      <ul class="usp">
+        <li><i class="fa-solid fa-truck-fast"></i> Giao nhanh 24–48h nội thành</li>
+        <li><i class="fa-solid fa-shield-heart"></i> Hàng chính hãng, CO/CQ</li>
+        <li><i class="fa-solid fa-tags"></i> Giá tốt theo hạng dự án</li>
+        <li><i class="fa-solid fa-headset"></i> Tư vấn kỹ thuật 24/7</li>
+      </ul>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="num">250+</div>
+        <div class="label">Công trình đã cấp</div>
+      </div>
+      <div class="stat">
+        <div class="num">5000+</div>
+        <div class="label">Mã hàng sẵn kho</div>
+      </div>
+      <div class="stat">
+        <div class="num">98%</div>
+        <div class="label">Giao đúng hẹn</div>
+      </div>
+      <div class="stat">
+        <div class="num">4.9/5</div>
+        <div class="label">Đánh giá khách hàng</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Dịch vụ / Hạng mục chính -->
+  <section class="about-section">
+    <h2>Dịch vụ trọng tâm</h2>
+    <div class="service-grid">
+      <article class="service">
+        <i class="fa-solid fa-industry"></i>
+        <h3>Vật tư phần thô</h3>
+        <p>Xi măng, cát đá, thép hình – thép cây, gạch xây… chuẩn nhà máy, giao bãi.</p>
+      </article>
+      <article class="service">
+        <i class="fa-solid fa-bath"></i>
+        <h3>Vật tư hoàn thiện</h3>
+        <p>Gạch ốp lát, sơn – chống thấm, thiết bị vệ sinh, phụ kiện đồng bộ.</p>
+      </article>
+      <article class="service">
+        <i class="fa-solid fa-screwdriver-wrench"></i>
+        <h3>Phụ trợ & tiêu hao</h3>
+        <p>Đá cắt, bu lông ốc vít, silicon, keo dán – đáp ứng nhanh theo khối lượng.</p>
+      </article>
+    </div>
+  </section>
+
+  
+
+  <section class="about-section">
+    <h2>Quy trình thực hiện</h2>
+    <ol class="steps">
+      <li><span>1</span> Tiếp nhận danh mục vật tư & tiến độ</li>
+      <li><span>2</span> Báo giá – chốt mẫu & điều khoản</li>
+      <li><span>3</span> Chuẩn bị hàng – kiểm CO/CQ</li>
+      <li><span>4</span> Giao bãi/điểm tập kết – nghiệm thu</li>
+      <li><span>5</span> Hậu mãi – cấp bù, đổi trả theo thỏa thuận</li>
+    </ol>
+  </section>
+
+  <!-- Chứng nhận / Cam kết -->
+  <section class="about-section certs">
+    <div class="badge"><i class="fa-solid fa-certificate"></i> ONLINE.GOV.VN</div>
+    <div class="badge"><i class="fa-solid fa-shield"></i> Bảo hiểm vận chuyển</div>
+    <div class="badge"><i class="fa-solid fa-file-shield"></i> CO/CQ theo lô</div>
+    <div class="badge"><i class="fa-solid fa-clipboard-check"></i> SLA giao nhận rõ ràng</div>
+  </section>
+
+  <!-- FAQ ngắn -->
+  <section class="about-section">
+    <h2>Câu hỏi thường gặp</h2>
+    <details class="faq">
+      <summary>Thời gian giao hàng bao lâu?</summary>
+      <p>Nội thành: 24–48h; liên tỉnh: 2–5 ngày tùy khối lượng & lịch xe.</p>
+    </details>
+    <details class="faq">
+      <summary>MatFlow có xuất hóa đơn & chứng chỉ hàng hóa?</summary>
+      <p>Có đầy đủ hóa đơn VAT, CO/CQ theo từng lô và phiếu xuất kho.</p>
+    </details>
+    <details class="faq">
+      <summary>Chính sách đổi trả thế nào?</summary>
+      <p>Đổi trả theo thỏa thuận hợp đồng; hàng lỗi do vận chuyển sẽ được cấp lại.</p>
+    </details>
+  </section>
+
+  <!-- CTA liên hệ -->
+  <section class="about-section cta">
+    <h2>Nhận báo giá hôm nay</h2>
+    <p class="muted">Gửi danh mục vật tư hoặc gọi hotline – chúng tôi phản hồi trong 30 phút làm việc.</p>
+    <div class="cta-actions">
+      <a class="btn-primary" href="tel:0933676123"><i class="fa-solid fa-phone"></i> 0933 676 123</a>
+      <a class="btn-ghost" href="mailto:matflowcontact@gmail.com"><i class="fa-solid fa-envelope"></i> matflowcontact@gmail.com</a>
+    </div>
+  </section>
+
+</main>
+
+
+  <footer class="hp-footer">
+    <div class="hp-footer-container">
+      <div class="footer-main">
+        <div class="footer-section">
+          <h4>VỀ CHÚNG TÔI</h4>
+          <ul>
+            <li><a href="gioi-thieu.html">Giới thiệu</a></li>
+            <li><a href="../homepage/contact.html">Liên hệ</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>TƯ VẤN MUA HÀNG</h4>
+          <ul>
+            <li><a href="../homepage/homepage.html">Trang chủ</a></li>
+            <li><a href="../homepage/products.html">Sản phẩm</a></li>
+            <li><a href="gioi-thieu.html">Giới thiệu</a></li>
+            <li><a href="../homepage/products.html">Tin tức</a></li>
+            <li><a href="../homepage/contact.html">Liên hệ</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+          <ul>
+            <li><a href="dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
+            <li><a href="chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+            <li><a href="chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>CHÍNH SÁCH</h4>
+          <ul>
+            <li><a href="chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
+            <li><a href="chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
+            <li><a href="chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+            <li><a href="chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
+          </ul>
+        </div>
+        <div class="footer-section">
+          <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+          <div class="social-links">
+            <a href="https://www.facebook.com/ngo.tam.729267" target="_blank" class="social-link facebook"><i class="fa-brands fa-facebook-f"></i></a>
+            <a href="https://www.instagram.com/jawinsss/" target="_blank" class="social-link instagram"><i class="fa-brands fa-instagram"></i></a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-bottom">
+        <div class="footer-bottom-section">
+          <h4>HÌNH THỨC THANH TOÁN</h4>
+          <div class="payment-methods">
+            <div class="payment-method">ZALOPAY</div>
+            <div class="payment-method">MOMO</div>
+          </div>
+        </div>
+        <div class="footer-bottom-section">
+          <h4>ĐƯỢC CHỨNG NHẬN</h4>
+          <div class="certifications">
+            <div class="certification">Duy Tan University</div>
+            <div class="certification">C1SE.51</div>
+          </div>
+        </div>
+      </div>
+      
+      <div class="footer-copyright">
+        Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+      </div>
+    </div>
+  </footer>
+
+  <!-- Back to Top Button -->
+  <button id="backToTop" class="back-to-top" title="Lên đầu trang">
+    <i class="fa-solid fa-chevron-up"></i>
+  </button>
+
+</body>
+
+</html>
