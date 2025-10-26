@@ -829,6 +829,9 @@ body {
   cursor: pointer;
   font-weight: 700;
   transition: transform 0.12s ease, box-shadow 0.2s ease;
+  text-decoration: none;
+  color: inherit;
+  font-size: 12px;
 }
 
 .hp-btn.primary {
