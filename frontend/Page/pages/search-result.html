@@ -60,7 +60,7 @@
                     <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
             </nav>
             <div class="hp-user">
-                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
+                <a id="hpCartBtn"href="../homepage/cart.html" class="hp-btn small" role="button" title="Giỏ hàng">🛒<span id="hpCartCount">0</span></a> <!--sửa phần này-->
             </div>
         </div>
     </header>
@@ -117,239 +117,235 @@
         </div>
     </div>
 
-    <script>
-        class SearchResultPage {
-            constructor() {
-                this.products = [];
-                this.filteredProducts = [];
-                this.currentFilter = 'all';
-                this.searchQuery = '';
-                this.init();
-            }
+        <script>
+    /** SearchResultPage — hiển thị đúng sản phẩm theo chữ bạn đã chọn ở ô tìm kiếm
+     *  Quy tắc: so khớp KHÔNG DẤU + viết thường, "tên sản phẩm" PHẢI chứa từ khóa q
+     *  => Click "Đinh" -> chỉ ra các sản phẩm có tên chứa "đinh"
+     */
+    class SearchResultPage {
+    constructor() {
+        this.products = [];
+        this.filtered = [];
+        this.currentFilter = 'all';
+        this.q = '';
+        document.addEventListener('DOMContentLoaded', () => this.init());
+    }
 
-            init() {
-                this.getSearchQuery();
-                this.setupEventListeners();
-                this.performSearch();
-            }
+    // ===== Utils =====
+    normalize(text = '') {
+        try {
+        return text
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd').replace(/Đ/g, 'D')
+            .toLowerCase()
+            .trim();
+        } catch {
+        return (text || '').toLowerCase().trim();
+        }
+    }
+    vnd(v) {
+        return new Intl.NumberFormat('vi-VN', {
+        style: 'currency', currency: 'VND', maximumFractionDigits: 0
+        }).format(v || 0);
+    }
 
-            getSearchQuery() {
-                const urlParams = new URLSearchParams(window.location.search);
-                this.searchQuery = urlParams.get('q') || '';
-                document.getElementById('searchQueryText').textContent = this.searchQuery;
-            }
+    // ===== Lifecycle =====
+    init() {
+        this.readQuery();
+        this.bindFilters();
+        this.loadAndFilter();
+    }
 
-            setupEventListeners() {
-                // Filter buttons
-                document.querySelectorAll('.filter-btn').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-                        e.target.classList.add('active');
-                        this.currentFilter = e.target.dataset.filter;
-                        this.applyFilter();
-                    });
-                });
+    readQuery() {
+        const p = new URLSearchParams(location.search);
+        this.q = p.get('q') || '';
+        const el = document.getElementById('searchQueryText');
+        if (el) el.textContent = this.q;
+    }
 
-                // Suggestion tags
-                document.querySelectorAll('.suggestion-tag').forEach(tag => {
-                    tag.addEventListener('click', (e) => {
-                        const suggestion = e.target.dataset.suggestion;
-                        window.location.href = `search-result.html?q=${encodeURIComponent(suggestion)}`;
-                    });
-                });
-            }
+    bindFilters() {
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', e => {
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            e.currentTarget.classList.add('active');
+            this.currentFilter = e.currentTarget.dataset.filter || 'all';
+            this.applyFilter();
+        });
+        });
 
-            async performSearch() {
-                if (!this.searchQuery) {
-                    this.showNoResults();
-                    return;
-                }
+        document.querySelectorAll('.suggestion-tag').forEach(tag => {
+        tag.addEventListener('click', e => {
+            const suggestion = e.currentTarget.dataset.suggestion || '';
+            location.href = `search-result.html?q=${encodeURIComponent(suggestion)}`;
+        });
+        });
+    }
 
-                try {
-                    // Load all products
-                    const response = await window.apiService.get('/products?take=1000');
-                    if (response?.success) {
-                        this.products = Array.isArray(response.data) ? response.data : response.data?.items || [];
-                        this.filterProducts();
-                    } else {
-                        this.showNoResults();
-                    }
-                } catch (error) {
-                    console.error('Error searching products:', error);
-                    this.showNoResults();
-                }
-            }
+    async loadAndFilter() {
+        if (!this.q) return this.showNoResults();
+        try {
+        // Lấy "tất cả" sản phẩm 1 lần. Tùy backend, bạn có thể tăng/giảm take.
+        const res = await window.apiService.get('/products?take=10000');
+        const data = res?.data?.data ?? res?.data ?? [];
+        this.products = Array.isArray(data) ? data : [];
+        this.filterByQuery();
+        } catch (err) {
+        console.error('search-result load error:', err);
+        this.showNoResults();
+        }
+    }
 
-            filterProducts() {
-                if (!this.searchQuery) {
-                    this.filteredProducts = [];
-                    this.displayResults();
-                    return;
-                }
+    // ===== Filtering =====
+    filterByQuery() {
+        const qNorm = this.normalize(this.q);
+        // Chỉ khớp theo TÊN sản phẩm chứa từ khóa (đã bỏ dấu)
+        this.filtered = this.products.filter(p => {
+        const name = this.normalize(p?.name || '');
+        return qNorm && name.includes(qNorm);
+        });
 
-                // Use the smart search functionality
-                const smartSearch = new SmartSearch();
-                this.filteredProducts = [];
-
-                for (const product of this.products) {
-                    const match = smartSearch.matchesProduct(product, this.searchQuery);
-                    if (match.score > 0.5) {
-                        this.filteredProducts.push({
-                            ...product,
-                            matchScore: match.score,
-                            matchType: match.type
-                        });
-                    }
-                }
-
-                // Sort by relevance
-                this.filteredProducts.sort((a, b) => {
-                    if (a.matchType === 'exact' && b.matchType !== 'exact') return -1;
-                    if (b.matchType === 'exact' && a.matchType !== 'exact') return 1;
-                    return b.matchScore - a.matchScore;
-                });
-
-                this.applyFilter();
-            }
-
-            applyFilter() {
-                let sortedProducts = [...this.filteredProducts];
-
-                switch (this.currentFilter) {
-                    case 'price-low':
-                        sortedProducts.sort((a, b) => a.price - b.price);
-                        break;
-                    case 'price-high':
-                        sortedProducts.sort((a, b) => b.price - a.price);
-                        break;
-                    case 'name-asc':
-                        sortedProducts.sort((a, b) => a.name.localeCompare(b.name, 'vi'));
-                        break;
-                    case 'name-desc':
-                        sortedProducts.sort((a, b) => b.name.localeCompare(a.name, 'vi'));
-                        break;
-                    default:
-                        // Keep relevance sorting
-                        break;
-                }
-
-                this.displayResults(sortedProducts);
-            }
-
-            displayResults(products = this.filteredProducts) {
-                const container = document.getElementById('searchResultsContainer');
-                const noResultsContainer = document.getElementById('noResultsContainer');
-                const searchCount = document.getElementById('searchCount');
-
-                searchCount.textContent = products.length;
-
-                if (products.length === 0) {
-                    container.style.display = 'none';
-                    noResultsContainer.style.display = 'block';
-                    return;
-                }
-
-                container.style.display = 'block';
-                noResultsContainer.style.display = 'none';
-
-                container.innerHTML = `
-                    <div class="search-results-grid">
-                        ${products.map(product => this.createProductCard(product)).join('')}
-                    </div>
-                `;
-
-                // Add click handlers
-                container.querySelectorAll('.search-product-card').forEach(card => {
-                    card.addEventListener('click', () => {
-                        const productId = card.dataset.productId;
-                        this.openProductDetail(productId);
-                    });
-                });
-            }
-
-            createProductCard(product) {
-                const image = product.images?.[0]?.url || 'https://via.placeholder.com/280x200?text=MatFlow';
-                const price = this.formatVND(product.price);
-                const highlightedName = this.highlightSearchTerm(product.name, this.searchQuery);
-
-                return `
-                    <div class="search-product-card" data-product-id="${product.id}">
-                        <img src="${image}" alt="${product.name}" class="search-product-image" 
-                             onerror="this.src='https://via.placeholder.com/280x200?text=MatFlow'">
-                        <div class="search-product-name">${highlightedName}</div>
-                        <div class="search-product-price">${price}</div>
-                        <div class="search-product-category">${product.category?.name || ''}</div>
-                        <div class="search-product-actions">
-                            <button class="search-btn primary" onclick="event.stopPropagation(); this.addToCart('${product.id}')">
-                                <i class="fa-solid fa-cart-plus"></i> Thêm giỏ
-                            </button>
-                            <button class="search-btn" onclick="event.stopPropagation(); this.viewDetail('${product.id}')">
-                                <i class="fa-solid fa-eye"></i> Xem
-                            </button>
-                        </div>
-                    </div>
-                `;
-            }
-
-            highlightSearchTerm(text, query) {
-                if (!query) return text;
-                
-                const smartSearch = new SmartSearch();
-                return smartSearch.highlightMatch(text, query);
-            }
-
-            openProductDetail(productId) {
-                // Navigate to homepage with product detail hash
-                window.location.href = `../homepage/homepage.html#product-detail&id=${productId}`;
-            }
-
-            showNoResults() {
-                const container = document.getElementById('searchResultsContainer');
-                const noResultsContainer = document.getElementById('noResultsContainer');
-                const searchCount = document.getElementById('searchCount');
-
-                searchCount.textContent = '0';
-                container.style.display = 'none';
-                noResultsContainer.style.display = 'block';
-            }
-
-            formatVND(amount) {
-                return new Intl.NumberFormat('vi-VN', {
-                    style: 'currency',
-                    currency: 'VND',
-                    maximumFractionDigits: 0
-                }).format(amount);
-            }
+        // Nếu rỗng: nới nhẹ -> khớp category (tùy ý, có thể bỏ nếu bạn muốn cực chặt)
+        if (!this.filtered.length) {
+        this.filtered = this.products.filter(p => {
+            const cate = this.normalize(p?.category?.name || '');
+            return qNorm && cate.includes(qNorm);
+        });
         }
 
-        // Global functions for button actions
-        window.addToCart = function(productId) {
-            // Add to cart functionality using CartUtils
-            CartUtils.addToCart(productId, 1);
-            
-            // Show success message
-            const btn = event.target.closest('.search-btn');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
-            btn.style.background = '#10b981';
-            
-            setTimeout(() => {
-                btn.innerHTML = originalText;
-                btn.style.background = '';
-            }, 2000);
-        };
+        this.applyFilter();
+    }
 
-        window.viewDetail = function(productId) {
-            window.location.href = `../homepage/homepage.html#product-detail&id=${productId}`;
-        };
+    applyFilter() {
+        let items = this.filtered.slice();
+        switch (this.currentFilter) {
+        case 'price-low':  items.sort((a,b)=>(a.price||0)-(b.price||0)); break;
+        case 'price-high': items.sort((a,b)=>(b.price||0)-(a.price||0)); break;
+        case 'name-asc':   items.sort((a,b)=>(a.name||'').localeCompare(b.name||'','vi')); break;
+        case 'name-desc':  items.sort((a,b)=>(b.name||'').localeCompare(a.name||'','vi')); break;
+        default: /* giữ nguyên theo thứ tự hiện có */ break;
+        }
+        this.render(items);
+    }
 
-        // Initialize when DOM is loaded
-        document.addEventListener('DOMContentLoaded', () => {
-            new SearchResultPage();
+    // ===== Render =====
+    render(items) {
+    const wrap  = document.getElementById('searchResultsContainer');
+    const empty = document.getElementById('noResultsContainer');
+    const count = document.getElementById('searchCount');
+    if (!wrap || !empty || !count) return;
+
+    count.textContent = items.length;
+
+    if (!items.length) {
+        wrap.style.display = 'none';
+        empty.style.display = 'block';
+        return;
+    }
+    wrap.style.display = 'block';
+    empty.style.display = 'none';
+
+    wrap.innerHTML = `
+        <div class="search-results-grid">
+        ${items.map(p => this.card(p)).join('')}
+        </div>
+    `;
+
+    // Nút Xem
+    wrap.querySelectorAll('[data-view]').forEach(btn => {
+        btn.addEventListener('click', e => {
+        e.stopPropagation();
+        const id = btn.getAttribute('data-view');
+        location.href = `../homepage/product-detail.html?id=${encodeURIComponent(id)}`;
         });
-    </script>
-    </main>
+    });
 
+    // Nút Thêm giỏ
+    wrap.querySelectorAll('[data-add]').forEach(btn => {
+        btn.addEventListener('click', e => {
+        e.stopPropagation();
+        CartUtils.addToCart(btn.getAttribute('data-add'), 1);
+        const txt = btn.innerHTML;
+        btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
+        btn.style.background = '#10b981';
+        setTimeout(()=>{ btn.innerHTML = txt; btn.style.background=''; }, 1200);
+        });
+    });
+
+    // Toàn bộ CARD có thể click/Enter/Space để mở chi tiết
+    if (this._cardClick) wrap.removeEventListener('click', this._cardClick);
+    if (this._cardKey)   wrap.removeEventListener('keydown', this._cardKey);
+
+    this._cardClick = (e) => {
+        // Bỏ qua khi click vào vùng nút hành động
+        if (e.target.closest('.search-product-actions')) return;
+        const card = e.target.closest('.search-product-card');
+        if (!card) return;
+        const id = card.dataset.id;
+        location.href = `../homepage/product-detail.html?id=${encodeURIComponent(id)}`;
+    };
+    this._cardKey = (e) => {
+        const card = e.target.closest('.search-product-card');
+        if (!card) return;
+        if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        const id = card.dataset.id;
+        location.href = `../homepage/product-detail.html?id=${encodeURIComponent(id)}`;
+        }
+    };
+
+    wrap.addEventListener('click', this._cardClick);
+    wrap.addEventListener('keydown', this._cardKey);
+    }
+
+    card(p) {
+    const img = p.images?.[0]?.url || 'https://via.placeholder.com/280x200?text=MatFlow';
+    return `
+        <div class="search-product-card" data-id="${p.id}" role="button" tabindex="0" aria-label="${(p.name||'')}">
+        <img class="search-product-image" src="${img}" alt="${(p.name||'')}"
+            onerror="this.src='https://via.placeholder.com/280x200?text=MatFlow'">
+        <div class="search-product-name">${p.name || ''}</div>
+        <div class="search-product-price">${this.vnd(p.price)}</div>
+        <div class="search-product-category">${p.category?.name || ''}</div>
+        <div class="search-product-actions">
+            <button class="search-btn primary" data-add="${p.id}">
+            <i class="fa-solid fa-cart-plus"></i> Thêm giỏ
+            </button>
+            <button class="search-btn" data-view="${p.id}">
+            <i class="fa-solid fa-eye"></i> Xem
+            </button>
+        </div>
+        </div>`;
+    }
+
+    showNoResults() {
+        const wrap  = document.getElementById('searchResultsContainer');
+        const empty = document.getElementById('noResultsContainer');
+        const count = document.getElementById('searchCount');
+        if (count) count.textContent = '0';
+        if (wrap)  wrap.style.display = 'none';
+        if (empty) empty.style.display = 'block';
+    }
+    }
+
+    // Helpers cho nút trong markup (nếu bạn vẫn dùng)
+    window.addToCart = function(productId, event) {
+    CartUtils.addToCart(productId, 1);
+    const btn = event.target.closest('.search-btn');
+    const old = btn.innerHTML;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> Đã thêm';
+    btn.style.background = '#10b981';
+    setTimeout(()=>{ btn.innerHTML = old; btn.style.background=''; }, 1500);
+    };
+    window.viewDetail = function(productId) {
+    location.href = `../homepage/product-detail.html?id=${encodeURIComponent(productId)}`;
+    };
+
+    // Khởi tạo
+    new SearchResultPage();
+    </script>
+
+    </main>
     <footer class="hp-footer">
         <div class="hp-footer-container">
             <div class="footer-main">
@@ -418,70 +414,5 @@
             </div>
         </div>
     </footer>
-
-    <script>
-        // User session management
-        document.addEventListener('DOMContentLoaded', () => {
-            const userNameEl = document.getElementById('hpUserName');
-            const loginLink = document.getElementById('hpLoginLink');
-            const logoutBtn = document.getElementById('hpLogoutBtn');
-            const adminLink = document.getElementById('hpAdminLink');
-            const cartBtn = document.getElementById('hpCartBtn');
-            const cartCount = document.getElementById('hpCartCount');
-            // Cart is now managed by CartUtils
-
-            // User session UI
-            async function syncUserUI(){
-                let user = null;
-                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(_) {}
-                const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-                if(!user && token){
-                    try {
-                        const res = await window.apiService.get('/users/profile');
-                        if(res?.success){ user = res.data; localStorage.setItem('user', JSON.stringify(user)); }
-                    } catch(e) {}
-                }
-                if(user){
-                    userNameEl.textContent = user.fullName || user.username || '';
-                    loginLink.setAttribute('hidden','');
-                    logoutBtn.removeAttribute('hidden');
-                    if((user.role||'').toUpperCase() === 'ADMIN') adminLink.removeAttribute('hidden');
-                } else {
-                    userNameEl.textContent = '';
-                    logoutBtn.setAttribute('hidden','');
-                    adminLink.setAttribute('hidden','');
-                    loginLink.removeAttribute('hidden');
-                }
-            }
-
-            if(logoutBtn){
-                logoutBtn.addEventListener('click', ()=>{
-                    try {
-                        // Clear all authentication data
-                        ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
-                            localStorage.removeItem(k); 
-                            sessionStorage.removeItem(k);
-                        });
-                    } catch(_){}
-                    // Refresh current page
-                    window.location.reload();
-                });
-            }
-
-            // Cart count is now handled by CartUtils
-            
-            cartBtn && cartBtn.addEventListener('click', ()=>{
-                window.location.href = '../homepage/cart.html';
-            });
-
-            syncUserUI();
-        });
-    </script>
-
-    <!-- Back to Top Button -->
-    <button id="backToTop" class="back-to-top" title="Lên đầu trang">
-        <i class="fa-solid fa-chevron-up"></i>
-    </button>
-    <script src="../../js/backToTop.js" defer></script>
 </body>
 </html>
