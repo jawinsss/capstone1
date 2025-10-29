@@ -165,6 +165,18 @@ async function updateProfileUI(user) {
     }
     
     // Update address data for search dropdowns
+    console.log('📍 Updating address dropdowns with user data:', {
+        province: user.province,
+        provinceName: user.provinceName,
+        ward: user.ward,
+        wardName: user.wardName,
+        street: user.street,
+        dropdownsExist: {
+            province: !!window.provinceDropdown,
+            ward: !!window.wardDropdown
+        }
+    });
+    
     if (user.province || user.provinceName) {
         // Get province name if not already available
         let provinceName = user.provinceName;
@@ -172,27 +184,20 @@ async function updateProfileUI(user) {
             provinceName = await userAPI.getProvinceName(user.province);
         }
         
-        // Set province data for search dropdown
-        if (window.selectedProvince) {
-            // Update existing selected province
-            window.selectedProvince = {
-                code: user.province,
-                name: provinceName || user.province,
-                name_with_type: provinceName || user.province
-            };
-        } else {
-            // Create new province data
-            window.selectedProvince = {
-                code: user.province,
-                name: provinceName || user.province,
-                name_with_type: provinceName || user.province
-            };
-        }
+        // Set province data globally
+        window.selectedProvince = {
+            code: user.province,
+            name: provinceName || user.province,
+            name_with_type: provinceName || user.province
+        };
         
         // Update province dropdown display
         const provinceDropdown = window.provinceDropdown;
         if (provinceDropdown) {
             provinceDropdown.setValue(provinceName || user.province);
+            console.log('✅ Province dropdown updated:', window.selectedProvince);
+        } else {
+            console.warn('⚠️ Province dropdown not ready yet');
         }
     }
     
@@ -203,35 +208,33 @@ async function updateProfileUI(user) {
             wardName = await userAPI.getWardName(user.ward, user.province);
         }
         
-        // Set ward data for search dropdown
-        if (window.selectedWard) {
-            // Update existing selected ward
-            window.selectedWard = {
-                code: user.ward,
-                id: user.ward,
-                name: wardName || user.ward,
-                name_with_type: wardName || user.ward
-            };
-        } else {
-            // Create new ward data
-            window.selectedWard = {
-                code: user.ward,
-                id: user.ward,
-                name: wardName || user.ward,
-                name_with_type: wardName || user.ward
-            };
-        }
+        // Set ward data globally
+        window.selectedWard = {
+            code: user.ward,
+            id: user.ward,
+            name: wardName || user.ward,
+            name_with_type: wardName || user.ward,
+            parent_code: user.district || user.province
+        };
         
-        // Update ward dropdown display
+        // Update ward dropdown display and API URL
         const wardDropdown = window.wardDropdown;
-        if (wardDropdown) {
+        if (wardDropdown && user.province) {
+            // Update ward API URL to fetch wards for the selected province
+            wardDropdown.options.apiUrl = `http://localhost:3000/locations/wards/${user.province}`;
             wardDropdown.setValue(wardName || user.ward);
+            console.log('✅ Ward dropdown updated:', window.selectedWard);
+        } else {
+            console.warn('⚠️ Ward dropdown not ready yet or no province');
         }
     }
     
     if (user.street) {
         const streetInput = document.getElementById('addressStreet');
-        if (streetInput) streetInput.value = user.street;
+        if (streetInput) {
+            streetInput.value = user.street;
+            console.log('✅ Street address updated:', user.street);
+        }
     }
     
     if (user.gender) {
@@ -1370,22 +1373,50 @@ document.querySelectorAll(".nav-item").forEach((item) => {
     // Show loading state
     showLoadingState();
     
-    // Load all data from APIs
+    // Wait for dropdowns to be initialized (they're created in another DOMContentLoaded listener)
+    // Set a flag to help coordinate
+    window.dropdownsReady = false;
+    
+    // Load notifications first (doesn't depend on dropdowns)
     try {
-      await Promise.all([
-        loadUserProfile(),
-        loadNotifications()
-      ]);
-      
-      // Check if on orders tab and init orders system
-      const activeSection = document.querySelector('.nav-item.active');
-      if (activeSection && activeSection.getAttribute('data-section') === 'orders') {
-        await initUserOrdersSystem();
-      }
+      await loadNotifications();
+      console.log('✅ Notifications loaded');
     } catch (error) {
-      console.error('Error loading initial data:', error);
-      showModal('Lỗi', 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng tải lại trang.', null, null);
+      console.error('Error loading notifications:', error);
     }
+    
+    // Wait for dropdowns to be ready, then load profile
+    const waitForDropdowns = setInterval(async () => {
+      if (window.dropdownsReady) {
+        clearInterval(waitForDropdowns);
+        try {
+          await loadUserProfile();
+          console.log('✅ User profile loaded successfully');
+          
+          // Check if on orders tab and init orders system
+          const activeSection = document.querySelector('.nav-item.active');
+          if (activeSection && activeSection.getAttribute('data-section') === 'orders') {
+            await initUserOrdersSystem();
+          }
+        } catch (error) {
+          console.error('Error loading profile data:', error);
+          showModal('Lỗi', 'Có lỗi xảy ra khi tải dữ liệu. Vui lòng tải lại trang.', null, null);
+        }
+      }
+    }, 50); // Check every 50ms
+    
+    // Fallback: if dropdowns not ready after 3 seconds, load profile anyway
+    setTimeout(async () => {
+      if (!window.dropdownsReady) {
+        clearInterval(waitForDropdowns);
+        console.warn('⚠️ Dropdowns not ready, loading profile anyway');
+        try {
+          await loadUserProfile();
+        } catch (error) {
+          console.error('Error loading profile data:', error);
+        }
+      }
+    }, 3000);
     
     // Set initial username in sidebar from profile
     const fullNameInput = document.getElementById("fullName")
@@ -1752,38 +1783,42 @@ document.querySelectorAll(".nav-item").forEach((item) => {
 
     // Initialize province search dropdown
     const provinceDropdown = new SearchDropdown(provinceContainer, {
-      placeholder: 'Tìm kiếm tỉnh/thành phố...',
+      placeholder: 'Chọn tỉnh/thành phố...',
       apiUrl: 'http://localhost:3000/locations/provinces',
-      limit: 5,
+      limit: 999, // Load all provinces at once
+      showLoadMore: false, // Disable load more button
       onSelect: (province) => {
+        console.log('🏙️ Province selected:', province);
         selectedProvince = province
         window.selectedProvince = province // Store globally for saveChanges
         selectedWard = null
         window.selectedWard = null
         wardDropdown.clearSearch()
         updateCombinedAddress()
-        console.log('Selected province:', province)
       }
     })
     
     // Store dropdown references globally
     window.provinceDropdown = provinceDropdown
+    console.log('✅ Province dropdown created');
 
     // Initialize ward search dropdown (will be updated when province is selected)
     const wardDropdown = new SearchDropdown(wardContainer, {
-      placeholder: 'Vui lòng chọn tỉnh/thành phố trước...',
+      placeholder: 'Chọn phường/xã...',
       apiUrl: '', // Will be set when province is selected
-      limit: 5,
+      limit: 999, // Load all wards at once
+      showLoadMore: false, // Disable load more button
       onSelect: (ward) => {
+        console.log('🏘️ Ward selected:', ward);
         selectedWard = ward
         window.selectedWard = ward // Store globally for saveChanges
         updateCombinedAddress()
-        console.log('Selected ward:', ward)
       }
     })
     
     // Store dropdown references globally
     window.wardDropdown = wardDropdown
+    console.log('✅ Ward dropdown created');
 
     // Update ward dropdown when province changes
     provinceDropdown.options.onSelect = (province) => {
@@ -1813,22 +1848,10 @@ document.querySelectorAll(".nav-item").forEach((item) => {
         window.wardDropdown.disable();
       }
       
-      // Populate with existing data if available
-      if (window.selectedProvince) {
-        const provinceName = window.selectedProvince.name_with_type || window.selectedProvince.name;
-        provinceDropdown.setValue(provinceName);
-        // Update ward dropdown URL
-        wardDropdown.options.apiUrl = `http://localhost:3000/locations/wards/${window.selectedProvince.code}`;
-        wardDropdown.loadInitialData();
-      }
-      
-      if (window.selectedWard) {
-        const wardName = window.selectedWard.name_with_type || window.selectedWard.name;
-        wardDropdown.setValue(wardName);
-      }
-      
-      console.log('✅ Address dropdowns populated with existing data');
-    }, 100);
+      // Mark dropdowns as ready
+      window.dropdownsReady = true;
+      console.log('✅ Address dropdowns initialized and disabled, ready for data');
+    }, 150);
   })
   
   // parseAddressParts:
@@ -1932,10 +1955,16 @@ document.querySelectorAll(".nav-item").forEach((item) => {
       if (window.provinceDropdown) {
         window.provinceDropdown.enable();
         console.log('📍 Province dropdown enabled with data:', window.selectedProvince);
+        console.log('📍 Province dropdown input disabled?', window.provinceDropdown.input?.disabled);
+      } else {
+        console.error('❌ Province dropdown not found!');
       }
       if (window.wardDropdown) {
         window.wardDropdown.enable();
         console.log('📍 Ward dropdown enabled with data:', window.selectedWard);
+        console.log('📍 Ward dropdown input disabled?', window.wardDropdown.input?.disabled);
+      } else {
+        console.error('❌ Ward dropdown not found!');
       }
   
       // Khi nhập tên, cập nhật hiển thị tức thì

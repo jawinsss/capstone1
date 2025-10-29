@@ -19,7 +19,7 @@ import { AuditModule } from './audit/audit.module';
 import { PaymentsModule } from './payments/payments.module';
 import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module';
 import { ReportsModule } from './reports/reports.module';
-
+import { ChatbotModule } from './chatbot/chatbot.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -43,6 +43,7 @@ import { ReportsModule } from './reports/reports.module';
     PaymentsModule,
     PaymentGatewayModule,
     ReportsModule,
+    ChatbotModule,
   ],
   controllers: [HealthController],
 })

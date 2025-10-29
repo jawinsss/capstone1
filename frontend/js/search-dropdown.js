@@ -13,6 +13,7 @@ class SearchDropdown {
       limitParam: 'limit',
       limit: 5,
       debounceDelay: 300,
+      showLoadMore: true, // Option to show/hide load more button
       onSelect: () => {},
       onLoadMore: () => {},
       ...options
@@ -199,7 +200,8 @@ class SearchDropdown {
       </div>
     `).join('');
     
-    const loadMoreHtml = this.hasMore ? `
+    // Only show "Load more" button if enabled in options and there are more items
+    const loadMoreHtml = (this.options.showLoadMore && this.hasMore) ? `
       <div class="search-dropdown-load-more">
         <button type="button">Tải thêm...</button>
       </div>
@@ -280,14 +282,22 @@ class SearchDropdown {
     this.input.style.cursor = 'not-allowed';
     this.input.style.opacity = '0.6';
     this.input.style.backgroundColor = '#f5f5f5';
+    this.input.readOnly = true;
     this.hideList();
   }
   
   enable() {
     this.input.disabled = false;
+    this.input.readOnly = false;
     this.input.style.cursor = 'text';
     this.input.style.opacity = '1';
     this.input.style.backgroundColor = '';
+    this.input.style.pointerEvents = 'auto';
+    console.log('🔓 Dropdown input enabled:', {
+      disabled: this.input.disabled,
+      readOnly: this.input.readOnly,
+      placeholder: this.input.placeholder
+    });
   }
   
   destroy() {

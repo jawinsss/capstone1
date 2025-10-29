@@ -1828,10 +1828,29 @@
   border-top: none;
   border-radius: 0 0 var(--border-radius) var(--border-radius);
   box-shadow: var(--shadow-lg);
-  max-height: 200px;
+  max-height: 400px;
   overflow-y: auto;
   z-index: 1000;
   display: none;
+}
+
+/* Custom scrollbar for dropdown list */
+.search-dropdown-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.search-dropdown-list::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 0 0 var(--border-radius) 0;
+}
+
+.search-dropdown-list::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.search-dropdown-list::-webkit-scrollbar-thumb:hover {
+  background: var(--primary-dark);
 }
 
 .search-dropdown-list.show {

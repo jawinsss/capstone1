@@ -38,6 +38,7 @@ model User {
   tickets   Ticket[]
   reviews   Review[]
   auditLogs AuditLog[]
+  conversations Conversation[]
 
   @@map("users")
 }
@@ -243,4 +244,40 @@ model AuditLog {
   user       User     @relation(fields: [userId], references: [id])
 
   @@map("audit_logs")
+}
+
+model Conversation {
+  id        String   @id @default(cuid())
+  title     String?  @default("New Conversation")
+  userId    String?  // Null for guest users
+  sessionId String?  // For guest tracking
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages  Message[]
+
+  @@index([userId])
+  @@index([sessionId])
+  @@map("conversations")
+}
+
+model Message {
+  id             String       @id @default(cuid())
+  conversationId String
+  role           MessageRole  // user or assistant
+  content        String       @db.Text
+  metadata       Json?        // Store suggested products, context, etc.
+  createdAt      DateTime     @default(now())
+
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId])
+  @@map("messages")
+}
+
+enum MessageRole {
+  USER
+  ASSISTANT
 }
