@@ -208,20 +208,20 @@ export class ToolsService {
       },
       {
         name: 'get_user_orders',
-        description: 'Lấy danh sách đơn hàng của người dùng.',
+        description: 'Lấy danh sách đơn hàng của NGƯỜI DÙNG HIỆN TẠI. Nếu không truyền userId, hệ thống sẽ dùng userId đã đăng nhập.',
         parameters: {
           type: 'object',
           properties: {
             userId: {
               type: 'string',
-              description: 'ID người dùng',
+              description: 'ID người dùng (tùy chọn, mặc định dùng người dùng hiện tại)',
             },
             limit: {
               type: 'number',
               description: 'Số lượng đơn hàng tối đa (mặc định 10)',
             },
           },
-          required: ['userId'],
+          required: [],
         },
       },
       {
@@ -362,7 +362,7 @@ export class ToolsService {
           return await this.sendContactEmail(toolCall.arguments);
         
         case 'get_user_orders':
-          return await this.getUserOrders(toolCall.arguments);
+          return await this.getUserOrders({ ...toolCall.arguments, userId: toolCall.arguments.userId || userId });
         
         case 'get_order_status':
           return await this.getOrderStatus(toolCall.arguments);
@@ -734,6 +734,14 @@ export class ToolsService {
 
   private async getUserOrders(args: any): Promise<ToolResult> {
     const { userId, limit = 10 } = args;
+
+    if (!userId) {
+      return {
+        success: false,
+        error: 'Thiếu thông tin người dùng',
+        message: 'Không xác định được người dùng hiện tại. Vui lòng đăng nhập lại.',
+      };
+    }
 
     const orders = await this.prisma.order.findMany({
       where: { userId },

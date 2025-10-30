@@ -251,6 +251,42 @@ export class ChatbotService {
               
               finalMessage = formattedMessage;
             } 
+            // 🧾 SPECIAL: get_user_orders → Hiển thị chi tiết đơn hàng
+            else if (toolCall.name === 'get_user_orders' && toolResult.data && Array.isArray(toolResult.data)) {
+              const orders = toolResult.data;
+              this.logger.log(`📋 Formatting ${orders.length} orders for display`);
+
+              let formattedMessage = orders.length === 0
+                ? 'Bạn chưa có đơn hàng nào.'
+                : `Tôi tìm thấy ${orders.length} đơn hàng gần đây của bạn:\n\n`;
+
+              const statusMap: Record<string, string> = {
+                PENDING: 'Đang chờ xác nhận',
+                CONFIRMED: 'Đã xác nhận',
+                SHIPPING: 'Đang giao hàng',
+                COMPLETED: 'Đã hoàn thành',
+                CANCELLED: 'Đã hủy',
+                RETURNED: 'Đã trả hàng',
+              };
+
+              orders.forEach((o: any, idx: number) => {
+                const total = typeof o.totalAmount === 'number' ? o.totalAmount.toLocaleString('vi-VN') : (o.totalAmount || 0);
+                const dateStr = o.createdAt ? new Date(o.createdAt).toLocaleString('vi-VN') : '';
+                const statusText = statusMap[o.status] || o.status || 'Không rõ';
+
+                formattedMessage += `${idx + 1}. Mã: ${o.code || '—'}\n`;
+                formattedMessage += `   📦 Số SP: ${o.itemCount || 0}`;
+                formattedMessage += ` | 💰 Tổng: ${total}đ`;
+                formattedMessage += ` | 🏷️ Trạng thái: ${statusText}`;
+                formattedMessage += dateStr ? ` | 📅 ${dateStr}` : '';
+                formattedMessage += `\n\n`;
+              });
+
+              finalMessage = formattedMessage;
+
+              // Gửi action để frontend hiển thị nút xem đơn hàng
+              actions.push({ type: 'view_orders', data: { count: orders.length } });
+            }
             // ✅ Các tool khác dùng message từ tool result
             else if (toolResult.message) {
               finalMessage = toolResult.message;

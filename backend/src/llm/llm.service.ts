@@ -367,7 +367,7 @@ KHÔNG nói → quantity: 1 (mặc định)
 
 VÍ DỤ 3: Tra cứu đơn hàng
 User: "Đơn hàng của tôi"
-→ get_user_orders(userId: <userId>, limit: 10)
+→ get_user_orders({ limit: 10 })  // KHÔNG cần hỏi userId, hệ thống tự dùng user đang đăng nhập
 
 User: "Kiểm tra đơn hàng DH123"
 → get_order_status(orderCode: "DH123")

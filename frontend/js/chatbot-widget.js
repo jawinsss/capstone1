@@ -420,6 +420,12 @@ class ChatbotWidget {
                             <i class="fas fa-shopping-cart"></i> Xem giỏ hàng
                         </button>
                     `;
+                } else if (action.type === 'view_orders') {
+                    actionsHtml += `
+                        <button class="action-btn view-orders-btn" onclick="window.location.href='/Page/userpage/user.html#orders'">
+                            <i class="fas fa-box"></i> Xem đơn hàng
+                        </button>
+                    `;
                 } else if (action.type === 'profile_updated') {
                     actionsHtml += `
                         <button class="action-btn view-profile-btn" onclick="window.location.href='/Page/userpage/user.html'">
