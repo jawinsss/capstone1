@@ -1,565 +1,370 @@
 export const categoryData = [
-  // 1. SẮT THÉP (Parent Category)
+  // 1. SẮT – THÉP XÂY DỰNG
   {
-    name: 'Sắt Thép',
-    slug: 'sat-thep',
-    description: 'Các loại sắt thép và phụ kiện kim loại dùng trong xây dựng và công nghiệp.',
+    name: 'Sắt – Thép Xây Dựng',
+    slug: 'sat-thep-xay-dung',
+    description: 'Các loại sắt thép sử dụng trong xây dựng công trình.',
     isActive: true,
     parentId: null,
     children: [
       {
-        name: 'Thép định hình',
-        slug: 'thep-dinh-hinh',
-        description: 'Thép được định hình theo các tiêu chuẩn kỹ thuật',
-        isActive: true,
-        parentId: null,
+        name: 'Thép cuộn',
+        slug: 'thep-cuon',
+        description: 'Thép dạng cuộn dùng trong xây dựng',
+        isActive: true
       },
       {
-        name: 'Sắt hộp vuông',
-        slug: 'sat-hop-vuong',
-        description: 'Sắt hộp có tiết diện hình vuông',
-        isActive: true,
-        parentId: null,
+        name: 'Thép hộp',
+        slug: 'thep-hop',
+        description: 'Thép hộp vuông và chữ nhật',
+        isActive: true
       },
       {
-        name: 'Sắt hộp hình chữ nhật',
-        slug: 'sat-hop-hinh-chu-nhat',
-        description: 'Sắt hộp có tiết diện hình chữ nhật',
-        isActive: true,
-        parentId: null,
+        name: 'Thép hình (U, I, H)',
+        slug: 'thep-hinh-u-i-h',
+        description: 'Thép hình dạng U, I, H',
+        isActive: true
       },
       {
-        name: 'Thép buộc',
-        slug: 'thep-buoc',
-        description: 'Thép dùng để buộc và liên kết',
-        isActive: true,
-        parentId: null,
+        name: 'Thép V',
+        slug: 'thep-v',
+        description: 'Thép góc chữ V',
+        isActive: true
       },
       {
-        name: 'Lưới thép',
-        slug: 'luoi-thep',
-        description: 'Lưới được làm từ thép',
-        isActive: true,
-        parentId: null,
+        name: 'Thép ống',
+        slug: 'thep-ong',
+        description: 'Thép dạng ống dùng trong xây dựng',
+        isActive: true
       },
       {
-        name: 'Đinh',
-        slug: 'dinh',
-        description: 'Đinh thép các loại',
-        isActive: true,
-        parentId: null,
+        name: 'Lưới thép, thép râu',
+        slug: 'luoi-thep-thep-rau',
+        description: 'Lưới thép và thép râu',
+        isActive: true
       },
-      {
-        name: 'Dây đai thép',
-        slug: 'day-dai-thep',
-        description: 'Dây đai được làm từ thép',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Bản mã',
-        slug: 'ban-ma',
-        description: 'Bản mã thép dùng để liên kết',
-        isActive: true,
-        parentId: null,
-      }
     ]
   },
 
-  // 2. HÓA CHẤT (Parent Category)
+  // 2. XI MĂNG – BỘT TRÉT – VỮA
   {
-    name: 'Hóa Chất',
-    slug: 'hoa-chat',
-    description: 'Các loại hóa chất chuyên dụng trong xây dựng và công nghiệp.',
+    name: 'Xi Măng – Bột Trét – Vữa',
+    slug: 'xi-mang-bot-tret-vua',
+    description: 'Xi măng, bột trét tường và các loại vữa xây dựng.',
     isActive: true,
     parentId: null,
     children: [
       {
-        name: 'Sika',
-        slug: 'sika',
-        description: 'Hóa chất Sika chuyên dụng',
-        isActive: true,
-        parentId: null,
+        name: 'Xi măng',
+        slug: 'xi-mang',
+        description: 'Xi măng các loại',
+        isActive: true
       },
       {
-        name: 'Chất tẩy rỉ',
-        slug: 'chat-tay-ri',
-        description: 'Hóa chất dùng để tẩy rỉ sét',
-        isActive: true,
-        parentId: null,
+        name: 'Bột trét tường',
+        slug: 'bot-tret-tuong',
+        description: 'Bột trét dùng cho hoàn thiện bề mặt tường',
+        isActive: true
       },
       {
-        name: 'Dầu lăn',
-        slug: 'dau-lan',
-        description: 'Dầu lăn chuyên dụng',
-        isActive: true,
-        parentId: null,
+        name: 'Vữa khô trộn sẵn',
+        slug: 'vua-kho-tron-san',
+        description: 'Vữa xây, tô trộn sẵn',
+        isActive: true
       },
-      {
-        name: 'Bestmix',
-        slug: 'bestmix',
-        description: 'Hóa chất Bestmix',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Weber',
-        slug: 'weber',
-        description: 'Hóa chất Weber',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Vinkems',
-        slug: 'vinkems',
-        description: 'Hóa chất Vinkems',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'STX',
-        slug: 'stx',
-        description: 'Hóa chất STX',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Selsil',
-        slug: 'selsil',
-        description: 'Hóa chất Selsil',
-        isActive: true,
-        parentId: null,
-      }
     ]
   },
 
-  // 3. PHỤ KIỆN NÂNG HẠ (Parent Category)
+  // 3. GẠCH – ỐP LÁT – VẬT LIỆU HOÀN THIỆN
   {
-    name: 'Phụ Kiện Nâng Hạ',
-    slug: 'phu-kien-nang-ha',
-    description: 'Các phụ kiện và thiết bị dùng cho công việc nâng hạ và di chuyển.',
+    name: 'Gạch – Ốp Lát – Vật Liệu Hoàn Thiện',
+    slug: 'gach-op-lat-vat-lieu-hoan-thien',
+    description: 'Các loại gạch, đá ốp lát và vật liệu hoàn thiện công trình.',
     isActive: true,
     parentId: null,
     children: [
       {
-        name: 'Cáp thép',
-        slug: 'cap-thep',
-        description: 'Cáp được làm từ thép',
-        isActive: true,
-        parentId: null,
+        name: 'Gạch men',
+        slug: 'gach-men',
+        description: 'Gạch men ốp lát',
+        isActive: true
       },
       {
-        name: 'Cáp vải',
-        slug: 'cap-vai',
-        description: 'Cáp được làm từ vải',
-        isActive: true,
-        parentId: null,
+        name: 'Gạch block',
+        slug: 'gach-block',
+        description: 'Gạch block xây dựng',
+        isActive: true
       },
       {
-        name: 'Cùm',
-        slug: 'cum',
-        description: 'Cùm chuyên dụng',
-        isActive: true,
-        parentId: null,
+        name: 'Gạch chịu nhiệt',
+        slug: 'gach-chiu-nhiet',
+        description: 'Gạch chịu nhiệt chuyên dụng',
+        isActive: true
       },
       {
-        name: 'Sling',
-        slug: 'sling',
-        description: 'Sling nâng hạ',
-        isActive: true,
-        parentId: null,
+        name: 'Đá ốp lát',
+        slug: 'da-op-lat',
+        description: 'Đá tự nhiên và đá nhân tạo',
+        isActive: true
       },
-      {
-        name: 'Phụ kiện cáp thép',
-        slug: 'phu-kien-cap-thep',
-        description: 'Các phụ kiện đi kèm với cáp thép',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Pa lăng xích',
-        slug: 'pa-lang-xich',
-        description: 'Pa lăng sử dụng xích',
-        isActive: true,
-        parentId: null,
-      }
     ]
   },
 
-  // 4. SIÊU THỊ KEO (Parent Category)
+  // 4. SƠN – CHỐNG THẤM
   {
-    name: 'Siêu Thị Keo',
-    slug: 'sieu-thi-keo',
-    description: 'Các loại keo chuyên dụng trong xây dựng và công nghiệp.',
+    name: 'Sơn – Chống Thấm',
+    slug: 'son-chong-tham',
+    description: 'Các loại sơn và vật liệu chống thấm.',
     isActive: true,
     parentId: null,
     children: [
       {
-        name: 'Keo khoan cấy',
-        slug: 'keo-khoan-cay',
-        description: 'Keo dùng cho khoan cấy',
-        isActive: true,
-        parentId: null,
+        name: 'Sơn nội thất',
+        slug: 'son-noi-that',
+        description: 'Sơn nước trong nhà',
+        isActive: true
       },
       {
-        name: 'Hilti',
-        slug: 'hilti',
-        description: 'Keo Hilti chuyên dụng',
-        isActive: true,
-        parentId: null,
+        name: 'Sơn ngoại thất',
+        slug: 'son-ngoai-that',
+        description: 'Sơn nước ngoài trời',
+        isActive: true
       },
       {
-        name: 'Ramset',
-        slug: 'ramset',
-        description: 'Keo Ramset',
-        isActive: true,
-        parentId: null,
+        name: 'Sơn chống rỉ',
+        slug: 'son-chong-ri',
+        description: 'Sơn bảo vệ chống rỉ sét',
+        isActive: true
       },
       {
-        name: 'Fischer',
-        slug: 'fischer',
-        description: 'Keo Fischer',
-        isActive: true,
-        parentId: null,
+        name: 'Chống thấm xi măng / acrylic',
+        slug: 'chong-tham-xi-mang-acrylic',
+        description: 'Vật liệu chống thấm',
+        isActive: true
+      },
+    ]
+  },
+
+  // 5. ỐNG NƯỚC – PHỤ KIỆN
+  {
+    name: 'Ống Nước – Phụ Kiện',
+    slug: 'ong-nuoc-phu-kien',
+    description: 'Các loại ống nước và phụ kiện đi kèm.',
+    isActive: true,
+    parentId: null,
+    children: [
+      {
+        name: 'Ống PVC',
+        slug: 'ong-pvc',
+        description: 'Ống nhựa PVC',
+        isActive: true
       },
       {
-        name: 'Sika',
-        slug: 'keo-sika',
-        description: 'Keo Sika',
-        isActive: true,
-        parentId: null,
+        name: 'Ống PPR',
+        slug: 'ong-ppr',
+        description: 'Ống chịu nhiệt PPR',
+        isActive: true
+      },
+      {
+        name: 'Phụ kiện ống (co, tê, măng sông)',
+        slug: 'phu-kien-ong',
+        description: 'Phụ kiện kết nối đường ống',
+        isActive: true
+      },
+      {
+        name: 'Van nước, khóa nước',
+        slug: 'van-nuoc-khoa-nuoc',
+        description: 'Van và khóa điều chỉnh nước',
+        isActive: true
+      },
+    ]
+  },
+
+  // 6. ĐIỆN – THIẾT BỊ ĐIỆN
+  {
+    name: 'Điện – Thiết Bị Điện',
+    slug: 'dien-thiet-bi-dien',
+    description: 'Thiết bị điện dân dụng và công nghiệp.',
+    isActive: true,
+    parentId: null,
+    children: [
+      {
+        name: 'Ổ cắm',
+        slug: 'o-cam',
+        description: 'Ổ cắm điện',
+        isActive: true
+      },
+      {
+        name: 'Dây điện',
+        slug: 'day-dien',
+        description: 'Dây điện dân dụng và công nghiệp',
+        isActive: true
+      },
+      {
+        name: 'Aptomat',
+        slug: 'aptomat',
+        description: 'Thiết bị đóng ngắt điện',
+        isActive: true
+      },
+      {
+        name: 'CB',
+        slug: 'cb-dien',
+        description: 'Cầu dao tự động',
+        isActive: true
+      },
+      {
+        name: 'Đèn LED',
+        slug: 'den-led',
+        description: 'Đèn LED chiếu sáng',
+        isActive: true
+      },
+    ]
+  },
+
+  // 7. MÁY MÓC – THIẾT BỊ THI CÔNG
+  {
+    name: 'Máy Móc – Thiết Bị Thi Công',
+    slug: 'may-moc-thiet-bi-thi-cong',
+    description: 'Thiết bị và máy móc dùng trong thi công công trình.',
+    isActive: true,
+    parentId: null,
+    children: [
+      {
+        name: 'Máy khoan',
+        slug: 'may-khoan',
+        description: 'Máy khoan xây dựng',
+        isActive: true
+      },
+      {
+        name: 'Máy cắt',
+        slug: 'may-cat',
+        description: 'Máy cắt vật liệu',
+        isActive: true
+      },
+      {
+        name: 'Máy hàn',
+        slug: 'may-han',
+        description: 'Máy hàn các loại',
+        isActive: true
+      },
+      {
+        name: 'Máy trộn bê tông',
+        slug: 'may-tron-be-tong',
+        description: 'Máy trộn trong xây dựng',
+        isActive: true
+      },
+    ]
+  },
+
+  // 8. HÓA CHẤT XÂY DỰNG
+  {
+    name: 'Hóa Chất Xây Dựng',
+    slug: 'hoa-chat-xay-dung',
+    description: 'Hóa chất và phụ gia sử dụng trong xây dựng.',
+    isActive: true,
+    parentId: null,
+    children: [
+      {
+        name: 'Keo xây dựng',
+        slug: 'keo-xay-dung',
+        description: 'Keo kết dính dùng trong xây dựng',
+        isActive: true
       },
       {
         name: 'Keo dán gạch',
         slug: 'keo-dan-gach',
-        description: 'Keo chuyên dụng để dán gạch',
-        isActive: true,
-        parentId: null,
+        description: 'Keo dán gạch chuyên dụng',
+        isActive: true
       },
       {
-        name: 'Keo chà ron',
-        slug: 'keo-cha-ron',
-        description: 'Keo dùng để chà ron',
-        isActive: true,
-        parentId: null,
+        name: 'Phụ gia bê tông',
+        slug: 'phu-gia-be-tong',
+        description: 'Phụ gia tăng cường chất lượng bê tông',
+        isActive: true
       },
       {
-        name: 'Keo Silicone Apollo',
-        slug: 'keo-silicone-apollo',
-        description: 'Keo Silicone Apollo',
-        isActive: true,
-        parentId: null,
+        name: 'Chất tẩy rửa xi măng',
+        slug: 'chat-tay-rua-xi-mang',
+        description: 'Dung dịch tẩy cặn xi măng',
+        isActive: true
       },
-      {
-        name: 'Keo dán đa năng',
-        slug: 'keo-dan-da-nang',
-        description: 'Keo dán có thể sử dụng cho nhiều mục đích',
-        isActive: true,
-        parentId: null,
-      }
     ]
   },
 
-  // 5. SIÊU THỊ SƠN (Parent Category)
+  // 9. VẬT TƯ KIM KHÍ – PHỤ KIỆN
   {
-    name: 'Siêu Thị Sơn',
-    slug: 'sieu-thi-son',
-    description: 'Các loại sơn chuyên dụng cho xây dựng và trang trí.',
+    name: 'Vật Tư Kim Khí – Phụ Kiện',
+    slug: 'vat-tu-kim-khi-phu-kien',
+    description: 'Kim khí xây dựng và các phụ kiện kim loại.',
     isActive: true,
     parentId: null,
     children: [
       {
-        name: 'Sơn dầu',
-        slug: 'son-dau',
-        description: 'Sơn dầu các loại',
-        isActive: true,
-        parentId: null,
+        name: 'Bulong – ốc vít',
+        slug: 'bulong-oc-vit',
+        description: 'Bulong, ốc vít các loại',
+        isActive: true
+      },
+      { name: 'Bản lề – khóa',
+        slug: 'ban-le-khoa',
+        description: 'Khóa cửa và bản lề kim loại',
+        isActive: true
       },
       {
-        name: 'Sơn nước',
-        slug: 'son-nuoc',
-        description: 'Sơn nước các loại',
-        isActive: true,
-        parentId: null,
-      }
+        name: 'Thanh ren – tắc kê',
+        slug: 'thanh-ren-tac-ke',
+        description: 'Ren, tắc kê nở',
+        isActive: true
+      },
+      {
+        name: 'Thang nhôm',
+        slug: 'thang-nhom',
+        description: 'Thang nhôm dân dụng và công nghiệp',
+        isActive: true
+      },
+      {
+        name: 'Dụng cụ cầm tay',
+        slug: 'dung-cu-cam-tay',
+        description: 'Bộ dụng cụ cầm tay dùng trong thi công',
+        isActive: true
+      },
     ]
   },
 
-  // 6. MÁY MÓC – THIẾT BỊ (Parent Category)
-  {
-    name: 'Máy Móc – Thiết Bị',
-    slug: 'may-moc-thiet-bi',
-    description: 'Các loại máy móc và thiết bị chuyên dụng trong xây dựng và công nghiệp.',
-    isActive: true,
-    parentId: null,
-    children: [
-      {
-        name: 'Bosch',
-        slug: 'bosch',
-        description: 'Máy móc và thiết bị Bosch',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Makita',
-        slug: 'makita',
-        description: 'Máy móc và thiết bị Makita',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Honda',
-        slug: 'honda',
-        description: 'Máy móc và thiết bị Honda',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Ingco',
-        slug: 'ingco',
-        description: 'Máy móc và thiết bị Ingco',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Súng bơm keo',
-        slug: 'sung-bom-keo',
-        description: 'Súng bơm keo chuyên dụng',
-        isActive: true,
-        parentId: null,
-      }
-    ]
-  },
-
-  // 7. VẬT TƯ HẠ TẦNG (Parent Category)
-  {
-    name: 'Vật Tư Hạ Tầng',
-    slug: 'vat-tu-ha-tang',
-    description: 'Các vật tư chuyên dụng cho hạ tầng và công trình công cộng.',
-    isActive: true,
-    parentId: null,
-    children: [
-      {
-        name: 'Bitum',
-        slug: 'bitum',
-        description: 'Bitum chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Vải địa',
-        slug: 'vai-dia',
-        description: 'Vải địa kỹ thuật',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Bạt',
-        slug: 'bat',
-        description: 'Bạt chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Lưới',
-        slug: 'luoi',
-        description: 'Lưới các loại',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Nilong',
-        slug: 'nilong',
-        description: 'Nilong chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Ván ép phủ phim',
-        slug: 'van-ep-phu-phim',
-        description: 'Ván ép được phủ phim',
-        isActive: true,
-        parentId: null,
-      }
-    ]
-  },
-
-  // 8. VẬT TƯ KIM KHÍ (Parent Category)
-  {
-    name: 'Vật Tư Kim Khí',
-    slug: 'vat-tu-kim-khi',
-    description: 'Các vật tư kim khí chuyên dụng trong xây dựng và công nghiệp.',
-    isActive: true,
-    parentId: null,
-    children: [
-      {
-        name: 'Đá mài – Đá cắt',
-        slug: 'da-mai-da-cat',
-        description: 'Đá mài và đá cắt chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Vật liệu hàn',
-        slug: 'vat-lieu-han',
-        description: 'Các vật liệu dùng cho hàn',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Foam bọt nở',
-        slug: 'foam-bot-no',
-        description: 'Foam bọt nở chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Kẽm buộc',
-        slug: 'kem-buoc',
-        description: 'Kẽm dùng để buộc',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Dây đai',
-        slug: 'day-dai',
-        description: 'Dây đai các loại',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Sơn dầu',
-        slug: 'son-dau-kim-khi',
-        description: 'Sơn dầu chuyên dụng',
-        isActive: true,
-        parentId: null,
-      }
-    ]
-  },
-
-  // 9. VẬT TƯ PHỤ XÂY DỰNG (Parent Category)
-  {
-    name: 'Vật Tư Phụ Xây Dựng',
-    slug: 'vat-tu-phu-xay-dung',
-    description: 'Các vật tư phụ trợ trong quá trình xây dựng và thi công.',
-    isActive: true,
-    parentId: null,
-    children: [
-      {
-        name: 'Vật tư gia công',
-        slug: 'vat-tu-gia-cong',
-        description: 'Vật tư dùng cho gia công',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Cùm',
-        slug: 'cum-phu-xay-dung',
-        description: 'Cùm chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Tyren',
-        slug: 'tyren',
-        description: 'Tyren chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Tán',
-        slug: 'tan',
-        description: 'Tán chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Bảo hộ lao động',
-        slug: 'bao-ho-lao-dong-phu-xay-dung',
-        description: 'Vật tư bảo hộ lao động',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Vật tư ME',
-        slug: 'vat-tu-me',
-        description: 'Vật tư ME chuyên dụng',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Con kê',
-        slug: 'con-ke',
-        description: 'Con kê chuyên dụng',
-        isActive: true,
-        parentId: null,
-      }
-    ]
-  },
-
-  // 10. LINH KIỆN LẮP GHÉP (Parent Category)
-  {
-    name: 'Linh Kiện Lắp Ghép',
-    slug: 'linh-kien-lap-ghep',
-    description: 'Các linh kiện chuyên dụng cho việc lắp ghép và kết nối.',
-    isActive: true,
-    parentId: null,
-    children: [
-      {
-        name: 'Bulong liên kết',
-        slug: 'bulong-lien-ket',
-        description: 'Bulong dùng để liên kết',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Bulong neo móng',
-        slug: 'bulong-neo-mong',
-        description: 'Bulong dùng để neo móng',
-        isActive: true,
-        parentId: null,
-      }
-    ]
-  },
-
-  // 11. BẢO HỘ LAO ĐỘNG (Parent Category)
+  // 10. BẢO HỘ LAO ĐỘNG
   {
     name: 'Bảo Hộ Lao Động',
     slug: 'bao-ho-lao-dong',
-    description: 'Các thiết bị và vật tư bảo hộ lao động.',
+    description: 'Đồ bảo hộ lao động cho công nhân xây dựng.',
     isActive: true,
     parentId: null,
     children: [
+      {
+        name: 'Nón bảo hộ',
+        slug: 'non-bao-ho',
+        description: 'Nón bảo hộ an toàn',
+        isActive: true
+      },
+      {
+        name: 'Găng tay',
+        slug: 'gang-tay',
+        description: 'Găng tay bảo hộ',
+        isActive: true
+      },
       {
         name: 'Giày bảo hộ',
         slug: 'giay-bao-ho',
         description: 'Giày bảo hộ lao động',
-        isActive: true,
-        parentId: null,
+        isActive: true
       },
       {
-        name: 'Găng tay bảo hộ',
-        slug: 'gang-tay-bao-ho',
-        description: 'Găng tay bảo hộ lao động',
-        isActive: true,
-        parentId: null,
+        name: 'Áo phản quang',
+        slug: 'ao-phan-quang',
+        description: 'Áo phản quang công trình',
+        isActive: true
       },
-      {
-        name: 'Dây đai an toàn',
-        slug: 'day-dai-an-toan',
-        description: 'Dây đai an toàn lao động',
-        isActive: true,
-        parentId: null,
-      },
-      {
-        name: 'Thang dây thoát hiểm',
-        slug: 'thang-day-thoat-hiem',
-        description: 'Thang dây dùng để thoát hiểm',
-        isActive: true,
-        parentId: null,
-      }
     ]
-  }
+  },
 ];
 
 // Helper function to create categories with proper parent-child relationships

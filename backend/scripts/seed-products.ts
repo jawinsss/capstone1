@@ -7,165 +7,163 @@ const prisma = new PrismaClient();
 
 // Mapping folder names to category slugs
 const folderToCategoryMap: Record<string, string> = {
+
+  'sat-thep-xay-dung': 'sat-thep-xay-dung',
+  'xi-mang-bot-tret-vua': 'xi-mang-bot-tret-vua',
+  'gach-op-lat-vat-lieu-hoan-thien': 'gach-op-lat-vat-lieu-hoan-thien',
+  'son-chong-tham': 'son-chong-tham',
+  'ong-nuoc-phu-kien': 'ong-nuoc-phu-kien',
+  'dien-thiet-bi-dien': 'dien-thiet-bi-dien',
+  'may-moc-thiet-bi-thi-cong': 'may-moc-thiet-bi-thi-cong',
+  'hoa-chat-xay-dung': 'hoa-chat-xay-dung',
+  'vat-tu-kim-khi-phu-kien': 'vat-tu-kim-khi-phu-kien',
   'bao-ho-lao-dong': 'bao-ho-lao-dong',
-  'vat-tu-phu-xay-dung': 'vat-tu-phu-xay-dung', // Dung cu will go to vat tu phu
-  'hoa-chat': 'hoa-chat',
-  'linh-kien-lap-ghep': 'linh-kien-lap-ghep',
-  'may-moc-thiet-bi': 'may-moc-thiet-bi',
-  'phu-kien-nang-ha': 'phu-kien-nang-ha',
-  'sat-thep': 'sat-thep',
-  'sieu-thi-keo': 'sieu-thi-keo',
-  'sieu-thi-son': 'sieu-thi-son',
-  'vat-tu-ha-tang': 'vat-tu-ha-tang',
-  'vat-tu-kim-khi': 'vat-tu-kim-khi',
 };
 
 // Product templates based on categories
 const productTemplates: Record<string, any> = {
-  'sat-thep': {
+  'sat-thep-xay-dung': {
     names: [
-      'Thép Phi', 'Thép Hộp', 'Sắt Hộp Vuông', 'Thép Định Hình',
-      'Lưới Thép Hàn', 'Đinh Thép', 'Dây Đai Thép', 'Bản Mã Thép'
+      'Thép Phi', 'Thép Hộp Vuông', 'Thép Hộp Chữ Nhật', 'Thép V',
+      'Thép Hình I', 'Thép Hình U', 'Lưới Thép Hàn', 'Đinh Thép'
+    ],
+    priceRange: [80000, 800000],
+    descriptions: [
+      'Chất lượng cao, tiêu chuẩn xây dựng.',
+      'Độ bền cao, chịu lực tốt, chống gỉ sét.',
+      'Thép đạt chuẩn kỹ thuật nhà nước.',
+      'Giá tốt cho công trình dân dụng và công nghiệp.'
+    ]
+  },
+
+  'xi-mang-bot-tret-vua': {
+    names: [
+      'Xi Măng Holcim', 'Xi Măng Hà Tiên', 'Xi Măng Nghi Sơn',
+      'Bột Trét Ngoài Trời', 'Bột Trét Nội Thất', 'Vữa Khô Trộn Sẵn'
+    ],
+    priceRange: [40000, 300000],
+    descriptions: [
+      'Chất lượng ổn định, độ bền cao.',
+      'Dễ thi công, độ bám dính tốt.',
+      'Đạt tiêu chuẩn TCVN.',
+      'Sử dụng linh hoạt cho nhiều công trình.'
+    ]
+  },
+
+  'gach-op-lat-vat-lieu-hoan-thien': {
+    names: [
+      'Gạch Men 60x60', 'Gạch Men 80x80', 'Gạch Ốp Tường',
+      'Gạch Granite', 'Gạch Vân Đá', 'Gạch Chống Trơn'
     ],
     priceRange: [50000, 500000],
     descriptions: [
-      'Chất lượng cao, đảm bảo tiêu chuẩn xây dựng',
-      'Sản phẩm thép chất lượng cao, được kiểm định',
-      'Thép chất lượng, độ bền cao, chống gỉ sét tốt',
-      'Đạt tiêu chuẩn kỹ thuật, an toàn cho công trình'
+      'Mẫu mã đẹp, chống trầy xước.',
+      'Độ bền cao, chịu lực tốt.',
+      'Không thấm nước, dễ vệ sinh.',
+      'Phù hợp cho mọi không gian.'
     ]
   },
-  'hoa-chat': {
+
+  'son-chong-tham': {
     names: [
-      'Sika', 'Weber', 'Bestmix', 'Vinkems', 'STX',
-      'Chất Chống Thấm', 'Chất Tẩy Rỉ', 'Dầu Lăn', 'Keo Dán'
+      'Sơn Chống Thấm Kova', 'Sơn Chống Thấm Jotun',
+      'Sơn Lót Kháng Kiềm', 'Dung Dịch Chống Thấm Tường',
+      'Sơn Ngoại Thất Cao Cấp'
     ],
-    priceRange: [30000, 300000],
+    priceRange: [60000, 600000],
     descriptions: [
-      'Hóa chất chuyên dụng cho xây dựng',
-      'Sản phẩm hóa chất chất lượng cao, hiệu quả',
-      'An toàn, thân thiện môi trường',
-      'Đạt chuẩn chất lượng quốc tế'
+      'Bám dính tốt, kháng nước hiệu quả.',
+      'Chống nấm mốc, dễ thi công.',
+      'Độ phủ cao, bền màu.',
+      'Được sử dụng phổ biến tại công trình lớn.'
     ]
   },
-  'phu-kien-nang-ha': {
+
+  'ong-nuoc-phu-kien': {
     names: [
-      'Cáp Thép', 'Cáp Vải', 'Pa Lăng Xích', 'Cùm Nâng',
-      'Sling Vải', 'Móc Cẩu', 'Khóa An Toàn'
+      'Ống PPR', 'Ống PVC', 'Ống HDPE', 'Cút Nối PPR',
+      'Van Khóa', 'Co Nối', 'Tê Nối', 'Măng Sông'
     ],
-    priceRange: [100000, 1000000],
+    priceRange: [10000, 300000],
     descriptions: [
-      'Phụ kiện nâng hạ an toàn, độ bền cao',
-      'Chịu tải trọng lớn, đảm bảo an toàn tuyệt đối',
-      'Sản phẩm chất lượng cao, được kiểm định',
-      'Đạt tiêu chuẩn an toàn quốc tế'
+      'Chịu nhiệt, chịu áp lực tốt.',
+      'Dễ lắp đặt, bền bỉ.',
+      'Vật liệu an toàn cho nước sinh hoạt.',
+      'Phù hợp hệ thống dẫn nước dân dụng.'
     ]
   },
-  'sieu-thi-keo': {
+
+  'dien-thiet-bi-dien': {
     names: [
-      'Keo Hilti', 'Keo Fischer', 'Keo Ramset', 'Keo Sika',
-      'Keo Dán Gạch', 'Keo Chà Ron', 'Keo Silicone', 'Keo Đa Năng'
+      'Ổ Cắm Điện', 'Công Tắc Điện', 'CB Chống Giật',
+      'Dây Điện Cadivi', 'Bảng Điện Âm Tường', 'Đèn LED Panel'
     ],
-    priceRange: [20000, 200000],
+    priceRange: [20000, 800000],
     descriptions: [
-      'Keo dán chuyên dụng, độ bám dính cao',
-      'Chống nước, chịu nhiệt tốt',
-      'Sản phẩm chất lượng cao, dễ sử dụng',
-      'Đạt tiêu chuẩn chất lượng, an toàn'
+      'Thiết bị điện an toàn, chất lượng cao.',
+      'Tiết kiệm điện năng, bền bỉ.',
+      'Thiết kế tiện dụng, dễ lắp đặt.',
+      'Đạt tiêu chuẩn an toàn điện quốc gia.'
     ]
   },
-  'sieu-thi-son': {
+
+  'may-moc-thiet-bi-thi-cong': {
     names: [
-      'Sơn Nước', 'Sơn Dầu', 'Sơn Chống Thấm', 'Sơn Lót',
-      'Sơn Ngoài Trời', 'Sơn Trong Nhà', 'Sơn Chống Rỉ'
+      'Máy Khoan', 'Máy Cắt', 'Máy Mài', 'Máy Đục',
+      'Máy Bơm Nước', 'Máy Hàn', 'Súng Bắn Keo'
     ],
-    priceRange: [50000, 500000],
+    priceRange: [500000, 6000000],
     descriptions: [
-      'Sơn chất lượng cao, bền màu lâu dài',
-      'Không độc hại, thân thiện môi trường',
-      'Dễ thi công, khô nhanh, che phủ tốt',
-      'Màu sắc đẹp, bền bỉ với thời gian'
+      'Công suất mạnh mẽ, bền bỉ.',
+      'Đáp ứng nhu cầu thi công chuyên nghiệp.',
+      'Bảo hành chính hãng.',
+      'Hiệu quả cao, an toàn khi sử dụng.'
     ]
   },
-  'may-moc-thiet-bi': {
+
+  'hoa-chat-xay-dung': {
     names: [
-      'Máy Khoan Bosch', 'Máy Mài Makita', 'Máy Cắt Honda',
-      'Máy Bơm', 'Máy Hàn', 'Súng Bơm Keo', 'Máy Đục Bê Tông'
+      'Sika Chống Thấm', 'Keo Dán Gạch Weber', 'Vữa Rót Gốc Xi Măng',
+      'Chất Tẩy Rỉ Sét', 'Keo Silicone', 'Bọt Foam'
     ],
-    priceRange: [500000, 5000000],
+    priceRange: [30000, 350000],
     descriptions: [
-      'Máy móc chất lượng cao, độ bền vượt trội',
-      'Công suất mạnh mẽ, hiệu quả cao',
-      'Bảo hành chính hãng, uy tín',
-      'Tiết kiệm điện năng, vận hành êm ái'
+      'Hiệu quả cao cho xử lý chống thấm.',
+      'Thân thiện môi trường, an toàn.',
+      'Sản phẩm chuyên nghiệp cho thợ xây dựng.',
+      'Đạt tiêu chuẩn quốc tế.'
     ]
   },
-  'vat-tu-ha-tang': {
+
+  'vat-tu-kim-khi-phu-kien': {
     names: [
-      'Bitum', 'Vải Địa', 'Bạt PE', 'Lưới Che', 
-      'Nilong', 'Ván Ép Phủ Phim'
-    ],
-    priceRange: [30000, 300000],
-    descriptions: [
-      'Vật tư hạ tầng chất lượng cao',
-      'Độ bền cao, chịu được điều kiện khắc nghiệt',
-      'Sản phẩm đạt tiêu chuẩn kỹ thuật',
-      'Giá cả hợp lý, chất lượng đảm bảo'
-    ]
-  },
-  'vat-tu-kim-khi': {
-    names: [
-      'Đá Mài', 'Đá Cắt', 'Que Hàn', 'Foam Bọt Nở',
-      'Kẽm Buộc', 'Dây Đai', 'Sơn Kim Khí'
-    ],
-    priceRange: [10000, 200000],
-    descriptions: [
-      'Vật tư kim khí chất lượng cao',
-      'Độ bền tốt, an toàn khi sử dụng',
-      'Sản phẩm chính hãng, uy tín',
-      'Giá cả cạnh tranh, chất lượng đảm bảo'
-    ]
-  },
-  'vat-tu-phu-xay-dung': {
-    names: [
-      'Cùm Ống', 'Tyren', 'Tán', 'Con Kê',
-      'Vật Tư ME', 'Vật Tư Gia Công', 'Dụng Cụ Cầm Tay'
-    ],
-    priceRange: [5000, 100000],
-    descriptions: [
-      'Vật tư phụ chất lượng, giá tốt',
-      'Sản phẩm đa dạng, phù hợp nhiều công trình',
-      'Độ bền cao, dễ lắp đặt',
-      'Đảm bảo chất lượng, an toàn khi sử dụng'
-    ]
-  },
-  'bao-ho-lao-dong': {
-    names: [
-      'Giày Bảo Hộ', 'Găng Tay Bảo Hộ', 'Mũ Bảo Hộ', 'Kính Bảo Hộ',
-      'Dây Đai An Toàn', 'Áo Phản Quang', 'Khẩu Trang', 'Thang Dây Thoát Hiểm'
-    ],
-    priceRange: [20000, 500000],
-    descriptions: [
-      'Bảo hộ lao động chất lượng cao, an toàn',
-      'Đạt tiêu chuẩn an toàn lao động',
-      'Bảo vệ tối đa cho người sử dụng',
-      'Chất liệu tốt, độ bền cao'
-    ]
-  },
-  'linh-kien-lap-ghep': {
-    names: [
-      'Bulong', 'Đai Ốc', 'Vít', 'Tán Đinh',
-      'Bulong Neo', 'Bulong Liên Kết', 'Vòng Đệm', 'Chốt'
+      'Bulong', 'Ốc Vít', 'Đai Treo', 'Kẽm Buộc',
+      'Đá Cắt', 'Đá Mài', 'Keo Epoxy', 'Que Hàn'
     ],
     priceRange: [5000, 150000],
     descriptions: [
-      'Linh kiện lắp ghép chất lượng cao',
-      'Độ bền tốt, chống gỉ sét hiệu quả',
-      'Kích thước chuẩn, dễ lắp đặt',
-      'Phù hợp cho nhiều loại công trình'
+      'Chất lượng cao, chuẩn kích thước.',
+      'Độ bền tốt, chịu lực hiệu quả.',
+      'Phù hợp thi công dân dụng & công nghiệp.',
+      'Giá tốt, hàng luôn sẵn kho.'
+    ]
+  },
+
+  'bao-ho-lao-dong': {
+    names: [
+      'Giày Bảo Hộ', 'Nón Bảo Hộ', 'Găng Tay Chống Cắt',
+      'Kính Bảo Hộ', 'Áo Phản Quang', 'Dây An Toàn'
+    ],
+    priceRange: [30000, 600000],
+    descriptions: [
+      'Bảo vệ an toàn cho người lao động.',
+      'Đạt tiêu chuẩn an toàn lao động.',
+      'Chất liệu bền bỉ, thoải mái.',
+      'Được sử dụng phổ biến tại công trình.'
     ]
   }
 };
+
 
 // Get all image files from a directory
 function getImageFiles(dirPath: string): string[] {
