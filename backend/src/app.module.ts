@@ -20,6 +20,8 @@ import { PaymentsModule } from './payments/payments.module';
 import { PaymentGatewayModule } from './payments-gateway/payment-gateway.module';
 import { ReportsModule } from './reports/reports.module';
 import { ChatbotModule } from './chatbot/chatbot.module';
+import { CalculatorModule } from './caculator-material/caculator.module';
+
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -44,7 +46,8 @@ import { ChatbotModule } from './chatbot/chatbot.module';
     PaymentGatewayModule,
     ReportsModule,
     ChatbotModule,
+    CalculatorModule,
   ],
-  controllers: [HealthController],
+  controllers: [HealthController,],
 })
 export class AppModule {}

@@ -47,7 +47,9 @@ async function bootstrap() {
   // Global validation pipe
   app.useGlobalPipes(new ValidationPipe({
     whitelist: true,
-    forbidNonWhitelisted: true,
+    // Allow non-whitelisted properties for now so dynamic `specs` objects
+    // from the frontend won't cause a 400. We will tighten this later.
+    forbidNonWhitelisted: false,
     transform: true,
   }));
 
