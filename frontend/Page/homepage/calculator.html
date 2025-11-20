@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>MatFlow - Máy tính vật tư</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../styles/homepage.css" />
+    <link rel="stylesheet" href="../../styles/calculator.css" />
+    <link
+      rel="shortcut icon"
+      href="../../assets/Favicon MatFlow.png"
+      type="image/x-icon"
+    />
+    <script src="../../js/config.js" defer></script>
+    <script src="../../js/performance-optimizer.js" defer></script>
+    <script src="../../js/apiService.js" defer></script>
+    <script src="../../js/auth-context.js" defer></script>
+    <script src="../../js/header-avatar.js" defer></script>
+    <script src="../../js/avatar-loader.js" defer></script>
+    <script src="../../js/cartUtils.js" defer></script>
+    <script src="../../js/search.js" defer></script>
+    <script src="../../js/homepage.js" defer></script>
+    <script src="../../js/calculator.js" defer></script>
+    <script src="../../js/backToTop.js" defer></script>
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <link rel="stylesheet" href="../../styles/chatbot-widget.css" />
+    <script src="../../js/chatbot-widget.js" defer></script>
+  </head>
+  <body>
+    <!-- Topbar -->
+    <div class="hp-topbar">
+      <div class="hp-topbar-inner">
+        <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
+        <div class="hp-top-actions">
+          <button class="hp-chip" type="button">
+            <i class="fa-solid fa-globe"></i> Tiếng việt
+          </button>
+          <div id="hpUserAvatar" class="hp-user-avatar" hidden>
+            <div class="hp-avatar-circle">
+              <span id="hpUserInitials">U</span>
+            </div>
+            <a
+              id="hpUserName"
+              class="hp-user-name"
+              href="../userpage/user.html"
+              style="text-decoration: none; color: inherit; cursor: pointer"
+            ></a>
+          </div>
+          <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
+          <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+          <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Header -->
+    <header class="hp-header">
+      <div class="hp-header-container">
+        <a href="homepage.html">
+          <img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow" />
+        </a>
+        <div class="hp-search">
+          <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm..." />
+          <div id="searchSuggestions" class="suggestions-dropdown"></div>
+          <div id="searchResults" class="search-results"></div>
+        </div>
+        <nav class="hp-nav">
+          <a href="homepage.html">
+            <i class="fa-solid fa-house"></i> Trang chủ
+          </a>
+          <div class="nav-dropdown">
+            <a href="products.html" class="nav-dropdown-toggle">
+              <i class="fa-solid fa-tag"></i> Sản Phẩm <i class="fa-solid fa-chevron-down"></i>
+            </a>
+            <div class="nav-dropdown-menu" id="productsDropdown">
+              <!-- Categories will be loaded here -->
+            </div>
+          </div>
+          <a href="contact.html">
+            <i class="fa-solid fa-envelope"></i> Liên Hệ
+          </a>
+          <a href="../pages/gioi-thieu.html">
+            <i class="fa-solid fa-users"></i> Giới Thiệu
+          </a>
+          <a href="calculator.html" class="active">
+            <i class="fa-solid fa-calculator"></i> Tính toán
+          </a>
+        </nav>
+        <div class="hp-user">
+          <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">
+            🛒 <span id="hpCartCount">0</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="calc-main">
+      <div class="calc-container">
+        <h1>🧮 Máy tính vật tư thông minh</h1>
+        <p style="color: #666; margin-bottom: 24px;">
+          AI sẽ phân tích và gợi ý sản phẩm phù hợp nhất với yêu cầu của bạn
+        </p>
+
+        <section class="calc-section">
+          <h2>Nhập thông tin</h2>
+          <form id="materialCalcForm" class="form-grid" onsubmit="return false;">
+            <div class="form-row">
+              <label for="selCategory">Danh mục *</label>
+              <select id="selCategory" required>
+                <option value="">-- Chọn danh mục --</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="selSubCategory">Loại sản phẩm</label>
+              <select id="selSubCategory">
+                <option value="">-- Chọn loại sản phẩm --</option>
+              </select>
+            </div>
+
+            <div class="form-row">
+              <label for="inputQty">Số lượng sản phẩm muốn xem *</label>
+              <input 
+                id="inputQty" 
+                type="number" 
+                min="1" 
+                max="20"
+                step="1" 
+                value="5"
+                placeholder="VD: 5 sản phẩm"
+                required
+              />
+              <small style="color: #666; font-size: 11px; margin-top: 4px;">
+                AI sẽ phân tích và hiển thị số lượng sản phẩm này
+              </small>
+            </div>
+
+            <div id="specInputs" class="spec-inputs"></div>
+
+            <div class="form-actions">
+              <button id="btnLoadSpecs" type="button" class="btn">
+                <i class="fa-solid fa-info-circle"></i> Lấy thông số mặc định
+              </button>
+              <button id="btnFormCalc" type="button" class="btn primary">
+                <i class="fa-solid fa-calculator"></i> Tính toán
+              </button>
+            </div>
+          </form>
+
+          <div id="formResults" class="suggestions"></div>
+        </section>
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="hp-footer">
+      <div class="hp-footer-container">
+        <div class="footer-main">
+          <div class="footer-section">
+            <h4>VỀ CHÚNG TÔI</h4>
+            <ul>
+              <li><a href="../pages/gioi-thieu.html">Giới thiệu</a></li>
+              <li><a href="contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>TƯ VẤN MUA HÀNG</h4>
+            <ul>
+              <li><a href="homepage.html">Trang chủ</a></li>
+              <li><a href="products.html">Sản phẩm</a></li>
+              <li><a href="../pages/gioi-thieu.html">Giới thiệu</a></li>
+              <li><a href="products.html">Tin tức</a></li>
+              <li><a href="contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+            <ul>
+              <li><a href="../pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
+              <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+              <li><a href="../pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>CHÍNH SÁCH</h4>
+            <ul>
+              <li><a href="../pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
+              <li><a href="../pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
+              <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
+              <li><a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+            <div class="social-links">
+              <a href="https://www.facebook.com/ngo.tam.729267" target="_blank" class="social-link facebook">
+                <i class="fa-brands fa-facebook-f"></i>
+              </a>
+              <a href="https://www.instagram.com/jawinsss/" target="_blank" class="social-link instagram">
+                <i class="fa-brands fa-instagram"></i>
+              </a>
+            </div>
+          </div>
+        </div>
+        <div class="footer-bottom">
+          <div class="footer-bottom-section">
+            <h4>HÌNH THỨC THANH TOÁN</h4>
+            <div class="payment-methods">
+              <div class="payment-method">ZALOPAY</div>
+              <div class="payment-method">MOMO</div>
+            </div>
+          </div>
+          <div class="footer-bottom-section">
+            <h4>ĐƯỢC CHỨNG NHẬN</h4>
+            <div class="certifications">
+              <div class="certification">Duy Tan University</div>
+              <div class="certification">C1SE.51</div>
+            </div>
+          </div>
+        </div>
+        <div class="footer-copyright">
+          Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+        </div>
+      </div>
+    </footer>
+
+    <!-- Back to Top Button -->
+    <button id="backToTop" class="back-to-top" title="Lên đầu trang">
+      <i class="fa-solid fa-chevron-up"></i>
+    </button>
+  </body>
+</html>
