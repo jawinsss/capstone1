@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chính sách đổi trả và hoàn tiền - MatFlow</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="../../styles/homepage.css">
-    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../styles/homepage.css" />
+    <link
+      rel="shortcut icon"
+      href="../../assets/Favicon MatFlow.png"
+      type="image/x-icon"
+    />
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/auth-context.js" defer></script>
@@ -17,496 +27,654 @@
     <script src="../../js/avatar-loader.js" defer></script>
     <script src="../../js/cartUtils.js" defer></script>
     <style>
-        [hidden]{display:none!important}
-        
+      [hidden] {
+        display: none !important;
+      }
+
+      .policy-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .policy-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px 0;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+      }
+
+      .policy-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .policy-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+      }
+
+      .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .policy-section {
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #3498db;
+      }
+
+      .section-content {
+        color: #555;
+        margin-bottom: 20px;
+      }
+
+      .highlight-box {
+        background: #e8f4fd;
+        border-left: 4px solid #3498db;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .warning-box {
+        background: #fff3cd;
+        border-left: 4px solid #ffc107;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .contact-info {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .contact-item i {
+        color: #3498db;
+        margin-right: 10px;
+        width: 20px;
+      }
+
+      .policy-list {
+        padding-left: 20px;
+      }
+
+      .policy-list li {
+        margin-bottom: 8px;
+      }
+
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #3498db;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.3s;
+        margin-bottom: 20px;
+      }
+
+      .back-btn:hover {
+        background: #2980b9;
+        color: white;
+      }
+
+      .last-updated {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        margin-top: 30px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      .time-frame {
+        background: #e8f5e8;
+        border: 1px solid #4caf50;
+        padding: 15px;
+        border-radius: 8px;
+        margin: 15px 0;
+      }
+
+      .time-frame h4 {
+        color: #2e7d32;
+        margin-bottom: 10px;
+      }
+
+      @media (max-width: 768px) {
         .policy-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
+          padding: 15px;
         }
-        
-        .policy-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 12px;
-        }
-        
-        .policy-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .policy-subtitle {
-            font-size: 1.1rem;
-            color: #666;
-        }
-        
+
         .policy-content {
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+          padding: 20px;
         }
-        
-        .policy-section {
-            margin-bottom: 30px;
+
+        .policy-title {
+          font-size: 2rem;
         }
-        
+
         .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #3498db;
+          font-size: 1.3rem;
         }
-        
-        .section-content {
-            color: #555;
-            margin-bottom: 20px;
-        }
-        
-        .highlight-box {
-            background: #e8f4fd;
-            border-left: 4px solid #3498db;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .warning-box {
-            background: #fff3cd;
-            border-left: 4px solid #ffc107;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .contact-info {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .contact-item i {
-            color: #3498db;
-            margin-right: 10px;
-            width: 20px;
-        }
-        
-        .policy-list {
-            padding-left: 20px;
-        }
-        
-        .policy-list li {
-            margin-bottom: 8px;
-        }
-        
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #3498db;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.3s;
-            margin-bottom: 20px;
-        }
-        
-        .back-btn:hover {
-            background: #2980b9;
-            color: white;
-        }
-        
-        .last-updated {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            margin-top: 30px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        .time-frame {
-            background: #e8f5e8;
-            border: 1px solid #4caf50;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
-        }
-        
-        .time-frame h4 {
-            color: #2e7d32;
-            margin-bottom: 10px;
-        }
-        
-        @media (max-width: 768px) {
-            .policy-container {
-                padding: 15px;
-            }
-            
-            .policy-content {
-                padding: 20px;
-            }
-            
-            .policy-title {
-                font-size: 2rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-        }
+      }
     </style>
-    <link rel="stylesheet" href="../../styles/chatbot-widget.css">
+    <link rel="stylesheet" href="../../styles/chatbot-widget.css" />
     <script src="../../js/chatbot-widget.js" defer></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="hp-topbar">
-        <div class="hp-topbar-inner">
-            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
-            <div class="hp-top-actions">
-                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
-                
-                <!-- User Avatar (shown when logged in) -->
-                <div id="hpUserAvatar" class="hp-user-avatar" hidden>
-                    <div class="hp-avatar-circle">
-                        <span id="hpUserInitials">U</span>
-                    </div>
-                    <a id="hpUserName" class="hp-user-name" href="../userpage/user.html" style="text-decoration: none; color: inherit; cursor: pointer;"></a>
-                </div>
-                
-                <!-- Login/Logout Links -->
-                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
-                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
-                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+      <div class="hp-topbar-inner">
+        <a class="hp-supplier-link" href="#"
+          >Đăng kí để trở thành nhà cung cấp</a
+        >
+        <div class="hp-top-actions">
+          <button class="hp-chip" type="button">
+            <i class="fa-solid fa-globe"></i> Tiếng việt
+          </button>
+
+          <!-- User Avatar (shown when logged in) -->
+          <div id="hpUserAvatar" class="hp-user-avatar" hidden>
+            <div class="hp-avatar-circle">
+              <span id="hpUserInitials">U</span>
             </div>
+            <a
+              id="hpUserName"
+              class="hp-user-name"
+              href="../userpage/user.html"
+              style="text-decoration: none; color: inherit; cursor: pointer"
+            ></a>
+          </div>
+
+          <!-- Login/Logout Links -->
+          <a id="hpLoginLink" href="../../index.html" class="hp-top-link"
+            >Đăng nhập</a
+          >
+          <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+          <a
+            id="hpAdminLink"
+            href="../adminpage/admin.html"
+            class="hp-top-link"
+            hidden
+            >Admin</a
+          >
         </div>
+      </div>
     </div>
 
     <header class="hp-header">
-        <div class="hp-header-container">
-            <a href="../homepage/homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
-            <div class="hp-search">
-                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
-                <div id="searchSuggestions" class="suggestions-dropdown"></div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-            <nav class="hp-nav">
-                <a href="../homepage/homepage.html">
-                    <i class="fa-solid fa-house"></i> Trang chủ</a>
-                <a href="../homepage/products.html">
-                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
-                <a href="../homepage/contact.html">
-                    <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
-                <a href="./gioi-thieu.html">
-                    <i class="fa-solid fa-users"></i>
-                    Giới Thiệu
-                </a>
-                <a href="calculator.html" class="active">
-                    <i class="fa-solid fa-calculator"></i> Tính toán
-                </a>
-            </nav>
-            <div class="hp-user">
-                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
-            </div>
+      <div class="hp-header-container">
+        <a href="../homepage/homepage.html"
+          ><img
+            class="hp-logo"
+            src="../../assets/Icon MatFlow.png"
+            alt="MatFlow"
+        /></a>
+        <div class="hp-search">
+          <input
+            id="hpSearch"
+            class="hp-input"
+            placeholder="Tìm kiếm sản phẩm..."
+          />
+          <div id="searchSuggestions" class="suggestions-dropdown"></div>
+          <div id="searchResults" class="search-results"></div>
         </div>
+        <nav class="hp-nav">
+          <a href="../homepage/homepage.html">
+            <i class="fa-solid fa-house"></i> Trang chủ</a
+          >
+          <a href="../homepage/products.html">
+            <i class="fa-solid fa-tag"></i> Sản Phẩm</a
+          >
+          <a href="../homepage/contact.html">
+            <i class="fa-solid fa-envelope"></i> Liên Hệ</a
+          >
+          <a href="./gioi-thieu.html">
+            <i class="fa-solid fa-users"></i>
+            Giới Thiệu
+          </a>
+        </nav>
+        <div class="hp-user">
+          <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">
+            🛒 <span id="hpCartCount">0</span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <main class="hp-main">
-        <div class="policy-container">
-            <a href="../homepage/homepage.html" class="back-btn">
-                <i class="fa-solid fa-arrow-left"></i>
-                Quay lại trang chủ
-            </a>
+      <div class="policy-container">
+        <a href="../homepage/homepage.html" class="back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          Quay lại trang chủ
+        </a>
 
-            <div class="policy-header">
-                <h1 class="policy-title">Chính sách đổi trả và hoàn tiền</h1>
-                <p class="policy-subtitle">Đảm bảo quyền lợi tối đa cho khách hàng</p>
-            </div>
-
-            <div class="policy-content">
-                <div class="policy-section">
-                    <div class="section-content">
-                        <p>Chào mừng bạn đến với <strong>MatFlow</strong>. Sau đây là chính sách đổi trả sản phẩm và hoàn tiền của chúng tôi.</p>
-                        <p>Các điều khoản và điều kiện được quy định trong "Chính sách đổi trả sản phẩm và hoàn tiền" được xây dựng để đảm bảo quyền lợi của khách hàng.</p>
-                    </div>
-                </div>
-
-                <div class="highlight-box">
-                    <h3 style="color: #2c3e50; margin-bottom: 15px;">
-                        <i class="fa-solid fa-shield-alt"></i> Cam kết chất lượng
-                    </h3>
-                    <p><strong>MatFlow</strong> đảm bảo sản phẩm được bán trên website là các sản phẩm thương mại chính hãng được nhập từ các thương hiệu uy tín và 100% chính hãng.</p>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">1. Điều kiện trả hàng</h2>
-                    <div class="section-content">
-                        <p><strong>MatFlow</strong> chỉ thực hiện "Chính sách đổi trả sản phẩm và hoàn tiền" đối với các trường hợp sau:</p>
-                        <ul class="policy-list">
-                            <li>Sản phẩm bị lỗi và hỏng trong quá trình vận chuyển</li>
-                            <li>Cửa hàng giao sai, thiếu sản phẩm cho khách hàng (VD: Sai màu, size (quy cách),...)</li>
-                            <li>Sản phẩm thực tế khác biệt nhiều so với mô tả</li>
-                            <li>Sản phẩm không đúng với đơn hàng đã đặt</li>
-                        </ul>
-                    </div>
-                    
-                    <div class="warning-box">
-                        <h4 style="color: #856404; margin-bottom: 10px;">
-                            <i class="fa-solid fa-exclamation-triangle"></i> Lưu ý quan trọng
-                        </h4>
-                        <p>Mọi yêu cầu liên quan tới "Chính sách đổi trả sản phẩm và hoàn tiền" chỉ được thực hiện thông qua 2 phương thức liên hệ:</p>
-                        <div class="contact-info">
-                            <div class="contact-item">
-                                <i class="fa-solid fa-envelope"></i>
-                                <span><strong>Email:</strong> info@matflow.com</span>
-                            </div>
-                            <div class="contact-item">
-                                <i class="fa-solid fa-phone"></i>
-                                <span><strong>Hotline:</strong> 0123 456 789</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">2. Thời gian đổi trả sản phẩm</h2>
-                    <div class="section-content">
-                        <div class="time-frame">
-                            <h4><i class="fa-solid fa-tools"></i> Sản phẩm có gia công, sản xuất</h4>
-                            <p>Đối với các sản phẩm này, chúng chỉ áp dụng "Chính sách đổi trả sản phẩm và hoàn tiền" nếu sản phẩm bị lỗi do chúng tôi gia công, sản xuất hoặc lỗi trong quá trình vận chuyển.</p>
-                            <p><strong>Thời gian:</strong> Liên hệ hotline trong vòng <strong>48 giờ</strong> kể từ lúc nhận hàng để được giải quyết.</p>
-                        </div>
-                        
-                        <div class="time-frame">
-                            <h4><i class="fa-solid fa-box"></i> Sản phẩm nguyên đai, nguyên kiện</h4>
-                            <p>Khách hàng thực hiện đổi trả sản phẩm trong thời gian <strong>3-5 ngày làm việc</strong> kể từ ngày nhận hàng.</p>
-                        </div>
-                        
-                        <div class="warning-box">
-                            <p><strong>Lưu ý:</strong> Không áp dụng đổi/trả với sản phẩm quà tặng.</p>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">3. Hoàn trả tiền</h2>
-                    <div class="section-content">
-                        <p><strong>MatFlow</strong> sẽ thực hiện hoàn tiền thanh toán trước/tiền cọc cho Quý khách hàng khi:</p>
-                        <ul class="policy-list">
-                            <li>Khách hàng không nhận được sản phẩm khi đã cọc/thanh toán trước</li>
-                            <li>Khi khách hàng thực hiện đổi trả hàng và <strong>MatFlow</strong> đã nhận được hàng trả lại</li>
-                            <li>Sản phẩm bị lỗi do lỗi sản xuất hoặc vận chuyển</li>
-                        </ul>
-                        
-                        <div class="highlight-box">
-                            <h4 style="color: #2c3e50; margin-bottom: 10px;">
-                                <i class="fa-solid fa-credit-card"></i> Phương thức hoàn tiền
-                            </h4>
-                            <p>Tùy hình thức Quý khách hàng đã thực hiện thanh toán, <strong>MatFlow</strong> sẽ thực hiện hoàn tiền qua:</p>
-                            <ul class="policy-list">
-                                <li>Chuyển khoản ngân hàng</li>
-                                <li>Tiền mặt (nếu mua tại cửa hàng)</li>
-                                <li>Ví điện tử (nếu thanh toán qua ví điện tử)</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">4. Quy trình đổi trả</h2>
-                    <div class="section-content">
-                        <ol class="policy-list">
-                            <li><strong>Liên hệ:</strong> Gọi hotline hoặc gửi email với thông tin đơn hàng</li>
-                            <li><strong>Xác nhận:</strong> Chúng tôi sẽ xác nhận và hướng dẫn quy trình đổi trả</li>
-                            <li><strong>Gửi hàng:</strong> Khách hàng gửi hàng về địa chỉ chỉ định</li>
-                            <li><strong>Kiểm tra:</strong> Chúng tôi kiểm tra tình trạng sản phẩm</li>
-                            <li><strong>Xử lý:</strong> Thực hiện đổi hàng mới hoặc hoàn tiền</li>
-                        </ol>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">5. Thông tin liên hệ</h2>
-                    <div class="contact-info">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;">Công ty TNHH MatFlow</h3>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-map-marker-alt"></i>
-                            <span><strong>Địa chỉ:</strong> 123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-phone"></i>
-                            <span><strong>Điện thoại:</strong> 0123 456 789</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-envelope"></i>
-                            <span><strong>Email:</strong> info@matflow.com</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-clock"></i>
-                            <span><strong>Giờ làm việc:</strong> 8:00 - 17:00 (Thứ 2 - Thứ 6)</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="last-updated">
-                    <p><strong>Lần cập nhật cuối:</strong> Tháng 1, 2025</p>
-                    <p><strong>Hiệu lực:</strong> Từ ngày 1 tháng 1 năm 2025</p>
-                </div>
-            </div>
+        <div class="policy-header">
+          <h1 class="policy-title">Chính sách đổi trả và hoàn tiền</h1>
+          <p class="policy-subtitle">Đảm bảo quyền lợi tối đa cho khách hàng</p>
         </div>
+
+        <div class="policy-content">
+          <div class="policy-section">
+            <div class="section-content">
+              <p>
+                Chào mừng bạn đến với <strong>MatFlow</strong>. Sau đây là chính
+                sách đổi trả sản phẩm và hoàn tiền của chúng tôi.
+              </p>
+              <p>
+                Các điều khoản và điều kiện được quy định trong "Chính sách đổi
+                trả sản phẩm và hoàn tiền" được xây dựng để đảm bảo quyền lợi
+                của khách hàng.
+              </p>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <h3 style="color: #2c3e50; margin-bottom: 15px">
+              <i class="fa-solid fa-shield-alt"></i> Cam kết chất lượng
+            </h3>
+            <p>
+              <strong>MatFlow</strong> đảm bảo sản phẩm được bán trên website là
+              các sản phẩm thương mại chính hãng được nhập từ các thương hiệu uy
+              tín và 100% chính hãng.
+            </p>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">1. Điều kiện trả hàng</h2>
+            <div class="section-content">
+              <p>
+                <strong>MatFlow</strong> chỉ thực hiện "Chính sách đổi trả sản
+                phẩm và hoàn tiền" đối với các trường hợp sau:
+              </p>
+              <ul class="policy-list">
+                <li>Sản phẩm bị lỗi và hỏng trong quá trình vận chuyển</li>
+                <li>
+                  Cửa hàng giao sai, thiếu sản phẩm cho khách hàng (VD: Sai màu,
+                  size (quy cách),...)
+                </li>
+                <li>Sản phẩm thực tế khác biệt nhiều so với mô tả</li>
+                <li>Sản phẩm không đúng với đơn hàng đã đặt</li>
+              </ul>
+            </div>
+
+            <div class="warning-box">
+              <h4 style="color: #856404; margin-bottom: 10px">
+                <i class="fa-solid fa-exclamation-triangle"></i> Lưu ý quan
+                trọng
+              </h4>
+              <p>
+                Mọi yêu cầu liên quan tới "Chính sách đổi trả sản phẩm và hoàn
+                tiền" chỉ được thực hiện thông qua 2 phương thức liên hệ:
+              </p>
+              <div class="contact-info">
+                <div class="contact-item">
+                  <i class="fa-solid fa-envelope"></i>
+                  <span><strong>Email:</strong> matflowcontact@gmail.com</span>
+                </div>
+                <div class="contact-item">
+                  <i class="fa-solid fa-phone"></i>
+                  <span><strong>Hotline:</strong>0905-626-568</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">2. Thời gian đổi trả sản phẩm</h2>
+            <div class="section-content">
+              <div class="time-frame">
+                <h4>
+                  <i class="fa-solid fa-tools"></i> Sản phẩm có gia công, sản
+                  xuất
+                </h4>
+                <p>
+                  Đối với các sản phẩm này, chúng chỉ áp dụng "Chính sách đổi
+                  trả sản phẩm và hoàn tiền" nếu sản phẩm bị lỗi do chúng tôi
+                  gia công, sản xuất hoặc lỗi trong quá trình vận chuyển.
+                </p>
+                <p>
+                  <strong>Thời gian:</strong> Liên hệ hotline trong vòng
+                  <strong>48 giờ</strong> kể từ lúc nhận hàng để được giải
+                  quyết.
+                </p>
+              </div>
+
+              <div class="time-frame">
+                <h4>
+                  <i class="fa-solid fa-box"></i> Sản phẩm nguyên đai, nguyên
+                  kiện
+                </h4>
+                <p>
+                  Khách hàng thực hiện đổi trả sản phẩm trong thời gian
+                  <strong>3-5 ngày làm việc</strong> kể từ ngày nhận hàng.
+                </p>
+              </div>
+
+              <div class="warning-box">
+                <p>
+                  <strong>Lưu ý:</strong> Không áp dụng đổi/trả với sản phẩm quà
+                  tặng.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">3. Hoàn trả tiền</h2>
+            <div class="section-content">
+              <p>
+                <strong>MatFlow</strong> sẽ thực hiện hoàn tiền thanh toán
+                trước/tiền cọc cho Quý khách hàng khi:
+              </p>
+              <ul class="policy-list">
+                <li>
+                  Khách hàng không nhận được sản phẩm khi đã cọc/thanh toán
+                  trước
+                </li>
+                <li>
+                  Khi khách hàng thực hiện đổi trả hàng và
+                  <strong>MatFlow</strong> đã nhận được hàng trả lại
+                </li>
+                <li>Sản phẩm bị lỗi do lỗi sản xuất hoặc vận chuyển</li>
+              </ul>
+
+              <div class="highlight-box">
+                <h4 style="color: #2c3e50; margin-bottom: 10px">
+                  <i class="fa-solid fa-credit-card"></i> Phương thức hoàn tiền
+                </h4>
+                <p>
+                  Tùy hình thức Quý khách hàng đã thực hiện thanh toán,
+                  <strong>MatFlow</strong> sẽ thực hiện hoàn tiền qua:
+                </p>
+                <ul class="policy-list">
+                  <li>Chuyển khoản ngân hàng</li>
+                  <li>Tiền mặt (nếu mua tại cửa hàng)</li>
+                  <li>Ví điện tử (nếu thanh toán qua ví điện tử)</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">4. Quy trình đổi trả</h2>
+            <div class="section-content">
+              <ol class="policy-list">
+                <li>
+                  <strong>Liên hệ:</strong> Gọi hotline hoặc gửi email với thông
+                  tin đơn hàng
+                </li>
+                <li>
+                  <strong>Xác nhận:</strong> Chúng tôi sẽ xác nhận và hướng dẫn
+                  quy trình đổi trả
+                </li>
+                <li>
+                  <strong>Gửi hàng:</strong> Khách hàng gửi hàng về địa chỉ chỉ
+                  định
+                </li>
+                <li>
+                  <strong>Kiểm tra:</strong> Chúng tôi kiểm tra tình trạng sản
+                  phẩm
+                </li>
+                <li>
+                  <strong>Xử lý:</strong> Thực hiện đổi hàng mới hoặc hoàn tiền
+                </li>
+              </ol>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">5. Thông tin liên hệ</h2>
+            <div class="contact-info">
+              <h3 style="color: #2c3e50; margin-bottom: 20px">
+                Công ty TNHH MatFlow
+              </h3>
+              <div class="contact-item">
+                <i class="fa-solid fa-map-marker-alt"></i>
+                <span><strong>Địa chỉ:</strong> 82 Nguyễn Công Triều</span>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-phone"></i>
+                <span><strong>Điện thoại:</strong>0905-626-568</span>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-envelope"></i>
+                <span><strong>Email:</strong> matflowcontact@gmail.com</span>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-clock"></i>
+                <span
+                  ><strong>Giờ làm việc:</strong> 8:00 - 17:00 (Thứ 2 - Thứ
+                  6)</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div class="last-updated">
+            <p><strong>Lần cập nhật cuối:</strong> Tháng 1, 2025</p>
+            <p><strong>Hiệu lực:</strong> Từ ngày 1 tháng 1 năm 2025</p>
+          </div>
+        </div>
+      </div>
     </main>
 
     <footer class="hp-footer">
-        <div class="hp-footer-container">
-            <div class="footer-main">
-                <div class="footer-section">
-                    <h4>VỀ CHÚNG TÔI</h4>
-                    <ul>
-                        <li><a href="gioi-thieu.html">Giới thiệu</a></li>
-                        <li><a href="../homepage/contact.html">Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>TƯ VẤN MUA HÀNG</h4>
-                    <ul>
-                        <li><a href="../homepage/homepage.html">Trang chủ</a></li>
-                        <li><a href="../homepage/products.html">Sản phẩm</a></li>
-                        <li><a href="gioi-thieu.html">Giới thiệu</a></li>
-                        <li><a href="../homepage/products.html">Tin tức</a></li>
-                        <li><a href="../homepage/contact.html">Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>HỖ TRỢ KHÁCH HÀNG</h4>
-                    <ul>
-                        <li><a href="../pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
-                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
-                        <li><a href="../pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>CHÍNH SÁCH</h4>
-                    <ul>
-                        <li><a href="../pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
-                        <li><a href="../pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
-                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
-                        <li><a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
-                    <div class="social-links">
-                        <a href="https://www.facebook.com/ngo.tam.729267" target="_blank" class="social-link facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="https://www.instagram.com/jawinsss/" target="_blank" class="social-link instagram"><i class="fa-brands fa-instagram"></i></a>
-                    </div>
-                </div>
+      <div class="hp-footer-container">
+        <div class="footer-main">
+          <div class="footer-section">
+            <h4>VỀ CHÚNG TÔI</h4>
+            <ul>
+              <li><a href="gioi-thieu.html">Giới thiệu</a></li>
+              <li><a href="../homepage/contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>TƯ VẤN MUA HÀNG</h4>
+            <ul>
+              <li><a href="../homepage/homepage.html">Trang chủ</a></li>
+              <li><a href="../homepage/products.html">Sản phẩm</a></li>
+              <li><a href="gioi-thieu.html">Giới thiệu</a></li>
+              <li><a href="../homepage/products.html">Tin tức</a></li>
+              <li><a href="../homepage/contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+            <ul>
+              <li>
+                <a href="../pages/dieu-khoan-dich-vu.html"
+                  >Điều khoản dịch vụ</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-bao-mat-thong-tin.html"
+                  >Chính sách bảo mật thông tin</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-kiem-hang.html"
+                  >Chính sách kiểm hàng</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>CHÍNH SÁCH</h4>
+            <ul>
+              <li>
+                <a href="../pages/chinh-sach-van-chuyen.html"
+                  >Chính sách vận chuyển</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-thanh-toan.html"
+                  >Chính sách thanh toán</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-bao-mat-thong-tin.html"
+                  >Chính sách bảo mật thông tin</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html"
+                  >Chính sách đổi trả và hoàn tiền</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+            <div class="social-links">
+              <a
+                href="https://www.facebook.com/ngo.tam.729267"
+                target="_blank"
+                class="social-link facebook"
+                ><i class="fa-brands fa-facebook-f"></i
+              ></a>
+              <a
+                href="https://www.instagram.com/jawinsss/"
+                target="_blank"
+                class="social-link instagram"
+                ><i class="fa-brands fa-instagram"></i
+              ></a>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-bottom-section">
-                    <h4>HÌNH THỨC THANH TOÁN</h4>
-                    <div class="payment-methods">
-                        <div class="payment-method">ZALOPAY</div>
-                        <div class="payment-method">MOMO</div>
-                    </div>
-                </div>
-                <div class="footer-bottom-section">
-                    <h4>ĐƯỢC CHỨNG NHẬN</h4>
-                    <div class="certifications">
-                        <div class="certification">Duy Tan University</div>
-                        <div class="certification">C1SE.51</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-copyright">
-                Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
-            </div>
+          </div>
         </div>
+
+        <div class="footer-bottom">
+          <div class="footer-bottom-section">
+            <h4>HÌNH THỨC THANH TOÁN</h4>
+            <div class="payment-methods">
+              <div class="payment-method">ZALOPAY</div>
+              <div class="payment-method">MOMO</div>
+            </div>
+          </div>
+          <div class="footer-bottom-section">
+            <h4>ĐƯỢC CHỨNG NHẬN</h4>
+            <div class="certifications">
+              <div class="certification">Duy Tan University</div>
+              <div class="certification">C1SE.51</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-copyright">
+          Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+        </div>
+      </div>
     </footer>
 
     <script>
-        // User session management
-        document.addEventListener('DOMContentLoaded', () => {
-            const userNameEl = document.getElementById('hpUserName');
-            const loginLink = document.getElementById('hpLoginLink');
-            const logoutBtn = document.getElementById('hpLogoutBtn');
-            const adminLink = document.getElementById('hpAdminLink');
-            const cartBtn = document.getElementById('hpCartBtn');
-            const cartCount = document.getElementById('hpCartCount');
-            // Cart is now managed by CartUtils
+      // User session management
+      document.addEventListener("DOMContentLoaded", () => {
+        const userNameEl = document.getElementById("hpUserName");
+        const loginLink = document.getElementById("hpLoginLink");
+        const logoutBtn = document.getElementById("hpLogoutBtn");
+        const adminLink = document.getElementById("hpAdminLink");
+        const cartBtn = document.getElementById("hpCartBtn");
+        const cartCount = document.getElementById("hpCartCount");
+        // Cart is now managed by CartUtils
 
-            // User session UI
-            async function syncUserUI(){
-                let user = null;
-                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(_) {}
-                const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-                if(!user && token){
-                    try {
-                        const res = await window.apiService.get('/users/profile');
-                        if(res?.success){ user = res.data; localStorage.setItem('user', JSON.stringify(user)); }
-                    } catch(e) {}
-                }
-                if(user){
-                    userNameEl.textContent = user.fullName || user.username || '';
-                    loginLink.setAttribute('hidden','');
-                    logoutBtn.removeAttribute('hidden');
-                    if((user.role||'').toUpperCase() === 'ADMIN') adminLink.removeAttribute('hidden');
-                } else {
-                    userNameEl.textContent = '';
-                    logoutBtn.setAttribute('hidden','');
-                    adminLink.setAttribute('hidden','');
-                    loginLink.removeAttribute('hidden');
-                }
-            }
+        // User session UI
+        async function syncUserUI() {
+          let user = null;
+          try {
+            user = JSON.parse(localStorage.getItem("user") || "null");
+          } catch (_) {}
+          const token =
+            localStorage.getItem("token") ||
+            localStorage.getItem("accessToken");
+          if (!user && token) {
+            try {
+              const res = await window.apiService.get("/users/profile");
+              if (res?.success) {
+                user = res.data;
+                localStorage.setItem("user", JSON.stringify(user));
+              }
+            } catch (e) {}
+          }
+          if (user) {
+            userNameEl.textContent = user.fullName || user.username || "";
+            loginLink.setAttribute("hidden", "");
+            logoutBtn.removeAttribute("hidden");
+            if ((user.role || "").toUpperCase() === "ADMIN")
+              adminLink.removeAttribute("hidden");
+          } else {
+            userNameEl.textContent = "";
+            logoutBtn.setAttribute("hidden", "");
+            adminLink.setAttribute("hidden", "");
+            loginLink.removeAttribute("hidden");
+          }
+        }
 
-            if(logoutBtn){
-                logoutBtn.addEventListener('click', ()=>{
-                    try {
-                        // Clear all authentication data
-                        ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
-                            localStorage.removeItem(k); 
-                            sessionStorage.removeItem(k);
-                        });
-                    } catch(_){}
-                    // Refresh current page
-                    window.location.reload();
-                });
-            }
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", () => {
+            try {
+              // Clear all authentication data
+              [
+                "accessToken",
+                "refreshToken",
+                "token",
+                "user",
+                "user_token",
+                "user_data",
+                "admin_token",
+                "admin_data",
+              ].forEach((k) => {
+                localStorage.removeItem(k);
+                sessionStorage.removeItem(k);
+              });
+            } catch (_) {}
+            // Refresh current page
+            window.location.reload();
+          });
+        }
 
-            // Cart count is now handled by CartUtils
-            
-            cartBtn && cartBtn.addEventListener('click', ()=>{
-                window.location.href = '../homepage/cart.html';
-            });
+        // Cart count is now handled by CartUtils
 
-            syncUserUI();
-        });
+        cartBtn &&
+          cartBtn.addEventListener("click", () => {
+            window.location.href = "../homepage/cart.html";
+          });
+
+        syncUserUI();
+      });
     </script>
 
     <!-- Back to Top Button -->
     <button id="backToTop" class="back-to-top" title="Lên đầu trang">
-        <i class="fa-solid fa-chevron-up"></i>
+      <i class="fa-solid fa-chevron-up"></i>
     </button>
     <script src="../../js/backToTop.js" defer></script>
-</body>
+  </body>
 </html>
