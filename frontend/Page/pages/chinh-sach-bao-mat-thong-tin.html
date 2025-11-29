@@ -1,15 +1,25 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chính sách bảo mật thông tin - MatFlow</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    <link rel="stylesheet" href="../../styles/homepage.css">
-    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../styles/homepage.css" />
+    <link
+      rel="shortcut icon"
+      href="../../assets/Favicon MatFlow.png"
+      type="image/x-icon"
+    />
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
     <script src="../../js/auth-context.js" defer></script>
@@ -17,479 +27,617 @@
     <script src="../../js/avatar-loader.js" defer></script>
     <script src="../../js/cartUtils.js" defer></script>
     <style>
-        [hidden]{display:none!important}
-        
+      [hidden] {
+        display: none !important;
+      }
+
+      .policy-container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        line-height: 1.6;
+      }
+
+      .policy-header {
+        text-align: center;
+        margin-bottom: 40px;
+        padding: 30px 0;
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 12px;
+      }
+
+      .policy-title {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #333;
+        margin-bottom: 10px;
+      }
+
+      .policy-subtitle {
+        font-size: 1.1rem;
+        color: #666;
+      }
+
+      .policy-content {
+        background: #fff;
+        padding: 40px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        margin-bottom: 30px;
+      }
+
+      .policy-section {
+        margin-bottom: 30px;
+      }
+
+      .section-title {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 15px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #3498db;
+      }
+
+      .section-content {
+        color: #555;
+        margin-bottom: 20px;
+      }
+
+      .highlight-box {
+        background: #e8f4fd;
+        border-left: 4px solid #3498db;
+        padding: 20px;
+        margin: 20px 0;
+        border-radius: 0 8px 8px 0;
+      }
+
+      .contact-info {
+        background: #f8f9fa;
+        padding: 25px;
+        border-radius: 8px;
+        margin: 20px 0;
+      }
+
+      .contact-item {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+
+      .contact-item i {
+        color: #3498db;
+        margin-right: 10px;
+        width: 20px;
+      }
+
+      .policy-list {
+        padding-left: 20px;
+      }
+
+      .policy-list li {
+        margin-bottom: 8px;
+      }
+
+      .back-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        background: #3498db;
+        color: white;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: background-color 0.3s;
+        margin-bottom: 20px;
+      }
+
+      .back-btn:hover {
+        background: #2980b9;
+        color: white;
+      }
+
+      .last-updated {
+        text-align: center;
+        color: #666;
+        font-style: italic;
+        margin-top: 30px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 8px;
+      }
+
+      @media (max-width: 768px) {
         .policy-container {
-            max-width: 1000px;
-            margin: 0 auto;
-            padding: 20px;
-            line-height: 1.6;
+          padding: 15px;
         }
-        
-        .policy-header {
-            text-align: center;
-            margin-bottom: 40px;
-            padding: 30px 0;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            border-radius: 12px;
-        }
-        
-        .policy-title {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        
-        .policy-subtitle {
-            font-size: 1.1rem;
-            color: #666;
-        }
-        
+
         .policy-content {
-            background: #fff;
-            padding: 40px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            margin-bottom: 30px;
+          padding: 20px;
         }
-        
-        .policy-section {
-            margin-bottom: 30px;
+
+        .policy-title {
+          font-size: 2rem;
         }
-        
+
         .section-title {
-            font-size: 1.5rem;
-            font-weight: 600;
-            color: #2c3e50;
-            margin-bottom: 15px;
-            padding-bottom: 8px;
-            border-bottom: 2px solid #3498db;
+          font-size: 1.3rem;
         }
-        
-        .section-content {
-            color: #555;
-            margin-bottom: 20px;
-        }
-        
-        .highlight-box {
-            background: #e8f4fd;
-            border-left: 4px solid #3498db;
-            padding: 20px;
-            margin: 20px 0;
-            border-radius: 0 8px 8px 0;
-        }
-        
-        .contact-info {
-            background: #f8f9fa;
-            padding: 25px;
-            border-radius: 8px;
-            margin: 20px 0;
-        }
-        
-        .contact-item {
-            display: flex;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .contact-item i {
-            color: #3498db;
-            margin-right: 10px;
-            width: 20px;
-        }
-        
-        .policy-list {
-            padding-left: 20px;
-        }
-        
-        .policy-list li {
-            margin-bottom: 8px;
-        }
-        
-        .back-btn {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: #3498db;
-            color: white;
-            padding: 12px 24px;
-            border-radius: 6px;
-            text-decoration: none;
-            font-weight: 500;
-            transition: background-color 0.3s;
-            margin-bottom: 20px;
-        }
-        
-        .back-btn:hover {
-            background: #2980b9;
-            color: white;
-        }
-        
-        .last-updated {
-            text-align: center;
-            color: #666;
-            font-style: italic;
-            margin-top: 30px;
-            padding: 15px;
-            background: #f8f9fa;
-            border-radius: 8px;
-        }
-        
-        @media (max-width: 768px) {
-            .policy-container {
-                padding: 15px;
-            }
-            
-            .policy-content {
-                padding: 20px;
-            }
-            
-            .policy-title {
-                font-size: 2rem;
-            }
-            
-            .section-title {
-                font-size: 1.3rem;
-            }
-        }
+      }
     </style>
-    <link rel="stylesheet" href="../../styles/chatbot-widget.css">
+    <link rel="stylesheet" href="../../styles/chatbot-widget.css" />
     <script src="../../js/chatbot-widget.js" defer></script>
-</head>
-<body>
+  </head>
+  <body>
     <div class="hp-topbar">
-        <div class="hp-topbar-inner">
-            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
-            <div class="hp-top-actions">
-                <button class="hp-chip" type="button"><i class="fa-solid fa-globe"></i> Tiếng việt</button>
-                
-                <!-- User Avatar (shown when logged in) -->
-                <div id="hpUserAvatar" class="hp-user-avatar" hidden>
-                    <div class="hp-avatar-circle">
-                        <span id="hpUserInitials">U</span>
-                    </div>
-                    <a id="hpUserName" class="hp-user-name" href="../userpage/user.html" style="text-decoration: none; color: inherit; cursor: pointer;"></a>
-                </div>
-                
-                <!-- Login/Logout Links -->
-                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
-                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
-                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+      <div class="hp-topbar-inner">
+        <a class="hp-supplier-link" href="#"
+          >Đăng kí để trở thành nhà cung cấp</a
+        >
+        <div class="hp-top-actions">
+          <button class="hp-chip" type="button">
+            <i class="fa-solid fa-globe"></i> Tiếng việt
+          </button>
+
+          <!-- User Avatar (shown when logged in) -->
+          <div id="hpUserAvatar" class="hp-user-avatar" hidden>
+            <div class="hp-avatar-circle">
+              <span id="hpUserInitials">U</span>
             </div>
+            <a
+              id="hpUserName"
+              class="hp-user-name"
+              href="../userpage/user.html"
+              style="text-decoration: none; color: inherit; cursor: pointer"
+            ></a>
+          </div>
+
+          <!-- Login/Logout Links -->
+          <a id="hpLoginLink" href="../../index.html" class="hp-top-link"
+            >Đăng nhập</a
+          >
+          <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+          <a
+            id="hpAdminLink"
+            href="../adminpage/admin.html"
+            class="hp-top-link"
+            hidden
+            >Admin</a
+          >
         </div>
+      </div>
     </div>
 
     <header class="hp-header">
-        <div class="hp-header-container">
-            <a href="../homepage/homepage.html"><img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow"></a>
-            <div class="hp-search">
-                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
-                <div id="searchSuggestions" class="suggestions-dropdown"></div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-            <nav class="hp-nav">
-                <a href="../homepage/homepage.html">
-                    <i class="fa-solid fa-house"></i> Trang chủ</a>
-                <a href="../homepage/products.html">
-                    <i class="fa-solid fa-tag"></i> Sản Phẩm</a>
-                <a href="../homepage/contact.html">
-                    <i class="fa-solid fa-envelope"></i> Liên Hệ</a>
-            </nav>
-            <div class="hp-user">
-                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
-            </div>
+      <div class="hp-header-container">
+        <a href="../homepage/homepage.html"
+          ><img
+            class="hp-logo"
+            src="../../assets/Icon MatFlow.png"
+            alt="MatFlow"
+        /></a>
+        <div class="hp-search">
+          <input
+            id="hpSearch"
+            class="hp-input"
+            placeholder="Tìm kiếm sản phẩm..."
+          />
+          <div id="searchSuggestions" class="suggestions-dropdown"></div>
+          <div id="searchResults" class="search-results"></div>
         </div>
+        <nav class="hp-nav">
+          <a href="../homepage/homepage.html">
+            <i class="fa-solid fa-house"></i> Trang chủ</a
+          >
+          <a href="../homepage/products.html">
+            <i class="fa-solid fa-tag"></i> Sản Phẩm</a
+          >
+          <a href="../homepage/contact.html">
+            <i class="fa-solid fa-envelope"></i> Liên Hệ</a
+          >
+          <a href="./gioi-thieu.html">
+            <i class="fa-solid fa-users"></i>
+            Giới Thiệu
+          </a>
+          <a href="../homepage/calculator.html">
+                    <i class="fa-solid fa-calculator"></i> Tính toán
+                </a>
+        </nav>
+        <div class="hp-user">
+          <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">
+            🛒 <span id="hpCartCount">0</span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <main class="hp-main">
-        <div class="policy-container">
-            <a href="../homepage/homepage.html" class="back-btn">
-                <i class="fa-solid fa-arrow-left"></i>
-                Quay lại trang chủ
-            </a>
+      <div class="policy-container">
+        <a href="../homepage/homepage.html" class="back-btn">
+          <i class="fa-solid fa-arrow-left"></i>
+          Quay lại trang chủ
+        </a>
 
-            <div class="policy-header">
-                <h1 class="policy-title">Chính sách bảo mật thông tin</h1>
-                <p class="policy-subtitle">Cam kết bảo vệ thông tin cá nhân của khách hàng</p>
-            </div>
-
-            <div class="policy-content">
-                <div class="policy-section">
-                    <h2 class="section-title">1. MỤC ĐÍCH VÀ PHẠM VI THU THẬP</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi thu thập thông tin cá nhân của bạn nhằm mục đích:</p>
-                        <ul class="policy-list">
-                            <li>Cung cấp dịch vụ và sản phẩm theo yêu cầu của bạn</li>
-                            <li>Xử lý đơn hàng và giao dịch</li>
-                            <li>Cải thiện chất lượng dịch vụ và trải nghiệm người dùng</li>
-                            <li>Gửi thông tin khuyến mãi và cập nhật sản phẩm mới</li>
-                            <li>Tuân thủ các quy định pháp luật hiện hành</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">2. THÔNG TIN THU THẬP</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi có thể thu thập các loại thông tin sau:</p>
-                        <ul class="policy-list">
-                            <li><strong>Thông tin cá nhân:</strong> Họ tên, địa chỉ, số điện thoại, email</li>
-                            <li><strong>Thông tin tài khoản:</strong> Tên đăng nhập, mật khẩu (được mã hóa)</li>
-                            <li><strong>Thông tin giao dịch:</strong> Lịch sử mua hàng, phương thức thanh toán</li>
-                            <li><strong>Thông tin kỹ thuật:</strong> Địa chỉ IP, trình duyệt, thiết bị truy cập</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">3. PHƯƠNG THỨC THU THẬP THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Thông tin cá nhân được thu thập thông qua:</p>
-                        <ul class="policy-list">
-                            <li>Đăng ký tài khoản trên website</li>
-                            <li>Đặt hàng và thanh toán</li>
-                            <li>Liên hệ và tư vấn</li>
-                            <li>Đăng ký nhận bản tin</li>
-                            <li>Sử dụng các tính năng của website</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">4. SỬ DỤNG THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Thông tin cá nhân của bạn được sử dụng để:</p>
-                        <ul class="policy-list">
-                            <li>Xử lý và hoàn thành đơn hàng</li>
-                            <li>Cung cấp dịch vụ khách hàng</li>
-                            <li>Gửi thông báo về tình trạng đơn hàng</li>
-                            <li>Cải thiện sản phẩm và dịch vụ</li>
-                            <li>Gửi thông tin khuyến mãi (nếu bạn đồng ý)</li>
-                            <li>Tuân thủ nghĩa vụ pháp lý</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">5. CHIA SẺ THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi có thể chia sẻ thông tin của bạn trong các trường hợp sau:</p>
-                        <ul class="policy-list">
-                            <li><strong>Đối tác vận chuyển:</strong> Để giao hàng đến địa chỉ của bạn</li>
-                            <li><strong>Nhà cung cấp dịch vụ:</strong> Để xử lý thanh toán và hỗ trợ kỹ thuật</li>
-                            <li><strong>Cơ quan pháp luật:</strong> Khi có yêu cầu chính thức từ cơ quan có thẩm quyền</li>
-                            <li><strong>Bảo vệ quyền lợi:</strong> Để bảo vệ quyền lợi hợp pháp của chúng tôi và khách hàng</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">6. BẢO MẬT THÔNG TIN</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn bằng:</p>
-                        <ul class="policy-list">
-                            <li>Mã hóa dữ liệu nhạy cảm</li>
-                            <li>Sử dụng giao thức HTTPS an toàn</li>
-                            <li>Hạn chế quyền truy cập thông tin</li>
-                            <li>Thường xuyên cập nhật hệ thống bảo mật</li>
-                            <li>Đào tạo nhân viên về bảo mật thông tin</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">7. QUYỀN CỦA KHÁCH HÀNG</h2>
-                    <div class="section-content">
-                        <p>Bạn có quyền:</p>
-                        <ul class="policy-list">
-                            <li>Truy cập và xem thông tin cá nhân của mình</li>
-                            <li>Yêu cầu chỉnh sửa thông tin không chính xác</li>
-                            <li>Yêu cầu xóa thông tin cá nhân</li>
-                            <li>Rút lại sự đồng ý về việc sử dụng thông tin</li>
-                            <li>Khiếu nại về việc xử lý thông tin cá nhân</li>
-                        </ul>
-                    </div>
-                </div>
-
-                <div class="highlight-box">
-                    <h3 style="color: #2c3e50; margin-bottom: 15px;">
-                        <i class="fa-solid fa-shield-alt"></i> Cam kết bảo mật
-                    </h3>
-                    <p>Chúng tôi cam kết không bán, cho thuê hoặc chia sẻ thông tin cá nhân của bạn với bên thứ ba vì mục đích thương mại mà không có sự đồng ý rõ ràng của bạn.</p>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">8. THÔNG TIN LIÊN HỆ</h2>
-                    <div class="contact-info">
-                        <h3 style="color: #2c3e50; margin-bottom: 20px;">Công ty TNHH MatFlow</h3>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-map-marker-alt"></i>
-                            <span><strong>Địa chỉ:</strong> 123 Đường ABC, Quận XYZ, TP. Hồ Chí Minh</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-phone"></i>
-                            <span><strong>Điện thoại:</strong> 0123 456 789</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-envelope"></i>
-                            <span><strong>Email:</strong> info@matflow.com</span>
-                        </div>
-                        <div class="contact-item">
-                            <i class="fa-solid fa-globe"></i>
-                            <span><strong>Website:</strong> www.matflow.com</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="policy-section">
-                    <h2 class="section-title">9. CẬP NHẬT CHÍNH SÁCH</h2>
-                    <div class="section-content">
-                        <p>Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian. Mọi thay đổi sẽ được thông báo trên website và có hiệu lực ngay sau khi được đăng tải.</p>
-                        <p>Bạn nên thường xuyên kiểm tra trang này để cập nhật những thay đổi mới nhất.</p>
-                    </div>
-                </div>
-
-                <div class="last-updated">
-                    <p><strong>Lần cập nhật cuối:</strong> Tháng 1, 2025</p>
-                    <p><strong>Hiệu lực:</strong> Từ ngày 1 tháng 1 năm 2025</p>
-                </div>
-            </div>
+        <div class="policy-header">
+          <h1 class="policy-title">Chính sách bảo mật thông tin</h1>
+          <p class="policy-subtitle">
+            Cam kết bảo vệ thông tin cá nhân của khách hàng
+          </p>
         </div>
+
+        <div class="policy-content">
+          <div class="policy-section">
+            <h2 class="section-title">1. MỤC ĐÍCH VÀ PHẠM VI THU THẬP</h2>
+            <div class="section-content">
+              <p>Chúng tôi thu thập thông tin cá nhân của bạn nhằm mục đích:</p>
+              <ul class="policy-list">
+                <li>Cung cấp dịch vụ và sản phẩm theo yêu cầu của bạn</li>
+                <li>Xử lý đơn hàng và giao dịch</li>
+                <li>Cải thiện chất lượng dịch vụ và trải nghiệm người dùng</li>
+                <li>Gửi thông tin khuyến mãi và cập nhật sản phẩm mới</li>
+                <li>Tuân thủ các quy định pháp luật hiện hành</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">2. THÔNG TIN THU THẬP</h2>
+            <div class="section-content">
+              <p>Chúng tôi có thể thu thập các loại thông tin sau:</p>
+              <ul class="policy-list">
+                <li>
+                  <strong>Thông tin cá nhân:</strong> Họ tên, địa chỉ, số điện
+                  thoại, email
+                </li>
+                <li>
+                  <strong>Thông tin tài khoản:</strong> Tên đăng nhập, mật khẩu
+                  (được mã hóa)
+                </li>
+                <li>
+                  <strong>Thông tin giao dịch:</strong> Lịch sử mua hàng, phương
+                  thức thanh toán
+                </li>
+                <li>
+                  <strong>Thông tin kỹ thuật:</strong> Địa chỉ IP, trình duyệt,
+                  thiết bị truy cập
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">3. PHƯƠNG THỨC THU THẬP THÔNG TIN</h2>
+            <div class="section-content">
+              <p>Thông tin cá nhân được thu thập thông qua:</p>
+              <ul class="policy-list">
+                <li>Đăng ký tài khoản trên website</li>
+                <li>Đặt hàng và thanh toán</li>
+                <li>Liên hệ và tư vấn</li>
+                <li>Đăng ký nhận bản tin</li>
+                <li>Sử dụng các tính năng của website</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">4. SỬ DỤNG THÔNG TIN</h2>
+            <div class="section-content">
+              <p>Thông tin cá nhân của bạn được sử dụng để:</p>
+              <ul class="policy-list">
+                <li>Xử lý và hoàn thành đơn hàng</li>
+                <li>Cung cấp dịch vụ khách hàng</li>
+                <li>Gửi thông báo về tình trạng đơn hàng</li>
+                <li>Cải thiện sản phẩm và dịch vụ</li>
+                <li>Gửi thông tin khuyến mãi (nếu bạn đồng ý)</li>
+                <li>Tuân thủ nghĩa vụ pháp lý</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">5. CHIA SẺ THÔNG TIN</h2>
+            <div class="section-content">
+              <p>
+                Chúng tôi có thể chia sẻ thông tin của bạn trong các trường hợp
+                sau:
+              </p>
+              <ul class="policy-list">
+                <li>
+                  <strong>Đối tác vận chuyển:</strong> Để giao hàng đến địa chỉ
+                  của bạn
+                </li>
+                <li>
+                  <strong>Nhà cung cấp dịch vụ:</strong> Để xử lý thanh toán và
+                  hỗ trợ kỹ thuật
+                </li>
+                <li>
+                  <strong>Cơ quan pháp luật:</strong> Khi có yêu cầu chính thức
+                  từ cơ quan có thẩm quyền
+                </li>
+                <li>
+                  <strong>Bảo vệ quyền lợi:</strong> Để bảo vệ quyền lợi hợp
+                  pháp của chúng tôi và khách hàng
+                </li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">6. BẢO MẬT THÔNG TIN</h2>
+            <div class="section-content">
+              <p>Chúng tôi cam kết bảo vệ thông tin cá nhân của bạn bằng:</p>
+              <ul class="policy-list">
+                <li>Mã hóa dữ liệu nhạy cảm</li>
+                <li>Sử dụng giao thức HTTPS an toàn</li>
+                <li>Hạn chế quyền truy cập thông tin</li>
+                <li>Thường xuyên cập nhật hệ thống bảo mật</li>
+                <li>Đào tạo nhân viên về bảo mật thông tin</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">7. QUYỀN CỦA KHÁCH HÀNG</h2>
+            <div class="section-content">
+              <p>Bạn có quyền:</p>
+              <ul class="policy-list">
+                <li>Truy cập và xem thông tin cá nhân của mình</li>
+                <li>Yêu cầu chỉnh sửa thông tin không chính xác</li>
+                <li>Yêu cầu xóa thông tin cá nhân</li>
+                <li>Rút lại sự đồng ý về việc sử dụng thông tin</li>
+                <li>Khiếu nại về việc xử lý thông tin cá nhân</li>
+              </ul>
+            </div>
+          </div>
+
+          <div class="highlight-box">
+            <h3 style="color: #2c3e50; margin-bottom: 15px">
+              <i class="fa-solid fa-shield-alt"></i> Cam kết bảo mật
+            </h3>
+            <p>
+              Chúng tôi cam kết không bán, cho thuê hoặc chia sẻ thông tin cá
+              nhân của bạn với bên thứ ba vì mục đích thương mại mà không có sự
+              đồng ý rõ ràng của bạn.
+            </p>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">8. THÔNG TIN LIÊN HỆ</h2>
+            <div class="contact-info">
+              <h3 style="color: #2c3e50; margin-bottom: 20px">
+                Công ty TNHH MatFlow
+              </h3>
+              <div class="contact-item">
+                <i class="fa-solid fa-map-marker-alt"></i>
+                <span><strong>Địa chỉ:</strong> 82 Nguyễn Công Triều</span>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-phone"></i>
+                <span><strong>Điện thoại:</strong> 0905-626-568</span>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-envelope"></i>
+                <span><strong>Email:</strong> matflowcontact@gmail.com</span>
+              </div>
+              <div class="contact-item">
+                <i class="fa-solid fa-globe"></i>
+                <span><strong>Website:</strong> www.matflow.com</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="policy-section">
+            <h2 class="section-title">9. CẬP NHẬT CHÍNH SÁCH</h2>
+            <div class="section-content">
+              <p>
+                Chúng tôi có thể cập nhật chính sách bảo mật này theo thời gian.
+                Mọi thay đổi sẽ được thông báo trên website và có hiệu lực ngay
+                sau khi được đăng tải.
+              </p>
+              <p>
+                Bạn nên thường xuyên kiểm tra trang này để cập nhật những thay
+                đổi mới nhất.
+              </p>
+            </div>
+          </div>
+
+          <div class="last-updated">
+            <p><strong>Lần cập nhật cuối:</strong> Tháng 1, 2025</p>
+            <p><strong>Hiệu lực:</strong> Từ ngày 1 tháng 1 năm 2025</p>
+          </div>
+        </div>
+      </div>
     </main>
 
     <footer class="hp-footer">
-        <div class="hp-footer-container">
-            <div class="footer-main">
-                <div class="footer-section">
-                    <h4>VỀ CHÚNG TÔI</h4>
-                    <ul>
-                        <li><a href="gioi-thieu.html">Giới thiệu</a></li>
-                        <li><a href="../homepage/contact.html">Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>TƯ VẤN MUA HÀNG</h4>
-                    <ul>
-                        <li><a href="../homepage/homepage.html">Trang chủ</a></li>
-                        <li><a href="../homepage/products.html">Sản phẩm</a></li>
-                        <li><a href="gioi-thieu.html">Giới thiệu</a></li>
-                        <li><a href="../homepage/products.html">Tin tức</a></li>
-                        <li><a href="../homepage/contact.html">Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>HỖ TRỢ KHÁCH HÀNG</h4>
-                    <ul>
-                        <li><a href="../pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
-                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
-                        <li><a href="../pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>CHÍNH SÁCH</h4>
-                    <ul>
-                        <li><a href="../pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
-                        <li><a href="../pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
-                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
-                        <li><a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
-                    <div class="social-links">
-                        <a href="https://www.facebook.com/ngo.tam.729267" target="_blank" class="social-link facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="https://www.instagram.com/jawinsss/" target="_blank" class="social-link instagram"><i class="fa-brands fa-instagram"></i></a>
-                    </div>
-                </div>
+      <div class="hp-footer-container">
+        <div class="footer-main">
+          <div class="footer-section">
+            <h4>VỀ CHÚNG TÔI</h4>
+            <ul>
+              <li><a href="gioi-thieu.html">Giới thiệu</a></li>
+              <li><a href="../homepage/contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>TƯ VẤN MUA HÀNG</h4>
+            <ul>
+              <li><a href="../homepage/homepage.html">Trang chủ</a></li>
+              <li><a href="../homepage/products.html">Sản phẩm</a></li>
+              <li><a href="gioi-thieu.html">Giới thiệu</a></li>
+              <li><a href="../homepage/products.html">Tin tức</a></li>
+              <li><a href="../homepage/contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+            <ul>
+              <li>
+                <a href="../pages/dieu-khoan-dich-vu.html"
+                  >Điều khoản dịch vụ</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-bao-mat-thong-tin.html"
+                  >Chính sách bảo mật thông tin</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-kiem-hang.html"
+                  >Chính sách kiểm hàng</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>CHÍNH SÁCH</h4>
+            <ul>
+              <li>
+                <a href="../pages/chinh-sach-van-chuyen.html"
+                  >Chính sách vận chuyển</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-thanh-toan.html"
+                  >Chính sách thanh toán</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-bao-mat-thong-tin.html"
+                  >Chính sách bảo mật thông tin</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html"
+                  >Chính sách đổi trả và hoàn tiền</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+            <div class="social-links">
+              <a
+                href="https://www.facebook.com/ngo.tam.729267"
+                target="_blank"
+                class="social-link facebook"
+                ><i class="fa-brands fa-facebook-f"></i
+              ></a>
+              <a
+                href="https://www.instagram.com/jawinsss/"
+                target="_blank"
+                class="social-link instagram"
+                ><i class="fa-brands fa-instagram"></i
+              ></a>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-bottom-section">
-                    <h4>HÌNH THỨC THANH TOÁN</h4>
-                    <div class="payment-methods">
-                        <div class="payment-method">ZALOPAY</div>
-                        <div class="payment-method">MOMO</div>
-                    </div>
-                </div>
-                <div class="footer-bottom-section">
-                    <h4>ĐƯỢC CHỨNG NHẬN</h4>
-                    <div class="certifications">
-                        <div class="certification">Duy Tan University</div>
-                        <div class="certification">C1SE.51</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-copyright">
-                Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
-            </div>
+          </div>
         </div>
+
+        <div class="footer-bottom">
+          <div class="footer-bottom-section">
+            <h4>HÌNH THỨC THANH TOÁN</h4>
+            <div class="payment-methods">
+              <div class="payment-method">ZALOPAY</div>
+              <div class="payment-method">MOMO</div>
+            </div>
+          </div>
+          <div class="footer-bottom-section">
+            <h4>ĐƯỢC CHỨNG NHẬN</h4>
+            <div class="certifications">
+              <div class="certification">Duy Tan University</div>
+              <div class="certification">C1SE.51</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-copyright">
+          Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+        </div>
+      </div>
     </footer>
 
     <script>
-        // User session management
-        document.addEventListener('DOMContentLoaded', () => {
-            const userNameEl = document.getElementById('hpUserName');
-            const loginLink = document.getElementById('hpLoginLink');
-            const logoutBtn = document.getElementById('hpLogoutBtn');
-            const adminLink = document.getElementById('hpAdminLink');
-            const cartBtn = document.getElementById('hpCartBtn');
-            const cartCount = document.getElementById('hpCartCount');
-            // Cart is now managed by CartUtils
+      // User session management
+      document.addEventListener("DOMContentLoaded", () => {
+        const userNameEl = document.getElementById("hpUserName");
+        const loginLink = document.getElementById("hpLoginLink");
+        const logoutBtn = document.getElementById("hpLogoutBtn");
+        const adminLink = document.getElementById("hpAdminLink");
+        const cartBtn = document.getElementById("hpCartBtn");
+        const cartCount = document.getElementById("hpCartCount");
+        // Cart is now managed by CartUtils
 
-            // User session UI
-            async function syncUserUI(){
-                let user = null;
-                try { user = JSON.parse(localStorage.getItem('user') || 'null'); } catch(_) {}
-                const token = localStorage.getItem('token') || localStorage.getItem('accessToken');
-                if(!user && token){
-                    try {
-                        const res = await window.apiService.get('/users/profile');
-                        if(res?.success){ user = res.data; localStorage.setItem('user', JSON.stringify(user)); }
-                    } catch(e) {}
-                }
-                if(user){
-                    userNameEl.textContent = user.fullName || user.username || '';
-                    loginLink.setAttribute('hidden','');
-                    logoutBtn.removeAttribute('hidden');
-                    if((user.role||'').toUpperCase() === 'ADMIN') adminLink.removeAttribute('hidden');
-                } else {
-                    userNameEl.textContent = '';
-                    logoutBtn.setAttribute('hidden','');
-                    adminLink.setAttribute('hidden','');
-                    loginLink.removeAttribute('hidden');
-                }
-            }
+        // User session UI
+        async function syncUserUI() {
+          let user = null;
+          try {
+            user = JSON.parse(localStorage.getItem("user") || "null");
+          } catch (_) {}
+          const token =
+            localStorage.getItem("token") ||
+            localStorage.getItem("accessToken");
+          if (!user && token) {
+            try {
+              const res = await window.apiService.get("/users/profile");
+              if (res?.success) {
+                user = res.data;
+                localStorage.setItem("user", JSON.stringify(user));
+              }
+            } catch (e) {}
+          }
+          if (user) {
+            userNameEl.textContent = user.fullName || user.username || "";
+            loginLink.setAttribute("hidden", "");
+            logoutBtn.removeAttribute("hidden");
+            if ((user.role || "").toUpperCase() === "ADMIN")
+              adminLink.removeAttribute("hidden");
+          } else {
+            userNameEl.textContent = "";
+            logoutBtn.setAttribute("hidden", "");
+            adminLink.setAttribute("hidden", "");
+            loginLink.removeAttribute("hidden");
+          }
+        }
 
-            if(logoutBtn){
-                logoutBtn.addEventListener('click', ()=>{
-                    try {
-                        // Clear all authentication data
-                        ['accessToken','refreshToken','token','user','user_token','user_data','admin_token','admin_data'].forEach(k=>{
-                            localStorage.removeItem(k); 
-                            sessionStorage.removeItem(k);
-                        });
-                    } catch(_){}
-                    // Refresh current page
-                    window.location.reload();
-                });
-            }
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", () => {
+            try {
+              // Clear all authentication data
+              [
+                "accessToken",
+                "refreshToken",
+                "token",
+                "user",
+                "user_token",
+                "user_data",
+                "admin_token",
+                "admin_data",
+              ].forEach((k) => {
+                localStorage.removeItem(k);
+                sessionStorage.removeItem(k);
+              });
+            } catch (_) {}
+            // Refresh current page
+            window.location.reload();
+          });
+        }
 
-            // Cart count is now handled by CartUtils
-            
-            cartBtn && cartBtn.addEventListener('click', ()=>{
-                window.location.href = '../homepage/cart.html';
-            });
+        // Cart count is now handled by CartUtils
 
-            syncUserUI();
-        });
+        cartBtn &&
+          cartBtn.addEventListener("click", () => {
+            window.location.href = "../homepage/cart.html";
+          });
+
+        syncUserUI();
+      });
     </script>
 
     <!-- Back to Top Button -->
     <button id="backToTop" class="back-to-top" title="Lên đầu trang">
-        <i class="fa-solid fa-chevron-up"></i>
+      <i class="fa-solid fa-chevron-up"></i>
     </button>
     <script src="../../js/backToTop.js" defer></script>
-</body>
+  </body>
 </html>

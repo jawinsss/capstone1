@@ -1,25 +1,35 @@
 <!DOCTYPE html>
 <html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Tài khoản cá nhân - MatFlow</title>
-    
+
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
     <!-- Font Awesome -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
-    
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    />
+
     <!-- Stylesheets -->
-    <link rel="stylesheet" href="../../styles/homepage.css">
-    <link rel="stylesheet" href="../../styles/user.css">
-    
+    <link rel="stylesheet" href="../../styles/homepage.css" />
+    <link rel="stylesheet" href="../../styles/user.css" />
+
     <!-- Favicon -->
-    <link rel="shortcut icon" href="../../assets/Favicon MatFlow.png" type="image/x-icon">
-    
+    <link
+      rel="shortcut icon"
+      href="../../assets/Favicon MatFlow.png"
+      type="image/x-icon"
+    />
+
     <!-- Scripts -->
     <script src="../../js/config.js" defer></script>
     <script src="../../js/apiService.js" defer></script>
@@ -30,736 +40,1054 @@
     <script src="../../js/search-dropdown.js" defer></script>
     <script src="../../js/backToTop.js" defer></script>
     <script src="../../js/user.js" defer></script>
-    
-    <style>[hidden]{display:none!important}</style>
-    <link rel="stylesheet" href="../../styles/chatbot-widget.css">
+
+    <style>
+      [hidden] {
+        display: none !important;
+      }
+    </style>
+    <link rel="stylesheet" href="../../styles/chatbot-widget.css" />
     <script src="../../js/chatbot-widget.js" defer></script>
-</head>
-<body>
+  </head>
+  <body>
     <!-- Top Bar -->
     <div class="hp-topbar">
-        <div class="hp-topbar-inner">
-            <a class="hp-supplier-link" href="#">Đăng kí để trở thành nhà cung cấp</a>
-            <div class="hp-top-actions">
-                <button class="hp-chip" type="button">
-                    <i class="fa-solid fa-globe"></i> Tiếng việt
-                </button>
-                
-                <!-- User Avatar (shown when logged in) -->
-                <div id="hpUserAvatar" class="hp-user-avatar" hidden>
-                    <div class="hp-avatar-circle">
-                        <span id="hpUserInitials">U</span>
-                    </div>
-                    <a id="hpUserName" class="hp-user-name" href="user.html" style="text-decoration: none; color: inherit; cursor: pointer;"></a>
-                </div>
-                
-                <!-- Login/Logout Links -->
-                <a id="hpLoginLink" href="../../index.html" class="hp-top-link">Đăng nhập</a>
-                <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
-                <a id="hpAdminLink" href="../adminpage/admin.html" class="hp-top-link" hidden>Admin</a>
+      <div class="hp-topbar-inner">
+        <a class="hp-supplier-link" href="#"
+          >Đăng kí để trở thành nhà cung cấp</a
+        >
+        <div class="hp-top-actions">
+          <button class="hp-chip" type="button">
+            <i class="fa-solid fa-globe"></i> Tiếng việt
+          </button>
+
+          <!-- User Avatar (shown when logged in) -->
+          <div id="hpUserAvatar" class="hp-user-avatar" hidden>
+            <div class="hp-avatar-circle">
+              <span id="hpUserInitials">U</span>
             </div>
+            <a
+              id="hpUserName"
+              class="hp-user-name"
+              href="user.html"
+              style="text-decoration: none; color: inherit; cursor: pointer"
+            ></a>
+          </div>
+
+          <!-- Login/Logout Links -->
+          <a id="hpLoginLink" href="../../index.html" class="hp-top-link"
+            >Đăng nhập</a
+          >
+          <button id="hpLogoutBtn" class="hp-top-link" hidden>Đăng xuất</button>
+          <a
+            id="hpAdminLink"
+            href="../adminpage/admin.html"
+            class="hp-top-link"
+            hidden
+            >Admin</a
+          >
         </div>
+      </div>
     </div>
 
     <!-- Header -->
     <header class="hp-header">
-        <div class="hp-header-container">
-            <a href="../homepage/homepage.html">
-                <img class="hp-logo" src="../../assets/Icon MatFlow.png" alt="MatFlow">
-            </a>
-            
-            <div class="hp-search">
-                <input id="hpSearch" class="hp-input" placeholder="Tìm kiếm sản phẩm...">
-                <div id="searchSuggestions" class="suggestions-dropdown"></div>
-                <div id="searchResults" class="search-results"></div>
-            </div>
-            
-            <nav class="hp-nav">
-                <a href="../homepage/homepage.html">
-                    <i class="fa-solid fa-house"></i> Trang chủ
-                </a>
-                <a href="../homepage/products.html">
-                    <i class="fa-solid fa-tag"></i> Sản Phẩm
-                </a>
-                <a href="../homepage/contact.html">
-                    <i class="fa-solid fa-envelope"></i> Liên Hệ
-                </a>
-            </nav>
-            
-            <div class="hp-user">
-                <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">🛒 <span id="hpCartCount">0</span></button>
-            </div>
+      <div class="hp-header-container">
+        <a href="../homepage/homepage.html">
+          <img
+            class="hp-logo"
+            src="../../assets/Icon MatFlow.png"
+            alt="MatFlow"
+          />
+        </a>
+
+        <div class="hp-search">
+          <input
+            id="hpSearch"
+            class="hp-input"
+            placeholder="Tìm kiếm sản phẩm..."
+          />
+          <div id="searchSuggestions" class="suggestions-dropdown"></div>
+          <div id="searchResults" class="search-results"></div>
         </div>
+
+        <nav class="hp-nav">
+          <a href="../homepage/homepage.html">
+            <i class="fa-solid fa-house"></i> Trang chủ
+          </a>
+          <a href="../homepage/products.html">
+            <i class="fa-solid fa-tag"></i> Sản Phẩm
+          </a>
+          <a href="../homepage/contact.html">
+            <i class="fa-solid fa-envelope"></i> Liên Hệ
+          </a>
+          <a href="./gioi-thieu.html">
+            <i class="fa-solid fa-users"></i>
+            Giới Thiệu
+          </a>
+          <a href="../homepage/calculator.html">
+            <i class="fa-solid fa-calculator"></i> Tính toán
+          </a>
+        </nav>
+
+        <div class="hp-user">
+          <button id="hpCartBtn" class="hp-btn small" title="Giỏ hàng">
+            🛒 <span id="hpCartCount">0</span>
+          </button>
+        </div>
+      </div>
     </header>
 
     <!-- Breadcrumb -->
     <div class="breadcrumb-container">
-        <div class="hp-main-container">
-            <nav class="breadcrumb" aria-label="Breadcrumb">
-                <ol class="breadcrumb-list">
-                    <li class="breadcrumb-item">
-                        <a href="../homepage/homepage.html" class="breadcrumb-link">
-                            <i class="fa-solid fa-house"></i>
-                            Trang chủ
-                        </a>
-                    </li>
-                    <li class="breadcrumb-separator">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </li>
-                    <li class="breadcrumb-item active" aria-current="page">
-                        <span>Tài khoản cá nhân</span>
-                    </li>
-                </ol>
-            </nav>
-        </div>
+      <div class="hp-main-container">
+        <nav class="breadcrumb" aria-label="Breadcrumb">
+          <ol class="breadcrumb-list">
+            <li class="breadcrumb-item">
+              <a href="../homepage/homepage.html" class="breadcrumb-link">
+                <i class="fa-solid fa-house"></i>
+                Trang chủ
+              </a>
+            </li>
+            <li class="breadcrumb-separator">
+              <i class="fa-solid fa-chevron-right"></i>
+            </li>
+            <li class="breadcrumb-item active" aria-current="page">
+              <span>Tài khoản cá nhân</span>
+            </li>
+          </ol>
+        </nav>
+      </div>
     </div>
 
     <!-- Main Content -->
     <main class="hp-main">
-        <div class="hp-main-container">
-            <div class="user-dashboard">
-                <!-- Sidebar -->
-                <aside class="user-sidebar">
-                    <div class="user-profile-card">
-                        <div class="user-avatar" id="sidebarAvatar">
-                            <span>U</span>
-                        </div>
-                        <div class="user-info">
-                            <h3 class="user-name">Tên user đang nhập</h3>
-                            <p class="user-role">Thành viên MatFlow</p>
-                        </div>
-                    </div>
-                    
-                    <nav class="sidebar-nav" role="navigation" aria-label="User dashboard navigation">
-                        <a href="#notifications" class="nav-item active" data-section="notifications" role="tab" aria-selected="true">
-                            <i class="fa-solid fa-bell" aria-hidden="true"></i>
-                            <span>Thông báo</span>
-                            <span class="notification-count" aria-label="2 thông báo chưa đọc">2</span>
-                        </a>
-                        <a href="#orders" class="nav-item" data-section="orders" role="tab" aria-selected="false">
-                            <i class="fa-solid fa-shopping-bag" aria-hidden="true"></i>
-                            <span>Đơn mua</span>
-                        </a>
-                        <a href="#profile" class="nav-item" data-section="profile" role="tab" aria-selected="false">
-                            <i class="fa-solid fa-user" aria-hidden="true"></i>
-                            <span>Thông tin</span>
-                        </a>
-                    </nav>
-                </aside>
-
-                <!-- Main Content Area -->
-                <div class="user-content">
-                    <!-- Notifications Section -->
-                    <section id="notifications" class="content-section active">
-                        <div class="section-header">
-                            <h2>Thông báo</h2>
-                            <button class="btn-secondary" id="markAllReadBtn">Đánh dấu tất cả đã đọc</button>
-                        </div>
-                        
-                        <div class="notification-alert">
-                            <i class="fa-solid fa-exclamation-triangle"></i>
-                            <span>Bạn có 2 thông báo chưa đọc</span>
-                        </div>
-
-                        <div class="notifications-list" id="notificationsList">
-                            <!-- Notifications will be loaded dynamically -->
-                        </div>
-                    </section>
-
-                    <!-- Profile Section -->
-                    <section id="profile" class="content-section">
-                        <div class="section-header">
-                            <h2>Thông tin cá nhân</h2>
-                            <button class="btn-primary" id="editProfileBtn">Chỉnh sửa</button>
-                        </div>
-
-                        <div class="profile-content">
-                            <!-- Avatar Section -->
-                            <div class="profile-avatar-section">
-                                <div class="avatar-container">
-                                    <img id="profileAvatarImg" src="" alt="User avatar" style="display: none;">
-                                    <div id="profileAvatarPlaceholder" class="avatar-placeholder">
-                                        <span id="avatarInitial">U</span>
-                                    </div>
-                                </div>
-                                
-                                <div class="avatar-actions">
-                                    <input type="file" id="avatarInput" accept="image/*" style="display: none;">
-                                    <button type="button" id="changeAvatarBtn" class="btn-secondary">Thay ảnh</button>
-                                    <button type="button" id="removeAvatarBtn" class="btn-danger" style="display: none;">Xóa ảnh</button>
-                                </div>
-                                
-                                <h3 id="displayName">Loading...</h3>
-                                <p>Thành viên MatFlow</p>
-                            </div>
-
-                            <!-- Profile Form -->
-                            <div class="profile-form">
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="fullName">Họ và tên</label>
-                                        <input type="text" id="fullName" value="" readonly>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="phoneNumber">Số điện thoại</label>
-                                        <input type="text" id="phoneNumber" value="" readonly>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-row">
-                                    <div class="form-group">
-                                        <label for="email">Email</label>
-                                        <input type="email" id="email" value="" readonly>
-                                    </div>
-                                    
-                                    <div class="form-group">
-                                        <label for="gender">Giới tính</label>
-                                        <select id="gender" disabled>
-                                            <option value="">Chọn giới tính</option>
-                                            <option value="Nam">Nam</option>
-                                            <option value="Nữ">Nữ</option>
-                                            <option value="Khác">Khác</option>
-                                        </select>
-                                    </div>
-                                </div>
-                                
-                                <div class="form-group">
-                                    <label>Địa chỉ</label>
-                                    <div class="address-fields">
-                                        <div class="form-group">
-                                            <label for="provinceSearch">Tỉnh/Thành phố</label>
-                                            <div id="provinceSearchContainer"></div>
-                                        </div>
-                                        <div class="form-group">
-                                            <label for="wardSearch">Phường/Xã</label>
-                                            <div id="wardSearchContainer"></div>
-                                        </div>
-                                    </div>
-                                    <input type="text" id="addressStreet" placeholder="Số nhà, tên đường" readonly>
-                                </div>
-
-                                <div class="form-actions" id="formActions" style="display: none;">
-                                    <button class="btn-primary" id="saveBtn">Lưu thay đổi</button>
-                                    <button class="btn-secondary" id="cancelBtn">Hủy</button>
-                                </div>
-                            </div>
-
-                            <!-- Additional Info -->
-                            <div class="additional-info">
-                                <h3>Thông tin bổ sung</h3>
-                                <div class="info-grid">
-                                    <div class="info-item">
-                                        <span class="info-label">Ngày tham gia:</span>
-                                        <span class="info-value" id="joinDate">Loading...</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Tổng đơn hàng:</span>
-                                        <span class="info-value" id="totalOrders">Loading...</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Điểm tích lũy:</span>
-                                        <span class="info-value" id="loyaltyPoints">Loading...</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Trạng thái tài khoản:</span>
-                                        <span class="info-value status-gold" id="accountStatus">Loading...</span>
-                                    </div>
-                                    <div class="info-item">
-                                        <span class="info-label">Vai trò:</span>
-                                        <span class="info-value" id="userRole">Loading...</span>
-                                    </div>
-                                </div>
-
-                                <div class="account-settings">
-                                    <h4>Cài đặt tài khoản</h4>
-                                    <div class="settings-list">
-                                        <div class="setting-item" id="changePasswordBtn">
-                                            <span>Đổi mật khẩu</span>
-                                            <i class="fa-solid fa-chevron-right"></i>
-                                        </div>
-                                        <div class="setting-item" id="notificationSettingsBtn">
-                                            <span>Cài đặt thông báo</span>
-                                            <i class="fa-solid fa-chevron-right"></i>
-                                        </div>
-                                        <div class="setting-item" id="accountSecurityBtn">
-                                            <span>Bảo mật tài khoản</span>
-                                            <i class="fa-solid fa-chevron-right"></i>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-
-                    <!-- Orders Section -->
-                    <section id="orders" class="content-section">
-                        <div class="section-header">
-                            <h2>Đơn mua</h2>
-                            <button class="btn-secondary" id="refreshOrdersBtn">
-                                <i class="fa-solid fa-rotate"></i> Làm mới
-                            </button>
-                        </div>
-
-                        <!-- Order Stats -->
-                        <div class="order-stats-user">
-                            <div class="stat-card" data-filter="all">
-                                <div class="stat-icon" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
-                                    <i class="fa-solid fa-shopping-bag"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-label">Tất cả</span>
-                                    <span class="stat-value" id="statAll">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" data-filter="PENDING">
-                                <div class="stat-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">
-                                    <i class="fa-solid fa-clock"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-label">Chờ xác nhận</span>
-                                    <span class="stat-value" id="statPending">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" data-filter="SHIPPING">
-                                <div class="stat-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);">
-                                    <i class="fa-solid fa-truck-fast"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-label">Đang giao</span>
-                                    <span class="stat-value" id="statShipping">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" data-filter="COMPLETED">
-                                <div class="stat-icon" style="background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);">
-                                    <i class="fa-solid fa-check-circle"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-label">Hoàn thành</span>
-                                    <span class="stat-value" id="statCompleted">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" data-filter="CANCELLED">
-                                <div class="stat-icon" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
-                                    <i class="fa-solid fa-times-circle"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-label">Đã hủy</span>
-                                    <span class="stat-value" id="statCancelled">0</span>
-                                </div>
-                            </div>
-                            <div class="stat-card" data-filter="RETURNED">
-                                <div class="stat-icon" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">
-                                    <i class="fa-solid fa-rotate-left"></i>
-                                </div>
-                                <div class="stat-info">
-                                    <span class="stat-label">Đã hoàn trả</span>
-                                    <span class="stat-value" id="statReturned">0</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Order Filters -->
-                        <div class="order-filters">
-                            <input type="text" class="search-input" id="orderSearchInput" placeholder="Tìm kiếm đơn hàng...">
-                            <select class="filter-select" id="orderStatusFilter">
-                                <option value="">Tất cả trạng thái</option>
-                                <option value="PENDING">Chờ xác nhận</option>
-                                <option value="CONFIRMED">Đã xác nhận</option>
-                                <option value="SHIPPING">Đang giao</option>
-                                <option value="COMPLETED">Hoàn thành</option>
-                                <option value="CANCELLED">Đã hủy</option>
-                                <option value="RETURNED">Đã hoàn trả</option>
-                            </select>
-                            <input type="date" class="date-input" id="orderDateFrom" placeholder="Từ ngày">
-                            <input type="date" class="date-input" id="orderDateTo" placeholder="Đến ngày">
-                        </div>
-
-                        <!-- Orders List -->
-                        <div class="orders-list-user" id="ordersListUser">
-                            <div class="loading-placeholder">
-                                <i class="fa-solid fa-spinner fa-spin"></i>
-                                <p>Đang tải đơn hàng...</p>
-                            </div>
-                        </div>
-                    </section>
-                </div>
+      <div class="hp-main-container">
+        <div class="user-dashboard">
+          <!-- Sidebar -->
+          <aside class="user-sidebar">
+            <div class="user-profile-card">
+              <div class="user-avatar" id="sidebarAvatar">
+                <span>U</span>
+              </div>
+              <div class="user-info">
+                <h3 class="user-name">Tên user đang nhập</h3>
+                <p class="user-role">Thành viên MatFlow</p>
+              </div>
             </div>
+
+            <nav
+              class="sidebar-nav"
+              role="navigation"
+              aria-label="User dashboard navigation"
+            >
+              <a
+                href="#notifications"
+                class="nav-item active"
+                data-section="notifications"
+                role="tab"
+                aria-selected="true"
+              >
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                <span>Thông báo</span>
+                <span
+                  class="notification-count"
+                  aria-label="2 thông báo chưa đọc"
+                  >2</span
+                >
+              </a>
+              <a
+                href="#orders"
+                class="nav-item"
+                data-section="orders"
+                role="tab"
+                aria-selected="false"
+              >
+                <i class="fa-solid fa-shopping-bag" aria-hidden="true"></i>
+                <span>Đơn mua</span>
+              </a>
+              <a
+                href="#profile"
+                class="nav-item"
+                data-section="profile"
+                role="tab"
+                aria-selected="false"
+              >
+                <i class="fa-solid fa-user" aria-hidden="true"></i>
+                <span>Thông tin</span>
+              </a>
+            </nav>
+          </aside>
+
+          <!-- Main Content Area -->
+          <div class="user-content">
+            <!-- Notifications Section -->
+            <section id="notifications" class="content-section active">
+              <div class="section-header">
+                <h2>Thông báo</h2>
+                <button class="btn-secondary" id="markAllReadBtn">
+                  Đánh dấu tất cả đã đọc
+                </button>
+              </div>
+
+              <div class="notification-alert">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+                <span>Bạn có 2 thông báo chưa đọc</span>
+              </div>
+
+              <div class="notifications-list" id="notificationsList">
+                <!-- Notifications will be loaded dynamically -->
+              </div>
+            </section>
+
+            <!-- Profile Section -->
+            <section id="profile" class="content-section">
+              <div class="section-header">
+                <h2>Thông tin cá nhân</h2>
+                <button class="btn-primary" id="editProfileBtn">
+                  Chỉnh sửa
+                </button>
+              </div>
+
+              <div class="profile-content">
+                <!-- Avatar Section -->
+                <div class="profile-avatar-section">
+                  <div class="avatar-container">
+                    <img
+                      id="profileAvatarImg"
+                      src=""
+                      alt="User avatar"
+                      style="display: none"
+                    />
+                    <div
+                      id="profileAvatarPlaceholder"
+                      class="avatar-placeholder"
+                    >
+                      <span id="avatarInitial">U</span>
+                    </div>
+                  </div>
+
+                  <div class="avatar-actions">
+                    <input
+                      type="file"
+                      id="avatarInput"
+                      accept="image/*"
+                      style="display: none"
+                    />
+                    <button
+                      type="button"
+                      id="changeAvatarBtn"
+                      class="btn-secondary"
+                    >
+                      Thay ảnh
+                    </button>
+                    <button
+                      type="button"
+                      id="removeAvatarBtn"
+                      class="btn-danger"
+                      style="display: none"
+                    >
+                      Xóa ảnh
+                    </button>
+                  </div>
+
+                  <h3 id="displayName">Loading...</h3>
+                  <p>Thành viên MatFlow</p>
+                </div>
+
+                <!-- Profile Form -->
+                <div class="profile-form">
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="fullName">Họ và tên</label>
+                      <input type="text" id="fullName" value="" readonly />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="phoneNumber">Số điện thoại</label>
+                      <input type="text" id="phoneNumber" value="" readonly />
+                    </div>
+                  </div>
+
+                  <div class="form-row">
+                    <div class="form-group">
+                      <label for="email">Email</label>
+                      <input type="email" id="email" value="" readonly />
+                    </div>
+
+                    <div class="form-group">
+                      <label for="gender">Giới tính</label>
+                      <select id="gender" disabled>
+                        <option value="">Chọn giới tính</option>
+                        <option value="Nam">Nam</option>
+                        <option value="Nữ">Nữ</option>
+                        <option value="Khác">Khác</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div class="form-group">
+                    <label>Địa chỉ</label>
+                    <div class="address-fields">
+                      <div class="form-group">
+                        <label for="provinceSearch">Tỉnh/Thành phố</label>
+                        <div id="provinceSearchContainer"></div>
+                      </div>
+                      <div class="form-group">
+                        <label for="wardSearch">Phường/Xã</label>
+                        <div id="wardSearchContainer"></div>
+                      </div>
+                    </div>
+                    <input
+                      type="text"
+                      id="addressStreet"
+                      placeholder="Số nhà, tên đường"
+                      readonly
+                    />
+                  </div>
+
+                  <div
+                    class="form-actions"
+                    id="formActions"
+                    style="display: none"
+                  >
+                    <button class="btn-primary" id="saveBtn">
+                      Lưu thay đổi
+                    </button>
+                    <button class="btn-secondary" id="cancelBtn">Hủy</button>
+                  </div>
+                </div>
+
+                <!-- Additional Info -->
+                <div class="additional-info">
+                  <h3>Thông tin bổ sung</h3>
+                  <div class="info-grid">
+                    <div class="info-item">
+                      <span class="info-label">Ngày tham gia:</span>
+                      <span class="info-value" id="joinDate">Loading...</span>
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Tổng đơn hàng:</span>
+                      <span class="info-value" id="totalOrders"
+                        >Loading...</span
+                      >
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Điểm tích lũy:</span>
+                      <span class="info-value" id="loyaltyPoints"
+                        >Loading...</span
+                      >
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Trạng thái tài khoản:</span>
+                      <span class="info-value status-gold" id="accountStatus"
+                        >Loading...</span
+                      >
+                    </div>
+                    <div class="info-item">
+                      <span class="info-label">Vai trò:</span>
+                      <span class="info-value" id="userRole">Loading...</span>
+                    </div>
+                  </div>
+
+                  <div class="account-settings">
+                    <h4>Cài đặt tài khoản</h4>
+                    <div class="settings-list">
+                      <div class="setting-item" id="changePasswordBtn">
+                        <span>Đổi mật khẩu</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                      </div>
+                      <div class="setting-item" id="notificationSettingsBtn">
+                        <span>Cài đặt thông báo</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                      </div>
+                      <div class="setting-item" id="accountSecurityBtn">
+                        <span>Bảo mật tài khoản</span>
+                        <i class="fa-solid fa-chevron-right"></i>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Orders Section -->
+            <section id="orders" class="content-section">
+              <div class="section-header">
+                <h2>Đơn mua</h2>
+                <button class="btn-secondary" id="refreshOrdersBtn">
+                  <i class="fa-solid fa-rotate"></i> Làm mới
+                </button>
+              </div>
+
+              <!-- Order Stats -->
+              <div class="order-stats-user">
+                <div class="stat-card" data-filter="all">
+                  <div
+                    class="stat-icon"
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        #667eea 0%,
+                        #764ba2 100%
+                      );
+                    "
+                  >
+                    <i class="fa-solid fa-shopping-bag"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Tất cả</span>
+                    <span class="stat-value" id="statAll">0</span>
+                  </div>
+                </div>
+                <div class="stat-card" data-filter="PENDING">
+                  <div
+                    class="stat-icon"
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        #f59e0b 0%,
+                        #d97706 100%
+                      );
+                    "
+                  >
+                    <i class="fa-solid fa-clock"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Chờ xác nhận</span>
+                    <span class="stat-value" id="statPending">0</span>
+                  </div>
+                </div>
+                <div class="stat-card" data-filter="SHIPPING">
+                  <div
+                    class="stat-icon"
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        #3b82f6 0%,
+                        #2563eb 100%
+                      );
+                    "
+                  >
+                    <i class="fa-solid fa-truck-fast"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Đang giao</span>
+                    <span class="stat-value" id="statShipping">0</span>
+                  </div>
+                </div>
+                <div class="stat-card" data-filter="COMPLETED">
+                  <div
+                    class="stat-icon"
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        #22c55e 0%,
+                        #16a34a 100%
+                      );
+                    "
+                  >
+                    <i class="fa-solid fa-check-circle"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Hoàn thành</span>
+                    <span class="stat-value" id="statCompleted">0</span>
+                  </div>
+                </div>
+                <div class="stat-card" data-filter="CANCELLED">
+                  <div
+                    class="stat-icon"
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        #ef4444 0%,
+                        #dc2626 100%
+                      );
+                    "
+                  >
+                    <i class="fa-solid fa-times-circle"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Đã hủy</span>
+                    <span class="stat-value" id="statCancelled">0</span>
+                  </div>
+                </div>
+                <div class="stat-card" data-filter="RETURNED">
+                  <div
+                    class="stat-icon"
+                    style="
+                      background: linear-gradient(
+                        135deg,
+                        #8b5cf6 0%,
+                        #7c3aed 100%
+                      );
+                    "
+                  >
+                    <i class="fa-solid fa-rotate-left"></i>
+                  </div>
+                  <div class="stat-info">
+                    <span class="stat-label">Đã hoàn trả</span>
+                    <span class="stat-value" id="statReturned">0</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Order Filters -->
+              <div class="order-filters">
+                <input
+                  type="text"
+                  class="search-input"
+                  id="orderSearchInput"
+                  placeholder="Tìm kiếm đơn hàng..."
+                />
+                <select class="filter-select" id="orderStatusFilter">
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="PENDING">Chờ xác nhận</option>
+                  <option value="CONFIRMED">Đã xác nhận</option>
+                  <option value="SHIPPING">Đang giao</option>
+                  <option value="COMPLETED">Hoàn thành</option>
+                  <option value="CANCELLED">Đã hủy</option>
+                  <option value="RETURNED">Đã hoàn trả</option>
+                </select>
+                <input
+                  type="date"
+                  class="date-input"
+                  id="orderDateFrom"
+                  placeholder="Từ ngày"
+                />
+                <input
+                  type="date"
+                  class="date-input"
+                  id="orderDateTo"
+                  placeholder="Đến ngày"
+                />
+              </div>
+
+              <!-- Orders List -->
+              <div class="orders-list-user" id="ordersListUser">
+                <div class="loading-placeholder">
+                  <i class="fa-solid fa-spinner fa-spin"></i>
+                  <p>Đang tải đơn hàng...</p>
+                </div>
+              </div>
+            </section>
+          </div>
         </div>
+      </div>
     </main>
 
     <!-- Back to Top Button -->
-    <button id="backToTop" class="back-to-top" aria-label="Lên đầu trang" title="Lên đầu trang">
-        <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
+    <button
+      id="backToTop"
+      class="back-to-top"
+      aria-label="Lên đầu trang"
+      title="Lên đầu trang"
+    >
+      <i class="fa-solid fa-chevron-up" aria-hidden="true"></i>
     </button>
 
     <!-- Password Change Modal -->
     <div id="passwordModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Đổi mật khẩu</h3>
-                <button class="modal-close" id="closePasswordModal">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <form id="passwordChangeForm">
-                    <div class="form-group">
-                        <label for="currentPassword">Mật khẩu hiện tại <span class="required">*</span></label>
-                        <div class="password-input-group">
-                            <input type="password" id="currentPassword" name="currentPassword" required>
-                            <button type="button" class="toggle-password" data-target="currentPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="newPassword">Mật khẩu mới <span class="required">*</span></label>
-                        <div class="password-input-group">
-                            <input type="password" id="newPassword" name="newPassword" required>
-                            <button type="button" class="toggle-password" data-target="newPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                        <div class="password-requirements">
-                            <small>Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường và số</small>
-                        </div>
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="confirmPassword">Xác nhận mật khẩu mới <span class="required">*</span></label>
-                        <div class="password-input-group">
-                            <input type="password" id="confirmPassword" name="confirmPassword" required>
-                            <button type="button" class="toggle-password" data-target="confirmPassword">
-                                <i class="fa-solid fa-eye"></i>
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div id="passwordError" class="error-message" style="display: none;"></div>
-                </form>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="cancelPasswordChange">Hủy</button>
-                <button type="submit" class="btn-primary" id="confirmPasswordChange">Đổi mật khẩu</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Đổi mật khẩu</h3>
+          <button class="modal-close" id="closePasswordModal">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
+        <div class="modal-body">
+          <form id="passwordChangeForm">
+            <div class="form-group">
+              <label for="currentPassword"
+                >Mật khẩu hiện tại <span class="required">*</span></label
+              >
+              <div class="password-input-group">
+                <input
+                  type="password"
+                  id="currentPassword"
+                  name="currentPassword"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  data-target="currentPassword"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="newPassword"
+                >Mật khẩu mới <span class="required">*</span></label
+              >
+              <div class="password-input-group">
+                <input
+                  type="password"
+                  id="newPassword"
+                  name="newPassword"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  data-target="newPassword"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+              <div class="password-requirements">
+                <small
+                  >Mật khẩu phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường
+                  và số</small
+                >
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="confirmPassword"
+                >Xác nhận mật khẩu mới <span class="required">*</span></label
+              >
+              <div class="password-input-group">
+                <input
+                  type="password"
+                  id="confirmPassword"
+                  name="confirmPassword"
+                  required
+                />
+                <button
+                  type="button"
+                  class="toggle-password"
+                  data-target="confirmPassword"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div
+              id="passwordError"
+              class="error-message"
+              style="display: none"
+            ></div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelPasswordChange">
+            Hủy
+          </button>
+          <button type="submit" class="btn-primary" id="confirmPasswordChange">
+            Đổi mật khẩu
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Notification Settings Modal -->
     <div id="notificationModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Cài đặt thông báo</h3>
-                <button class="modal-close" id="closeNotificationModal">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="settings-section">
-                    <h4>Thông báo đơn hàng</h4>
-                    <div class="setting-option">
-                        <div class="setting-info">
-                            <span class="setting-title">Trạng thái đơn hàng</span>
-                            <small class="setting-desc">Nhận thông báo khi đơn hàng được xác nhận, đang giao hoặc hoàn thành</small>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="orderStatus" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="setting-option">
-                        <div class="setting-info">
-                            <span class="setting-title">Thanh toán</span>
-                            <small class="setting-desc">Thông báo về thanh toán thành công hoặc thất bại</small>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="paymentNotif" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4>Thông báo khuyến mãi</h4>
-                    <div class="setting-option">
-                        <div class="setting-info">
-                            <span class="setting-title">Ưu đãi đặc biệt</span>
-                            <small class="setting-desc">Nhận thông báo về các chương trình khuyến mãi và giảm giá</small>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="promotions" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="setting-option">
-                        <div class="setting-info">
-                            <span class="setting-title">Sản phẩm mới</span>
-                            <small class="setting-desc">Thông báo khi có sản phẩm mới phù hợp với sở thích của bạn</small>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="newProducts">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h4>Phương thức nhận thông báo</h4>
-                    <div class="setting-option">
-                        <div class="setting-info">
-                            <span class="setting-title">Email</span>
-                            <small class="setting-desc">Gửi thông báo qua email</small>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="emailNotif" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="setting-option">
-                        <div class="setting-info">
-                            <span class="setting-title">SMS</span>
-                            <small class="setting-desc">Gửi thông báo qua tin nhắn</small>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="smsNotif">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="cancelNotificationSettings">Hủy</button>
-                <button type="button" class="btn-primary" id="saveNotificationSettings">Lưu cài đặt</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Cài đặt thông báo</h3>
+          <button class="modal-close" id="closeNotificationModal">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
+        <div class="modal-body">
+          <div class="settings-section">
+            <h4>Thông báo đơn hàng</h4>
+            <div class="setting-option">
+              <div class="setting-info">
+                <span class="setting-title">Trạng thái đơn hàng</span>
+                <small class="setting-desc"
+                  >Nhận thông báo khi đơn hàng được xác nhận, đang giao hoặc
+                  hoàn thành</small
+                >
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="orderStatus" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-option">
+              <div class="setting-info">
+                <span class="setting-title">Thanh toán</span>
+                <small class="setting-desc"
+                  >Thông báo về thanh toán thành công hoặc thất bại</small
+                >
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="paymentNotif" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h4>Thông báo khuyến mãi</h4>
+            <div class="setting-option">
+              <div class="setting-info">
+                <span class="setting-title">Ưu đãi đặc biệt</span>
+                <small class="setting-desc"
+                  >Nhận thông báo về các chương trình khuyến mãi và giảm
+                  giá</small
+                >
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="promotions" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-option">
+              <div class="setting-info">
+                <span class="setting-title">Sản phẩm mới</span>
+                <small class="setting-desc"
+                  >Thông báo khi có sản phẩm mới phù hợp với sở thích của
+                  bạn</small
+                >
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="newProducts" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h4>Phương thức nhận thông báo</h4>
+            <div class="setting-option">
+              <div class="setting-info">
+                <span class="setting-title">Email</span>
+                <small class="setting-desc">Gửi thông báo qua email</small>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="emailNotif" checked />
+                <span class="slider"></span>
+              </label>
+            </div>
+
+            <div class="setting-option">
+              <div class="setting-info">
+                <span class="setting-title">SMS</span>
+                <small class="setting-desc">Gửi thông báo qua tin nhắn</small>
+              </div>
+              <label class="toggle-switch">
+                <input type="checkbox" id="smsNotif" />
+                <span class="slider"></span>
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="cancelNotificationSettings"
+          >
+            Hủy
+          </button>
+          <button
+            type="button"
+            class="btn-primary"
+            id="saveNotificationSettings"
+          >
+            Lưu cài đặt
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Account Security Modal -->
     <div id="securityModal" class="modal-overlay">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Bảo mật tài khoản</h3>
-                <button class="modal-close" id="closeSecurityModal">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="security-section">
-                    <div class="security-item">
-                        <div class="security-icon">
-                            <i class="fa-solid fa-shield-alt"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Xác thực hai yếu tố (2FA)</h4>
-                            <p>Tăng cường bảo mật bằng cách yêu cầu mã xác thực từ điện thoại</p>
-                            <div class="security-status">
-                                <span class="status-badge disabled">Chưa kích hoạt</span>
-                            </div>
-                        </div>
-                        <button class="btn-primary" id="enable2FA">Kích hoạt</button>
-                    </div>
-
-                    <div class="security-item">
-                        <div class="security-icon">
-                            <i class="fa-solid fa-mobile-alt"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Số điện thoại xác thực</h4>
-                            <p>Số điện thoại được sử dụng để xác thực và khôi phục tài khoản</p>
-                            <div class="security-status">
-                                <span class="status-badge verified">0763739254</span>
-                            </div>
-                        </div>
-                        <button class="btn-secondary" id="changePhone">Thay đổi</button>
-                    </div>
-
-                    <div class="security-item">
-                        <div class="security-icon">
-                            <i class="fa-solid fa-envelope"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Email khôi phục</h4>
-                            <p>Email dự phòng để khôi phục tài khoản khi cần thiết</p>
-                            <div class="security-status">
-                                <span class="status-badge verified">user@example.com</span>
-                            </div>
-                        </div>
-                        <button class="btn-secondary" id="changeRecoveryEmail">Thay đổi</button>
-                    </div>
-
-                    <div class="security-item">
-                        <div class="security-icon">
-                            <i class="fa-solid fa-history"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Lịch sử đăng nhập</h4>
-                            <p>Xem các lần đăng nhập gần đây và thiết bị được sử dụng</p>
-                            <div class="security-status">
-                                <span class="status-badge info">Lần cuối: Hôm nay, 14:30</span>
-                            </div>
-                        </div>
-                        <button class="btn-secondary" id="viewLoginHistory">Xem chi tiết</button>
-                    </div>
-
-                    <div class="security-item">
-                        <div class="security-icon">
-                            <i class="fa-solid fa-devices"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Thiết bị đăng nhập</h4>
-                            <p>Quản lý các thiết bị đã đăng nhập vào tài khoản</p>
-                            <div class="security-status">
-                                <span class="status-badge info">3 thiết bị đang hoạt động</span>
-                            </div>
-                        </div>
-                        <button class="btn-secondary" id="manageDevices">Quản lý</button>
-                    </div>
-                </div>
-
-                <div class="danger-zone">
-                    <h4>Vùng nguy hiểm</h4>
-                    <div class="security-item danger">
-                        <div class="security-icon">
-                            <i class="fa-solid fa-exclamation-triangle"></i>
-                        </div>
-                        <div class="security-info">
-                            <h4>Xóa tài khoản</h4>
-                            <p>Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu liên quan</p>
-                        </div>
-                        <button class="btn-danger" id="deleteAccount">Xóa tài khoản</button>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="closeSecuritySettings">Đóng</button>
-            </div>
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Bảo mật tài khoản</h3>
+          <button class="modal-close" id="closeSecurityModal">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
+        <div class="modal-body">
+          <div class="security-section">
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fa-solid fa-shield-alt"></i>
+              </div>
+              <div class="security-info">
+                <h4>Xác thực hai yếu tố (2FA)</h4>
+                <p>
+                  Tăng cường bảo mật bằng cách yêu cầu mã xác thực từ điện thoại
+                </p>
+                <div class="security-status">
+                  <span class="status-badge disabled">Chưa kích hoạt</span>
+                </div>
+              </div>
+              <button class="btn-primary" id="enable2FA">Kích hoạt</button>
+            </div>
+
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fa-solid fa-mobile-alt"></i>
+              </div>
+              <div class="security-info">
+                <h4>Số điện thoại xác thực</h4>
+                <p>
+                  Số điện thoại được sử dụng để xác thực và khôi phục tài khoản
+                </p>
+                <div class="security-status">
+                  <span class="status-badge verified">0763739254</span>
+                </div>
+              </div>
+              <button class="btn-secondary" id="changePhone">Thay đổi</button>
+            </div>
+
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fa-solid fa-envelope"></i>
+              </div>
+              <div class="security-info">
+                <h4>Email khôi phục</h4>
+                <p>Email dự phòng để khôi phục tài khoản khi cần thiết</p>
+                <div class="security-status">
+                  <span class="status-badge verified">user@example.com</span>
+                </div>
+              </div>
+              <button class="btn-secondary" id="changeRecoveryEmail">
+                Thay đổi
+              </button>
+            </div>
+
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fa-solid fa-history"></i>
+              </div>
+              <div class="security-info">
+                <h4>Lịch sử đăng nhập</h4>
+                <p>Xem các lần đăng nhập gần đây và thiết bị được sử dụng</p>
+                <div class="security-status">
+                  <span class="status-badge info"
+                    >Lần cuối: Hôm nay, 14:30</span
+                  >
+                </div>
+              </div>
+              <button class="btn-secondary" id="viewLoginHistory">
+                Xem chi tiết
+              </button>
+            </div>
+
+            <div class="security-item">
+              <div class="security-icon">
+                <i class="fa-solid fa-devices"></i>
+              </div>
+              <div class="security-info">
+                <h4>Thiết bị đăng nhập</h4>
+                <p>Quản lý các thiết bị đã đăng nhập vào tài khoản</p>
+                <div class="security-status">
+                  <span class="status-badge info"
+                    >3 thiết bị đang hoạt động</span
+                  >
+                </div>
+              </div>
+              <button class="btn-secondary" id="manageDevices">Quản lý</button>
+            </div>
+          </div>
+
+          <div class="danger-zone">
+            <h4>Vùng nguy hiểm</h4>
+            <div class="security-item danger">
+              <div class="security-icon">
+                <i class="fa-solid fa-exclamation-triangle"></i>
+              </div>
+              <div class="security-info">
+                <h4>Xóa tài khoản</h4>
+                <p>Xóa vĩnh viễn tài khoản và toàn bộ dữ liệu liên quan</p>
+              </div>
+              <button class="btn-danger" id="deleteAccount">
+                Xóa tài khoản
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button
+            type="button"
+            class="btn-secondary"
+            id="closeSecuritySettings"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- Footer -->
     <footer class="hp-footer">
-        <div class="hp-footer-container">
-            <div class="footer-main">
-                <div class="footer-section">
-                    <h4>VỀ CHÚNG TÔI</h4>
-                    <ul>
-                        <li><a href="../homepage/homepage.html">Giới thiệu</a></li>
-                        <li><a href="../homepage/contact.html">Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>TƯ VẤN MUA HÀNG</h4>
-                    <ul>
-                        <li><a href="../homepage/homepage.html">Trang chủ</a></li>
-                        <li><a href="../homepage/products.html">Sản phẩm</a></li>
-                        <li><a href="../homepage/homepage.html">Giới thiệu</a></li>
-                        <li><a href="../homepage/products.html">Tin tức</a></li>
-                        <li><a href="../homepage/contact.html">Liên hệ</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>HỖ TRỢ KHÁCH HÀNG</h4>
-                    <ul>
-                        <li><a href="../pages/dieu-khoan-dich-vu.html">Điều khoản dịch vụ</a></li>
-                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
-                        <li><a href="../pages/chinh-sach-kiem-hang.html">Chính sách kiểm hàng</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>CHÍNH SÁCH</h4>
-                    <ul>
-                        <li><a href="../pages/chinh-sach-van-chuyen.html">Chính sách vận chuyển</a></li>
-                        <li><a href="../pages/chinh-sach-thanh-toan.html">Chính sách thanh toán</a></li>
-                        <li><a href="../pages/chinh-sach-bao-mat-thong-tin.html">Chính sách bảo mật thông tin</a></li>
-                        <li><a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html">Chính sách đổi trả và hoàn tiền</a></li>
-                    </ul>
-                </div>
-                <div class="footer-section">
-                    <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
-                    <div class="social-links">
-                        <a href="#" class="social-link facebook"><i class="fa-brands fa-facebook-f"></i></a>
-                        <a href="#" class="social-link instagram"><i class="fa-brands fa-instagram"></i></a>
-                    </div>
-                </div>
+      <div class="hp-footer-container">
+        <div class="footer-main">
+          <div class="footer-section">
+            <h4>VỀ CHÚNG TÔI</h4>
+            <ul>
+              <li><a href="../homepage/homepage.html">Giới thiệu</a></li>
+              <li><a href="../homepage/contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>TƯ VẤN MUA HÀNG</h4>
+            <ul>
+              <li><a href="../homepage/homepage.html">Trang chủ</a></li>
+              <li><a href="../homepage/products.html">Sản phẩm</a></li>
+              <li><a href="../homepage/homepage.html">Giới thiệu</a></li>
+              <li><a href="../homepage/products.html">Tin tức</a></li>
+              <li><a href="../homepage/contact.html">Liên hệ</a></li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>HỖ TRỢ KHÁCH HÀNG</h4>
+            <ul>
+              <li>
+                <a href="../pages/dieu-khoan-dich-vu.html"
+                  >Điều khoản dịch vụ</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-bao-mat-thong-tin.html"
+                  >Chính sách bảo mật thông tin</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-kiem-hang.html"
+                  >Chính sách kiểm hàng</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>CHÍNH SÁCH</h4>
+            <ul>
+              <li>
+                <a href="../pages/chinh-sach-van-chuyen.html"
+                  >Chính sách vận chuyển</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-thanh-toan.html"
+                  >Chính sách thanh toán</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-bao-mat-thong-tin.html"
+                  >Chính sách bảo mật thông tin</a
+                >
+              </li>
+              <li>
+                <a href="../pages/chinh-sach-doi-tra-va-hoan-tien.html"
+                  >Chính sách đổi trả và hoàn tiền</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div class="footer-section">
+            <h4>KẾT NỐI VỚI CHÚNG TÔI</h4>
+            <div class="social-links">
+              <a href="#" class="social-link facebook"
+                ><i class="fa-brands fa-facebook-f"></i
+              ></a>
+              <a href="#" class="social-link instagram"
+                ><i class="fa-brands fa-instagram"></i
+              ></a>
             </div>
-            
-            <div class="footer-bottom">
-                <div class="footer-bottom-section">
-                    <h4>HÌNH THỨC THANH TOÁN</h4>
-                    <div class="payment-methods">
-                        <div class="payment-method">ZALOPAY</div>
-                        <div class="payment-method">MOMO</div>
-                    </div>
-                </div>
-                <div class="footer-bottom-section">
-                    <h4>ĐƯỢC CHỨNG NHẬN</h4>
-                    <div class="certifications">
-                        <div class="certification">Duy Tan University</div>
-                        <div class="certification">C1SE.51</div>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="footer-copyright">
-                Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
-            </div>
+          </div>
         </div>
+
+        <div class="footer-bottom">
+          <div class="footer-bottom-section">
+            <h4>HÌNH THỨC THANH TOÁN</h4>
+            <div class="payment-methods">
+              <div class="payment-method">ZALOPAY</div>
+              <div class="payment-method">MOMO</div>
+            </div>
+          </div>
+          <div class="footer-bottom-section">
+            <h4>ĐƯỢC CHỨNG NHẬN</h4>
+            <div class="certifications">
+              <div class="certification">Duy Tan University</div>
+              <div class="certification">C1SE.51</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="footer-copyright">
+          Copyright © 2025 - Bản quyền thuộc về Công ty TNHH MatFlow
+        </div>
+      </div>
     </footer>
 
     <!-- Order Detail Modal -->
-    <div id="orderDetailModalUser" class="modal-overlay" style="display: none;">
-        <div class="modal-content-large">
-            <div class="modal-header">
-                <h3>Chi tiết đơn hàng</h3>
-                <button class="modal-close" id="closeOrderDetailUser">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body" id="orderDetailBodyUser">
-                <!-- Content will be injected here -->
-            </div>
+    <div id="orderDetailModalUser" class="modal-overlay" style="display: none">
+      <div class="modal-content-large">
+        <div class="modal-header">
+          <h3>Chi tiết đơn hàng</h3>
+          <button class="modal-close" id="closeOrderDetailUser">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
+        <div class="modal-body" id="orderDetailBodyUser">
+          <!-- Content will be injected here -->
+        </div>
+      </div>
     </div>
 
     <!-- Return Request Modal -->
-    <div id="returnRequestModal" class="modal-overlay" style="display: none;">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3>Yêu cầu hoàn trả / hoàn tiền</h3>
-                <button class="modal-close" id="closeReturnRequestModal">
-                    <i class="fa-solid fa-times"></i>
-                </button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="returnReason">Lý do hoàn trả <span class="required">*</span></label>
-                    <textarea id="returnReason" rows="5" placeholder="Vui lòng mô tả lý do bạn muốn hoàn trả sản phẩm..."></textarea>
-                </div>
-                <div class="info-box warning">
-                    <i class="fa-solid fa-exclamation-triangle"></i>
-                    <div>
-                        <strong>Lưu ý:</strong>
-                        <p>Yêu cầu hoàn trả sẽ được xem xét trong vòng 24-48h. Vui lòng giữ nguyên sản phẩm và bao bì để thuận tiện cho việc kiểm tra.</p>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn-secondary" id="cancelReturnRequest">Hủy</button>
-                <button type="button" class="btn-primary" id="confirmReturnRequest">Gửi yêu cầu</button>
-            </div>
+    <div id="returnRequestModal" class="modal-overlay" style="display: none">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Yêu cầu hoàn trả / hoàn tiền</h3>
+          <button class="modal-close" id="closeReturnRequestModal">
+            <i class="fa-solid fa-times"></i>
+          </button>
         </div>
+        <div class="modal-body">
+          <div class="form-group">
+            <label for="returnReason"
+              >Lý do hoàn trả <span class="required">*</span></label
+            >
+            <textarea
+              id="returnReason"
+              rows="5"
+              placeholder="Vui lòng mô tả lý do bạn muốn hoàn trả sản phẩm..."
+            ></textarea>
+          </div>
+          <div class="info-box warning">
+            <i class="fa-solid fa-exclamation-triangle"></i>
+            <div>
+              <strong>Lưu ý:</strong>
+              <p>
+                Yêu cầu hoàn trả sẽ được xem xét trong vòng 24-48h. Vui lòng giữ
+                nguyên sản phẩm và bao bì để thuận tiện cho việc kiểm tra.
+              </p>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelReturnRequest">
+            Hủy
+          </button>
+          <button type="button" class="btn-primary" id="confirmReturnRequest">
+            Gửi yêu cầu
+          </button>
+        </div>
+      </div>
     </div>
 
     <!-- jQuery -->
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    
+
     <!-- Select2 -->
-    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+    <link
+      href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css"
+      rel="stylesheet"
+    />
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
-</body>
+  </body>
 </html>

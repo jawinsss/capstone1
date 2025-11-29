@@ -399,8 +399,8 @@ class ChatbotWidget {
                 <div class="product-sources">
                     <h4>📚 Sản phẩm tham khảo:</h4>
                     ${sources.map((source, idx) => `
-                        <div class="product-source">
-                            <strong>${idx + 1}. ${this.escapeHtml(source.productName)}</strong><br>
+                        <div class="product-source" data-product-id="${source.productId || ''}" style="cursor:pointer">
+                            <strong class="product-link">${idx + 1}. ${this.escapeHtml(source.productName)}</strong><br>
                             <span>Danh mục: ${this.escapeHtml(source.category)} | 
                             Giá: ${source.price.toLocaleString('vi-VN')} VND</span>
                         </div>
@@ -453,6 +453,19 @@ class ChatbotWidget {
         `;
         
         this.messagesContainer.appendChild(messageDiv);
+        
+        // Attach click handlers for product recommendations → navigate to product detail
+        try {
+            const productEls = messageDiv.querySelectorAll('.product-source[data-product-id]');
+            productEls.forEach(el => {
+                el.addEventListener('click', () => {
+                    const productId = el.getAttribute('data-product-id');
+                    if (!productId) return;
+                    // Use absolute path so it works from any page
+                    window.location.href = `/Page/homepage/product-detail.html?id=${productId}`;
+                });
+            });
+        } catch (_) { /* no-op */ }
         this.scrollToBottom();
     }
 
