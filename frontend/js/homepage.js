@@ -710,5 +710,51 @@ document.addEventListener('DOMContentLoaded', () => {
   // }, 15000);
   
 });
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // thumbs (bên phải)
+    const thumbs = new Swiper('.hero-thumbs', {
+      direction: 'vertical',     // dọc
+      slidesPerView: 3,
+      spaceBetween: 12,
+      watchSlidesProgress: true,
+      breakpoints: {
+        0:   { direction: 'horizontal', slidesPerView: 4, spaceBetween: 10 },
+        992: { direction: 'vertical',   slidesPerView: 3, spaceBetween: 12 }
+      }
+    });
+
+    // main (bên trái)
+    const main = new Swiper('.hero-main', {
+      loop: true,
+      speed: 700,
+      autoplay: { delay: 3500, disableOnInteraction: false },
+      pagination: { el: '.hero-main .swiper-pagination', clickable: true },
+      navigation: {
+        nextEl: '.hero-main .swiper-button-next',
+        prevEl: '.hero-main .swiper-button-prev'
+      },
+      thumbs: { swiper: thumbs }
+    });
+  } catch (e) {
+    console.warn('Không khởi tạo Swiper được:', e);
+  }
+});
+const heroSwiper = new Swiper('.heroSwiper', {
+  loop: true,
+  autoplay: {
+    delay: 4000,
+    disableOnInteraction: false
+  },
+  pagination: {
+    el: '.heroSwiper .swiper-pagination',
+    clickable: true
+  },
+  navigation: {
+    nextEl: '.heroSwiper .swiper-button-next',
+    prevEl: '.heroSwiper .swiper-button-prev'
+  }
+});
+
 
 

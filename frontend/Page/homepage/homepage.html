@@ -21,8 +21,13 @@
     <script src="../../js/homepage.js" defer></script>
     <script src="../../js/backToTop.js" defer></script>
     <style>[hidden]{display:none!important}</style>
+    <!-- Swiper CSS + JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+
         <link rel="stylesheet" href="../../styles/chatbot-widget.css">
     <script src="../../js/chatbot-widget.js" defer></script>
+    
 </head>
 <body>
     <div class="hp-topbar">
@@ -84,25 +89,27 @@
 
     <section id="home" data-view="home">
         <main class="hp-main">
-            <div class="hp-main-container">
-                <section class="hp-hero">
-                    <div class="hp-hero-left">
-                        <a href="#home" title="MatFlow Homepage">
-                            <img src="../../assets/MatFlow homepage.png" alt="MatFlow">
-                        </a>
-                    </div>
-                    <div class="hp-hero-right">
-                        <a href="products.html" class="hp-hero-small">
-                            <img src="../../assets/Sắt thép hp.png" alt="Sắt thép">
-                        </a>
-                        <a href="products.html" class="hp-hero-small">
-                            <img src="../../assets/hóa chất hp.png" alt="Hóa chất">
-                        </a>
-                        <a href="products.html" class="hp-hero-small">
-                            <img src="../../assets/máy móc hp.png" alt="Máy móc thiết bị">
-                        </a>
-                    </div>
-                </section>
+           <!-- SLIDER -->
+<div class="swiper heroSwiper">
+    <div class="swiper-wrapper">
+        <div class="swiper-slide">
+            <img src="../../assets/MatFlow homepage.png" alt="Banner 1">
+        </div>
+        <div class="swiper-slide">
+            <img src="../../assets/Sắt thép hp.png" alt="Banner 2">
+        </div>
+        <div class="swiper-slide">
+            <img src="../../assets/hóa chất hp.png" alt="Banner 3">
+        </div>
+        <div class="swiper-slide">
+            <img src="../../assets/máy móc hp.png" alt="Banner 4">
+        </div>
+    </div>
+    <div class="swiper-pagination"></div>
+    <div class="swiper-button-next"></div>
+    <div class="swiper-button-prev"></div>
+</div>
+
                 <div class="hp-feature-bar">
                     <a href="../pages/chinh-sach-van-chuyen.html" class="hp-feature"><i class="fa-solid fa-truck"></i> Giao hàng toàn quốc</a>
                     <a href="../pages/chinh-sach-thanh-toan.html" class="hp-feature"><i class="fa-solid fa-credit-card"></i> Thanh toán tiện lợi</a>
@@ -197,3 +204,22 @@
     </button>
 </body>
 </html>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    new Swiper(".heroSwiper", {
+        loop: true,
+        autoplay: {
+            delay: 3000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: ".swiper-pagination",
+            clickable: true,
+        },
+        navigation: {
+            nextEl: ".swiper-button-next",
+            prevEl: ".swiper-button-prev",
+        },
+    });
+});
+</script>
