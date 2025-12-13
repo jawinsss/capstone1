@@ -1128,9 +1128,109 @@
                     <button class="tab-btn">Tickets</button>
 
                 </div>
+  
+<!-- TAB ĐÁNH GIÁ - ADMIN -->
+<div id="feedbacks" class="support-tab"> 
+  <div class="adm-fb-layout">
+    <!-- Bên trái: Tổng quan -->
+    <section class="adm-fb-summary-card">
+      <h2>Đánh giá & Góp ý</h2>
+      <p class="adm-fb-summary-sub">
+        Xem nhanh mức độ hài lòng & phân bố số sao của khách hàng.
+      </p>
 
+      <div class="adm-fb-summary-main">
+        <div class="adm-fb-score-block">
+          <div id="admFbAvgScore" class="adm-fb-score">0.0</div>
+          <div class="adm-fb-stars" id="admFbStarIcons">★★★★★</div>
+          <div id="admFbTotalReviews" class="adm-fb-total">Chưa có đánh giá</div>
+        </div>
 
+        <div class="adm-fb-bars">
+          <!-- 5 sao -->
+          <div class="adm-fb-bar-row">
+            <span>5 sao</span>
+            <div class="adm-fb-bar">
+              <div class="adm-fb-bar-fill" data-star="5"></div>
+            </div>
+            <span id="admFbCount5">0</span>
+          </div>
+          <!-- 4 sao -->
+          <div class="adm-fb-bar-row">
+            <span>4 sao</span>
+            <div class="adm-fb-bar">
+              <div class="adm-fb-bar-fill" data-star="4"></div>
+            </div>
+            <span id="admFbCount4">0</span>
+          </div>
+          <!-- 3 sao -->
+          <div class="adm-fb-bar-row">
+            <span>3 sao</span>
+            <div class="adm-fb-bar">
+              <div class="adm-fb-bar-fill" data-star="3"></div>
+            </div>
+            <span id="admFbCount3">0</span>
+          </div>
+          <!-- 2 sao -->
+          <div class="adm-fb-bar-row">
+            <span>2 sao</span>
+            <div class="adm-fb-bar">
+              <div class="adm-fb-bar-fill" data-star="2"></div>
+            </div>
+            <span id="admFbCount2">0</span>
+          </div>
+          <!-- 1 sao -->
+          <div class="adm-fb-bar-row">
+            <span>1 sao</span>
+            <div class="adm-fb-bar">
+              <div class="adm-fb-bar-fill" data-star="1"></div>
+            </div>
+            <span id="admFbCount1">0</span>
+          </div>
+        </div>
+      </div>
+    </section>
 
+    <!-- Bên phải: Danh sách chi tiết -->
+    <section class="adm-fb-list-card">
+      <header class="adm-fb-list-header">
+        <h3>Danh sách đánh giá</h3>
+        <div class="adm-fb-filters">
+          <input
+            type="text"
+            id="admFbSearch"
+            placeholder="Tìm theo tên, email, nội dung..."
+          />
+          <select id="admFbRatingFilter">
+            <option value="">Tất cả số sao</option>
+            <option value="5">5 sao</option>
+            <option value="4">4 sao</option>
+            <option value="3">3 sao</option>
+            <option value="2">2 sao</option>
+            <option value="1">1 sao</option>
+          </select>
+          <select id="admFbTypeFilter">
+            <option value="">Tất cả loại phản hồi</option>
+            <option value="price">Giá cả / báo giá</option>
+            <option value="shipping">Giao hàng / kho vận</option>
+            <option value="support">Tư vấn / CSKH</option>
+            <option value="website">Giao diện website</option>
+            <option value="other">Khác</option>
+          </select>
+        </div>
+      </header>
+
+      <div id="admFbEmpty" class="adm-fb-empty" style="display:none;">
+        Chưa có đánh giá nào.
+      </div>
+
+      <div id="admFbList" class="adm-fb-list">
+        <!-- JS render item vào đây -->
+      </div>
+    </section>
+  </div>
+</div>
+ 
                 <div class="split">
 
                     <section class="panel">
@@ -3540,7 +3640,7 @@
 
 
 </body>
-
+<script src="../../js/admin-feedback.js" defer></script>
 
 
 </html>

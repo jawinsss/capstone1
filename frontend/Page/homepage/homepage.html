@@ -21,8 +21,13 @@
     <script src="../../js/homepage.js" defer></script>
     <script src="../../js/backToTop.js" defer></script>
     <style>[hidden]{display:none!important}</style>
+    <!-- Swiper CSS + JS -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.css"/>
+<script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js" defer></script>
+
         <link rel="stylesheet" href="../../styles/chatbot-widget.css">
     <script src="../../js/chatbot-widget.js" defer></script>
+    
 </head>
 <body>
     <div class="hp-topbar">
@@ -84,30 +89,89 @@
 
     <section id="home" data-view="home">
         <main class="hp-main">
-            <div class="hp-main-container">
-                <section class="hp-hero">
-                    <div class="hp-hero-left">
-                        <a href="#home" title="MatFlow Homepage">
-                            <img src="../../assets/MatFlow homepage.png" alt="MatFlow">
-                        </a>
+           <!-- SLIDER -->
+<section class="hp-hero">
+
+                <!-- LEFT: SWIPER -->
+                <div class="hp-hero-left">
+                    <div class="swiper heroSwiper">
+                        <div class="swiper-wrapper">
+                            <div class="swiper-slide"><img src="../../assets/MatFlow homepage.png" alt="Banner 1"></div>
+                            <div class="swiper-slide"><img src="../../assets/Sắt thép hp.png" alt="Banner 2"></div>
+                            <div class="swiper-slide"><img src="../../assets/hóa chất hp.png" alt="Banner 3"></div>
+                            <div class="swiper-slide"><img src="../../assets/máy móc hp.png" alt="Banner 4"></div>
+                        </div>
+
+                        <div class="swiper-pagination"></div>
+                        <div class="swiper-button-next"></div>
+                        <div class="swiper-button-prev"></div>
                     </div>
-                    <div class="hp-hero-right">
-                        <a href="products.html" class="hp-hero-small">
-                            <img src="../../assets/Sắt thép hp.png" alt="Sắt thép">
-                        </a>
-                        <a href="products.html" class="hp-hero-small">
-                            <img src="../../assets/hóa chất hp.png" alt="Hóa chất">
-                        </a>
-                        <a href="products.html" class="hp-hero-small">
-                            <img src="../../assets/máy móc hp.png" alt="Máy móc thiết bị">
-                        </a>
-                    </div>
-                </section>
+                </div>
+
+                <!-- RIGHT: 4 STATIC BANNERS -->
+                <div class="hp-hero-right">
+  <a href="products.html" class="hp-hero-small" data-banner-index="0">
+    <img src="../../assets/MatFlow homepage.png" alt="Banner 1">
+  </a>
+  <a href="products.html" class="hp-hero-small" data-banner-index="1">
+    <img src="../../assets/Sắt thép hp.png" alt="Banner 2">
+  </a>
+  <a href="products.html" class="hp-hero-small" data-banner-index="2">
+    <img src="../../assets/hóa chất hp.png" alt="Banner 3">
+  </a>
+  <a href="products.html" class="hp-hero-small" data-banner-index="3">
+    <img src="../../assets/máy móc hp.png" alt="Banner 4">
+  </a>
+</div>
+ </section>
+
                 <div class="hp-feature-bar">
                     <a href="../pages/chinh-sach-van-chuyen.html" class="hp-feature"><i class="fa-solid fa-truck"></i> Giao hàng toàn quốc</a>
                     <a href="../pages/chinh-sach-thanh-toan.html" class="hp-feature"><i class="fa-solid fa-credit-card"></i> Thanh toán tiện lợi</a>
                     <a href="../pages/dieu-khoan-dich-vu.html" class="hp-feature"><i class="fa-solid fa-headset"></i> Tư vấn 24/7</a>
                 </div>
+                <section class="hp-usecases">
+
+<section class="mf-feature-cats">
+  <h2 class="mf-section-title">Danh mục nổi bật</h2>
+
+  <div class="mf-cat-grid">
+
+    <a class="mf-cat-box" href="products.html?cat=thep">
+      <img src="../../assets/vat_tu/sat-thep/sat-thep-2.jpg" alt="">
+      <div class="mf-cat-info">
+        <h3>Thép – Xi măng</h3>
+        <p>Vật liệu cốt lõi cho mọi công trình</p>
+      </div>
+    </a>
+
+    <a class="mf-cat-box" href="products.html?cat=hoachat">
+      <img src="../../assets/vat_tu/son-chong-tham/sieu-thi-son-10.jpg" alt="">
+      <div class="mf-cat-info">
+        <h3>Hóa chất – Chống thấm</h3>
+        <p>Giải pháp bền vững mùa mưa</p>
+      </div>
+    </a>
+
+    <a class="mf-cat-box" href="products.html?cat=son">
+      <img src="../../assets/vat_tu/sieu-thi-son/sieu-thi-son-27.jpg" alt="">
+      <div class="mf-cat-info">
+        <h3>Sơn – Phụ gia</h3>
+        <p>Bảo vệ & làm đẹp công trình</p>
+      </div>
+    </a>
+
+    <a class="mf-cat-box" href="products.html?cat=maymoc">
+      <img src="../../assets/vat_tu/may-moc-thiet-bi/may-moc-thiet-bi-1.jpg" alt="">
+      <div class="mf-cat-info">
+        <h3>Máy móc – Thiết bị</h3>
+        <p>Hiệu suất cao – vận hành mạnh mẽ</p>
+      </div>
+    </a>
+
+  </div>
+</section>
+
                 <!-- <marquee>Những Sản Phẩm Nổi Bật</marquee> -->
                 <div class="hp-layout">
                     <aside class="hp-aside" >
@@ -119,6 +183,127 @@
             </div>
         </main>
     </section>
+    <!-- SECTION 2: HÀNG BÁN CHẠY TUẦN NÀY -->
+<section class="mf-hot-section">
+  <div class="mf-hot-header">
+    <div>
+      <h2>Hàng bán chạy tuần này</h2>
+      <p>Những sản phẩm được mua nhiều nhất trên MatFlow</p>
+    </div>
+    <a href="products.html" class="mf-hot-viewall">Xem tất cả</a>
+  </div>
+
+  <div class="mf-hot-track">
+    <!-- CARD 1 -->
+    <a href="products.html?id=steel01" class="mf-hot-card">
+      <div class="mf-hot-badge">Bán chạy</div>
+      <div class="mf-hot-img">
+        <img src="../../assets/vat_tu/sat-thep/sat-thep-10.jpg" alt="Thép xây dựng">
+      </div>
+      <div class="mf-hot-info">
+        <h3>Thép cây xây dựng D16 – Hòa Phát</h3>
+        <p class="mf-hot-meta">Mác CB400 – giao theo cây / bó</p>
+        <div class="mf-hot-bottom">
+          <span class="mf-hot-price">325.000đ / cây</span>
+          <span class="mf-hot-tag">Giao nhanh 24h</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 2 -->
+    <a href="products.html?id=xi01" class="mf-hot-card">
+      <div cl
+      ass="mf-hot-badge">Giảm 10%</div>
+      <div class="mf-hot-img">
+        <img src="../../assets/vat_tu/xi-mang-bot-tret-vua/xi-mang-bot-tret-vua-9.jpg" alt="Xi măng GLUE BIULD">
+      </div>
+      <div class="mf-hot-info">
+        <h3>Xi măng GLUE BUILD đa dụng 50kg</h3>
+        <p class="mf-hot-meta">Phù hợp đổ móng, sàn, cột</p>
+        <div class="mf-hot-bottom">
+          <span class="mf-hot-price">89.000đ / bao</span>
+          <span class="mf-hot-tag mf-hot-tag--green">Kho gần nhất</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 3 -->
+    <a href="products.html?id=sika01" class="mf-hot-card">
+      <div class="mf-hot-badge">Hot</div>
+      <div class="mf-hot-img">
+        <img src="../../assets/vat_tu/son-chong-tham/sieu-thi-son-15.png" alt="Chống thấm MAXILITE">
+      </div>
+      <div class="mf-hot-info">
+        <h3>Sơn chống thấm tường & sân thượng</h3>
+        <p class="mf-hot-meta">Giải pháp mùa mưa – dễ thi công</p>
+        <div class="mf-hot-bottom">
+          <span class="mf-hot-price">245.000đ / thùng</span>
+          <span class="mf-hot-tag">Tư vấn kỹ thuật</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 4 -->
+    <a href="products.html?id=may01" class="mf-hot-card">
+      <div class="mf-hot-badge">New</div>
+      <div class="mf-hot-img">
+        <img src="../../assets/vat_tu/may-moc-thiet-bi/may-moc-thiet-bi-59.jpg" alt="Máy mài góc">
+      </div>
+      <div class="mf-hot-info">
+        <h3>Máy mài góc 1000W – Ingco</h3>
+        <p class="mf-hot-meta">Bảo hành 12 tháng – phù hợp thợ</p>
+        <div class="mf-hot-bottom">
+          <span class="mf-hot-price">1.050.000đ</span>
+          <span class="mf-hot-tag mf-hot-tag--orange">Quà tặng kèm</span>
+        </div>
+      </div>
+    </a>
+
+    <!-- CARD 5 (tùy thích thêm) -->
+    <a href="products.html?id=ong01" class="mf-hot-card">
+      <div class="mf-hot-badge">Bán chạy</div>
+      <div class="mf-hot-img">
+        <img src="../../assets/vat_tu/sat-thep/sat-thep-16.jpg" alt="Ống thép mạ kẽm">
+      </div>
+      <div class="mf-hot-info">
+        <h3>Ống thép mạ kẽm D60</h3>
+        <p class="mf-hot-meta">Dùng cho nhà xưởng, khung mái</p>
+        <div class="mf-hot-bottom">
+          <span class="mf-hot-price">215.000đ / cây</span>
+          <span class="mf-hot-tag mf-hot-tag--green">Có sẵn hàng</span>
+        </div>
+      </div>
+    </a>
+ <!-- CARD 6 (tùy thích thêm) -->
+    <a href="products.html?id=ong01" class="mf-hot-card">
+      <div class="mf-hot-badge">Bán chạy</div>
+      <div class="mf-hot-img">
+        <img src="../../assets/vat_tu/bao-ho-lao-dong/bao-ho-lao-dong-1.jpg" alt="Áo bảo hộ lao động">
+      </div>
+      <div class="mf-hot-info">
+        <h3>Áo gi-le phản quan</h3>
+        <p class="mf-hot-meta">Dùng cho người lao động</p>
+        <div class="mf-hot-bottom">
+          <span class="mf-hot-price">235.000đ / chiếc</span>
+          <span class="mf-hot-tag mf-hot-tag--green">Có sẵn hàng</span>
+        </div>
+      </div>
+    </a>
+  </div>
+</section>
+<section class="hp-section hp-section-testimonials">
+  <div class="hp-section-head">
+    <h2>KHÁCH HÀNG NÓI GÌ VỀ MATFLOW</h2>
+    <a href="../homepage/feedback.html" class="hp-link-view-all">
+      Xem tất cả
+      <i class="fa-solid fa-arrow-right-long"></i>
+    </a>
+  </div>
+
+  <div id="hpTestimonialsList" class="hp-testimonials-grid">
+    <!-- JS sẽ render 3 feedback mới nhất vào đây -->
+  </div>
+</section>
 
     
 
@@ -196,4 +381,45 @@
         <i class="fa-solid fa-chevron-up"></i>
     </button>
 </body>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const thumbs = document.querySelectorAll(".hp-hero-right .hp-hero-small");
+
+    function setActiveThumb(index) {
+        thumbs.forEach((thumb, i) => {
+            if (i === index) thumb.classList.add("is-active");
+            else thumb.classList.remove("is-active");
+        });
+    }
+
+    const swiper = new Swiper(".heroSwiper", {
+        loop: true,
+        autoplay: {
+            delay: 3000,
+            disableOnInteraction: false,
+        },
+        pagination: {
+            el: ".heroSwiper .swiper-pagination",
+            clickable: true,
+        },
+        navigation: {
+            nextEl: ".heroSwiper .swiper-button-next",
+            prevEl: ".heroSwiper .swiper-button-prev",
+        },
+        on: {
+            init(sw) {
+                setActiveThumb(sw.realIndex);
+            },
+            slideChange(sw) {
+                setActiveThumb(sw.realIndex);
+            }
+        }
+    });
+
+  
+});
+</script>
+
+
 </html>
+

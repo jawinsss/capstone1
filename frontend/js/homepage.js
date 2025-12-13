@@ -710,5 +710,145 @@ document.addEventListener('DOMContentLoaded', () => {
   // }, 15000);
   
 });
+document.addEventListener('DOMContentLoaded', () => {
+  try {
+    // thumbs (bên phải)
+    const thumbs = new Swiper('.hero-thumbs', {
+      direction: 'vertical',     // dọc
+      slidesPerView: 3,
+      spaceBetween: 12,
+      watchSlidesProgress: true,
+      breakpoints: {
+        0:   { direction: 'horizontal', slidesPerView: 4, spaceBetween: 10 },
+        992: { direction: 'vertical',   slidesPerView: 3, spaceBetween: 12 }
+      }
+    });
+
+    // main (bên trái)
+    const main = new Swiper('.hero-main', {
+      loop: true,
+      speed: 700,
+      autoplay: { delay: 3500, disableOnInteraction: false },
+      pagination: { el: '.hero-main .swiper-pagination', clickable: true },
+      navigation: {
+        nextEl: '.hero-main .swiper-button-next',
+        prevEl: '.hero-main .swiper-button-prev'
+      },
+      thumbs: { swiper: thumbs }
+    });
+  } catch (e) {
+    console.warn('Không khởi tạo Swiper được:', e);
+  }
+});
+const heroSwiper = new Swiper('.heroSwiper', {
+  loop: true,
+  autoplay: {
+    delay: 4000,
+    disableOnInteraction: false
+  },
+  pagination: {
+    el: '.heroSwiper .swiper-pagination',
+    clickable: true
+  },
+  navigation: {
+    nextEl: '.heroSwiper .swiper-button-next',
+    prevEl: '.heroSwiper .swiper-button-prev'
+  }
+});
+// ====== HOMEPAGE TESTIMONIALS – đọc dữ liệu từ feedback ======
+const FEEDBACK_STORAGE_KEY = "matflowFeedback";
+
+document.addEventListener("DOMContentLoaded", () => {
+  // ... các init khác của homepage của bạn (nếu có)
+
+  renderHomepageTestimonials();
+});
+
+function renderHomepageTestimonials() {
+  const container = document.getElementById("hpTestimonialsList");
+  if (!container) return;
+
+  let allFeedback = [];
+  try {
+    allFeedback = JSON.parse(localStorage.getItem(FEEDBACK_STORAGE_KEY)) || [];
+  } catch (e) {
+    allFeedback = [];
+  }
+
+  fillTestimonials(container, allFeedback);
+}
+
+function fillTestimonials(container, allFeedback) {
+  container.innerHTML = "";
+
+  if (!allFeedback.length) {
+    container.innerHTML = `
+      <article class="hp-testimonial-card">
+        <p class="hp-testimonial-content">
+          Chưa có đánh giá nào. Hãy là người đầu tiên để lại cảm nhận về MatFlow!
+        </p>
+        <a href="../pages/feedback.html" class="hp-link-view-all">
+          Gửi đánh giá ngay
+        </a>
+      </article>
+    `;
+    return;
+  }
+
+  // Lấy 3 feedback mới nhất
+  const latest = [...allFeedback]
+    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+    .slice(0, 3);
+
+  const cards = latest
+    .map(fb => {
+      const name = fb.name || "Khách hàng";
+      const title = mapTypeLabelHome(fb.type);
+      const content = fb.message || "";
+      const rating = Number(fb.rating) || 0;
+
+      return `
+        <article class="hp-testimonial-card">
+          <div class="hp-testimonial-stars">
+            ${"★".repeat(rating)}${"☆".repeat(5 - rating)}
+          </div>
+          <h3 class="hp-testimonial-title">${escapeHtml(title)}</h3>
+          <p class="hp-testimonial-content">${escapeHtml(content)}</p>
+          <p class="hp-testimonial-meta">
+            <strong>${escapeHtml(name)}</strong>
+          </p>
+        </article>
+      `;
+    })
+    .join("");
+
+  container.innerHTML = cards;
+}
+
+function mapTypeLabelHome(type) {
+  switch (type) {
+    case "price":
+      return "Giá cả / báo giá";
+    case "shipping":
+      return "Giao hàng / kho vận";
+    case "support":
+      return "Tư vấn / chăm sóc khách hàng";
+    case "website":
+      return "Trải nghiệm trên website";
+    case "other":
+    default:
+      return "Góp ý khác";
+  }
+}
+
+function escapeHtml(str) {
+  return String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 
 
