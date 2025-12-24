@@ -1056,3 +1056,4 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Initialization error:', error);
   });
 });
+

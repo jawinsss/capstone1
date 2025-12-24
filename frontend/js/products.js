@@ -753,3 +753,26 @@ document.addEventListener('DOMContentLoaded', () => {
     console.error('Products initialization error:', error);
   });
 });
+
+// category url
+const params = new URLSearchParams(window.location.search);
+const selectedCategory = params.get("category"); 
+
+// slugify function to normalize category names
+function slugify(str) {
+  return str
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")  // remove accents
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/(^-|-$)/g, "");
+}
+//filter products by category
+const filtered = allProducts.filter(p => {
+  return slugify(p.categoryName) === selectedCategory;
+});
+
+renderProducts(filtered);
+
+
+
