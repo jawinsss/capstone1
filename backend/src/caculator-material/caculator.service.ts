@@ -604,12 +604,12 @@ ${productList}
   private getDefaultSpecsForCategory(cat: string): string[] {
     const name = (cat || '').toLowerCase();
 
-    if (name.includes('thép')) return ['length', 'width', 'height', 'weight'];
-    if (name.includes('bảo hộ')) return ['size', 'material', 'color'];
-    if (name.includes('găng tay')) return ['size', 'material', 'length', 'type'];
-    if (name.includes('xi măng')) return ['bag_weight', 'grade'];
-    if (name.includes('ống')) return ['size', 'material', 'standard'];
+    if (name.includes('thép')) return ['chieuDai', 'chieuRong', 'chieuCao', 'trongLuong'];
+    if (name.includes('bảo hộ')) return ['kichThuoc', 'chatLieu', 'mauSac'];
+    if (name.includes('găng tay')) return ['kichThuoc', 'chatLieu', 'chieuDai', 'loai'];
+    if (name.includes('xi măng')) return ['trongLuongBao', 'mác'];
+    if (name.includes('ống')) return ['kichThuoc', 'chatLieu', 'tieuChuan'];
 
-    return ['length', 'width', 'height', 'quantity'];
+    return ['chieuDai', 'chieuRong', 'chieuCao', 'soLuong'];
   }
 }
