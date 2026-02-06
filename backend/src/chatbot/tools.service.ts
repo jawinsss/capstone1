@@ -44,7 +44,7 @@ export class ToolsService {
     return [
       {
         name: 'search_products',
-        description: 'Tìm kiếm sản phẩm THÔNG MINH trong database theo tên, mô tả, danh mục, khoảng giá, và sắp xếp. Hỗ trợ tìm: mới nhất, rẻ nhất, đắt nhất, nhiều tồn kho.',
+        description: 'Smart product search in database by name, description, category, price range, and sort. Supports: newest, cheapest, most expensive, most stock.',
         parameters: {
           type: 'object',
           properties: {
@@ -93,7 +93,7 @@ export class ToolsService {
       },
       {
         name: 'add_to_cart',
-        description: 'Thêm sản phẩm vào giỏ hàng với số lượng tùy chọn. CHỈ sử dụng khi người dùng YÊU CẦU rõ ràng ("thêm", "cho vào giỏ"). PHẢI parse số lượng từ user input.',
+        description: 'Add product to cart. ONLY use when user explicitly REQUESTS it. Must parse quantity from user input.',
         parameters: {
           type: 'object',
           properties: {
@@ -115,7 +115,7 @@ export class ToolsService {
       },
       {
         name: 'add_multiple_to_cart',
-        description: 'Thêm NHIỀU sản phẩm vào giỏ hàng cùng lúc. Dùng khi user yêu cầu thêm 2+ sản phẩm.',
+        description: 'Add MULTIPLE products to cart. Use when user requests 2+ products.',
         parameters: {
           type: 'object',
           properties: {
@@ -404,10 +404,10 @@ export class ToolsService {
   private async searchProducts(args: any): Promise<ToolResult> {
     const { query, category, minPrice, maxPrice, sortBy, limit = 10 } = args;
     
-    // ✅ Giới hạn tối đa 50 sản phẩm
+    // Max limit 50 products
     const maxLimit = Math.min(limit || 10, 50);
 
-    // ✅ Build price filter
+    // Build price filter
     const priceFilter: any = {};
     if (minPrice !== undefined && minPrice !== null) {
       priceFilter.gte = Number(minPrice);
@@ -416,7 +416,7 @@ export class ToolsService {
       priceFilter.lte = Number(maxPrice);
     }
 
-    // ✅ Build orderBy based on sortBy parameter
+    // Build orderBy based on sortBy parameter
     let orderBy: any = { createdAt: 'desc' }; // Default: mới nhất
     
     switch (sortBy) {
@@ -452,7 +452,7 @@ export class ToolsService {
               name: { contains: category, mode: 'insensitive' },
             },
           } : {},
-          // ✅ Price range filter
+          // Price range filter
           Object.keys(priceFilter).length > 0 ? {
             price: priceFilter,
           } : {},
@@ -466,7 +466,7 @@ export class ToolsService {
       orderBy: orderBy,
     });
 
-    // ✅ Build descriptive message
+    // Build descriptive message
     let message = `Tìm thấy ${products.length} sản phẩm`;
     
     // Thêm thông tin sắp xếp
@@ -558,9 +558,9 @@ export class ToolsService {
     const { productId, quantity = 1 } = args;
     const targetUserId = args.userId || userId;
 
-    this.logger.log(`🛒 addToCart called with productId: ${productId}, quantity: ${quantity}`);
+    this.logger.log(`addToCart called with productId: ${productId}, quantity: ${quantity}`);
 
-    // ✅ Guest users can add to cart (localStorage)
+    // Guest users can add to cart (localStorage)
     // if (!targetUserId) {
     //   return {
     //     success: false,
@@ -575,7 +575,7 @@ export class ToolsService {
     });
 
     if (!product) {
-      this.logger.warn(`❌ Product not found: ${productId}`);
+      this.logger.warn(`Product not found: ${productId}`);
       return {
         success: false,
         error: 'Sản phẩm không tồn tại hoặc không còn kinh doanh',
@@ -584,17 +584,17 @@ export class ToolsService {
     }
 
     if (product.stock < quantity) {
-      this.logger.warn(`⚠️ Insufficient stock for ${product.name}: requested ${quantity}, available ${product.stock}`);
+      this.logger.warn(`Insufficient stock for ${product.name}: requested ${quantity}, available ${product.stock}`);
       return {
         success: false,
         error: `Chỉ còn ${product.stock} sản phẩm trong kho`,
         message: product.stock > 0
-          ? `❌ Xin lỗi, sản phẩm "${product.name}" chỉ còn ${product.stock} trong kho. Bạn có muốn thêm ${product.stock} sản phẩm không?`
-          : `❌ Xin lỗi, sản phẩm "${product.name}" hiện tạm hết hàng. Bạn có muốn xem sản phẩm tương tự không?`,
+          ? `Xin lỗi, sản phẩm "${product.name}" chỉ còn ${product.stock} trong kho. Bạn có muốn thêm ${product.stock} sản phẩm không?`
+          : `Xin lỗi, sản phẩm "${product.name}" hiện tạm hết hàng. Bạn có muốn xem sản phẩm tương tự không?`,
       };
     }
 
-    this.logger.log(`✅ Added to cart: ${product.name} (${productId}) x${quantity}`);
+    this.logger.log(`Added to cart: ${product.name} (${productId}) x${quantity}`);
 
     // Calculate remaining stock
     const remainingStock = product.stock - quantity;
@@ -611,8 +611,8 @@ export class ToolsService {
         remainingStock,
       },
       message: quantity === 1 
-        ? `✅ Đã thêm "${product.name}" vào giỏ hàng!`
-        : `✅ Đã thêm ${quantity}x "${product.name}" vào giỏ hàng! (Còn lại ${remainingStock} trong kho)`,
+        ? `Đã thêm "${product.name}" vào giỏ hàng!`
+        : `Đã thêm ${quantity}x "${product.name}" vào giỏ hàng! (Còn lại ${remainingStock} trong kho)`,
     };
   }
 
@@ -620,10 +620,10 @@ export class ToolsService {
     const { products } = args;
     const targetUserId = args.userId || userId;
 
-    this.logger.log(`🛒 addMultipleToCart called with ${products?.length || 0} products`);
+    this.logger.log(`addMultipleToCart called with ${products?.length || 0} products`);
 
     if (!products || products.length === 0) {
-      this.logger.warn('⚠️ Empty products list provided');
+      this.logger.warn('Empty products list provided');
       return {
         success: false,
         error: 'Danh sách sản phẩm trống',
@@ -653,20 +653,20 @@ export class ToolsService {
     }
 
     if (successProducts.length === 0) {
-      this.logger.error('❌ All products failed to add');
+      this.logger.error('All products failed to add');
       return {
         success: false,
         error: 'Không thể thêm sản phẩm nào vào giỏ hàng',
-        message: `❌ Không thể thêm sản phẩm. ${failedProducts[0]?.error || 'Vui lòng thử lại.'}`,
+        message: `Không thể thêm sản phẩm. ${failedProducts[0]?.error || 'Vui lòng thử lại.'}`,
       };
     }
 
     const message = successProducts.length === products.length
-      ? `✅ Đã thêm ${successProducts.length} sản phẩm vào giỏ hàng: ${successProducts.join(', ')}`
-      : `✅ Đã thêm ${successProducts.length}/${products.length} sản phẩm vào giỏ hàng. Một số sản phẩm không thể thêm.`;
+      ? `Đã thêm ${successProducts.length} sản phẩm vào giỏ hàng: ${successProducts.join(', ')}`
+      : `Đã thêm ${successProducts.length}/${products.length} sản phẩm vào giỏ hàng. Một số sản phẩm không thể thêm.`;
 
-    this.logger.log(`✅ Successfully added ${successProducts.length}/${products.length} products`);
-    this.logger.log(`📦 Returning data array with ${results.length} items`);
+    this.logger.log(`Successfully added ${successProducts.length}/${products.length} products`);
+    this.logger.log(`Returning data array with ${results.length} items`);
 
     return {
       success: true,
@@ -712,7 +712,7 @@ export class ToolsService {
     return {
       success: true,
       data: updatedUser,
-      message: '✅ Đã cập nhật thông tin cá nhân thành công!',
+      message: 'Đã cập nhật thông tin cá nhân thành công!',
     };
   }
 
@@ -728,7 +728,7 @@ export class ToolsService {
 
     return {
       success: true,
-      message: `✅ Đã gửi email liên hệ đến MatFlow thành công! Chúng tôi sẽ phản hồi sớm nhất có thể.`,
+      message: `Đã gửi email liên hệ đến MatFlow thành công! Chúng tôi sẽ phản hồi sớm nhất có thể.`,
     };
   }
 

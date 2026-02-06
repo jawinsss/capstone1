@@ -24,9 +24,7 @@ export class CalculatorService {
     private readonly prisma: PrismaService,
   ) { }
 
-  /** =======================================================
-   * 🔥 NATURAL LANGUAGE CALCULATION
-   * =======================================================*/
+  // Natural Language Calculation
   async calculateMaterials(
     payload: MaterialCalculatorRequestDto,
   ): Promise<MaterialCalculatorResponseDto> {
@@ -61,9 +59,7 @@ export class CalculatorService {
       question,
     });
 
-    /** -------------------------------------------------------
-     * 🔥 Vector search (only IDs, no images)
-     * -------------------------------------------------------*/
+    // Vector search (IDs only)
     const vectorResults = await this.vector.searchRelevantProducts(
       ruleResult.searchQuery,
       20,
@@ -71,9 +67,7 @@ export class CalculatorService {
 
     const ids = vectorResults.map((p: any) => p.id);
 
-    /** -------------------------------------------------------
-     * 🔥 Query Prisma again to GET REAL IMAGES
-     * -------------------------------------------------------*/
+    // Fetch product details including images
     const products = await this.prisma.product.findMany({
       where: { id: { in: ids } },
       include: {
@@ -109,9 +103,7 @@ export class CalculatorService {
     };
   }
 
-  /** =======================================================
-   * 🔥 CATEGORY SPECIFICATIONS
-   * =======================================================*/
+  // Category Specifications
   async getCategorySpecifications(categoryId: string) {
     if (!categoryId) {
       return { success: false, message: 'categoryId is required' };
@@ -172,9 +164,7 @@ export class CalculatorService {
     };
   }
 
-  /** =======================================================
-   * 🔥 FORM CALCULATION WITH DEEP AI ANALYSIS
-   * =======================================================*/
+  // Form Calculation with AI Analysis
   async calculateFromForm(payload: MaterialCalcFormDto) {
     this.logger.log('=== CALCULATOR FORM REQUEST ===');
     this.logger.log(`Payload: ${JSON.stringify(payload)}`);
@@ -193,11 +183,11 @@ export class CalculatorService {
     /** Build comprehensive search query from ALL user inputs */
     const parts: string[] = [];
 
-    // 🔥 PRIORITIZE PRODUCTTYPE (Subcategory) for AI analysis
+    // Prioritize productType/Subcategory for AI analysis
     // User wants AI to analyze from subcategory, not main category
     if (productType) {
       parts.push(productType);
-      this.logger.log(`🎯 AI will analyze from productType: ${productType}`);
+      this.logger.log(`AI will analyze from productType: ${productType}`);
     } else if (subCategoryId) {
       // Fallback: get subcategory name if productType not provided
       const subCat = await this.prisma.category.findUnique({
@@ -205,7 +195,7 @@ export class CalculatorService {
       });
       if (subCat) {
         parts.push(subCat.name);
-        this.logger.log(`🎯 AI will analyze from subcategory: ${subCat.name}`);
+        this.logger.log(`AI will analyze from subcategory: ${subCat.name}`);
       }
     }
 
@@ -219,10 +209,7 @@ export class CalculatorService {
     this.logger.log(`🔍 Search query: "${searchQuery}"`);
     this.logger.log(`📋 Specs: ${JSON.stringify(specs)}`);
 
-    /** 
-     * 🔥 STEP 1: BROADER SEARCH - Get more products for AI to analyze
-     * Instead of limiting to just the category, we search more broadly
-     */
+    // Step 1: Broad search to get candidates for AI analysis
     let candidateProducts: any[] = [];
 
     try {
@@ -241,15 +228,13 @@ export class CalculatorService {
           where: { id: { in: ids }, isActive: true },
           include: { category: true, images: true },
         });
-        this.logger.log(`✅ Vector search found ${candidateProducts.length} active products`);
+        this.logger.log(`Vector search found ${candidateProducts.length} active products`);
       }
     } catch (err) {
-      this.logger.error('❌ Vector search failed:', err);
+      this.logger.error('Vector search failed:', err);
     }
 
-    /**
-     * 🔥 STEP 2: FALLBACK - If vector search fails or returns few results
-     */
+    // Step 2: Fallback if vector search returns few results
     if (candidateProducts.length < 20) {
       this.logger.log(`📦 Expanding search with category fallback (current: ${candidateProducts.length})`);
 
@@ -286,16 +271,13 @@ export class CalculatorService {
         });
 
         candidateProducts = [...candidateProducts, ...categoryProducts];
-        this.logger.log(`✅ Added ${categoryProducts.length} from categories, total: ${candidateProducts.length}`);
+        this.logger.log(`Added ${categoryProducts.length} from categories, total: ${candidateProducts.length}`);
       } else {
-        this.logger.warn('⚠️ No category IDs available for fallback');
+        this.logger.warn('No category IDs available for fallback');
       }
     }
 
-    /**
-     * 🔥 STEP 3: AI DEEP ANALYSIS
-     * AI analyzes ALL candidate products' descriptions and selects the best matches
-     */
+    // Step 3: AI Deep Analysis
     let results: any[] = [];
     let aiSummary = '';
 
@@ -315,10 +297,10 @@ export class CalculatorService {
         results = aiAnalysis.products;
         aiSummary = aiAnalysis.summary;
 
-        this.logger.log(`✅ AI returned ${results.length} products after deep analysis`);
+        this.logger.log(`AI returned ${results.length} products after deep analysis`);
       } catch (aiError) {
         // Fallback to basic results if AI fails
-        this.logger.error('❌ AI analysis failed, using basic results:', aiError);
+        this.logger.error('AI analysis failed, using basic results:', aiError);
 
         // Take top results based on vector score
         results = candidateProducts
@@ -345,7 +327,7 @@ export class CalculatorService {
         aiSummary = `Đã tìm thấy ${results.length} sản phẩm phù hợp.`;
       }
     } else {
-      this.logger.warn('⚠️ No candidate products to analyze!');
+      this.logger.warn('No candidate products to analyze!');
     }
 
     this.logger.log(`📊 FINAL RESULTS: ${results.length} products`);
@@ -358,10 +340,7 @@ export class CalculatorService {
     };
   }
 
-  /** =======================================================
-   * 🤖 AI-POWERED DEEP PRODUCT ANALYSIS
-   * Analyzes product descriptions and matches with user specs
-   * =======================================================*/
+  // AI-Powered Product Analysis
   private async analyzeProductsWithAI(
     products: any[],
     userInput: MaterialCalcFormDto,
@@ -483,7 +462,7 @@ ${productList}
       // Map AI results back to full product data
       const aiProducts = parsedResponse.products || [];
 
-      // 🔥 ENSURE WE RETURN EXACTLY requestedQuantity
+      // Ensure we return exactly requestedQuantity
       const limitedProducts = aiProducts.slice(0, requestedQuantity);
 
       const results = limitedProducts.map((aiProduct: any) => {
@@ -505,7 +484,7 @@ ${productList}
           aiReasoning: aiProduct.reasoning || 'Sản phẩm phù hợp',
           matchedAttributes: aiProduct.matchedAttributes || [],
           images: fullProduct.images.map((img: any) => ({
-            // 🔥 HANDLE BASE64 IMAGES FROM ADMIN UPLOADS
+            // Handle base64 images from admin uploads
             url: img.url.startsWith('data:')
               ? img.url // Base64 data URI - return as-is
               : img.url.startsWith('/assets')
@@ -517,7 +496,7 @@ ${productList}
         };
       }).filter(Boolean); // Remove null entries
 
-      this.logger.log(`✅ AI selected ${results.length} products from ${products.length} candidates`);
+      this.logger.log(`AI selected ${results.length} products from ${products.length} candidates`);
 
       return {
         products: results,

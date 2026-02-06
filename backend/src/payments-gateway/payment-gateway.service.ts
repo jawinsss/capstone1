@@ -159,7 +159,7 @@ export class PaymentGatewayService {
 
   // ================== MoMo IPN Handler ==================
   async handleMomoIPN(body: any) {
-    this.logger.log('🔔 MoMo IPN received:', JSON.stringify(body));
+    this.logger.log('MoMo IPN received:', JSON.stringify(body));
 
     const {
       partnerCode,
@@ -195,7 +195,7 @@ export class PaymentGatewayService {
       .digest('hex');
 
     if (calculatedSignature !== signature) {
-      this.logger.error('❌ MoMo signature verification failed!');
+      this.logger.error('MoMo signature verification failed!');
       return { success: false, message: 'Invalid signature' };
     }
 
@@ -205,14 +205,14 @@ export class PaymentGatewayService {
       const decodedData = JSON.parse(Buffer.from(extraData, 'base64').toString());
       orderId = decodedData.orderId;
     } catch (error) {
-      this.logger.error('❌ Failed to parse extraData:', error);
+      this.logger.error('Failed to parse extraData:', error);
       return { success: false, message: 'Invalid extraData' };
     }
 
     // Handle payment result
     if (resultCode === 0) {
       // Payment successful
-      this.logger.log(`✅ MoMo payment successful for order ${orderId}`);
+      this.logger.log(`MoMo payment successful for order ${orderId}`);
       
       await this.prisma.$transaction(async (tx) => {
         // Update order
@@ -241,7 +241,7 @@ export class PaymentGatewayService {
       return { success: true, message: 'Payment confirmed' };
     } else {
       // Payment failed
-      this.logger.error(`❌ MoMo payment failed for order ${orderId}: ${message}`);
+      this.logger.error(`MoMo payment failed for order ${orderId}: ${message}`);
       
       await this.prisma.payment.create({
         data: {
@@ -260,7 +260,7 @@ export class PaymentGatewayService {
 
   // ================== ZaloPay Callback Handler ==================
   async handleZaloPayCallback(body: any) {
-    this.logger.log('🔔 ZaloPay callback received:', JSON.stringify(body));
+    this.logger.log('ZaloPay callback received:', JSON.stringify(body));
 
     const { data: dataStr, mac: reqMac } = body;
 
@@ -272,7 +272,7 @@ export class PaymentGatewayService {
       .digest('hex');
 
     if (reqMac !== calculatedMac) {
-      this.logger.error('❌ ZaloPay MAC verification failed!');
+      this.logger.error('ZaloPay MAC verification failed!');
       return { return_code: -1, return_message: 'Invalid MAC' };
     }
 
@@ -295,11 +295,11 @@ export class PaymentGatewayService {
       const embedDataObj = JSON.parse(embed_data);
       orderId = embedDataObj.orderId;
     } catch (error) {
-      this.logger.error('❌ Failed to parse embed_data:', error);
+      this.logger.error('Failed to parse embed_data:', error);
       return { return_code: -1, return_message: 'Invalid embed_data' };
     }
 
-    this.logger.log(`✅ ZaloPay payment successful for order ${orderId}`);
+    this.logger.log(`ZaloPay payment successful for order ${orderId}`);
 
     await this.prisma.$transaction(async (tx) => {
       // Update order
@@ -365,7 +365,7 @@ export class PaymentGatewayService {
     amount: number;
     resultCode: number;
   }) {
-    this.logger.log(`✅ Manual payment confirmation for order: ${payload.orderId}`);
+    this.logger.log(`Manual payment confirmation for order: ${payload.orderId}`);
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -427,7 +427,7 @@ export class PaymentGatewayService {
         message: 'Payment confirmed successfully',
       };
     } catch (error) {
-      this.logger.error(`❌ Failed to confirm payment for order: ${payload.orderId}`, error);
+      this.logger.error(`Failed to confirm payment for order: ${payload.orderId}`, error);
       return {
         success: false,
         message: 'Failed to confirm payment',
@@ -443,7 +443,7 @@ export class PaymentGatewayService {
     resultCode: number;
     message: string;
   }) {
-    this.logger.log(`❌ Manual payment failure for order: ${payload.orderId} - ${payload.message}`);
+    this.logger.log(`Manual payment failure for order: ${payload.orderId} - ${payload.message}`);
 
     try {
       await this.prisma.$transaction(async (tx) => {
@@ -487,7 +487,7 @@ export class PaymentGatewayService {
           });
         }
 
-        // ⚠️ CRITICAL: Update order status to CANCELLED
+        // Critical: Update order status to CANCELLED
         // When online payment fails, the order should be cancelled
         const order = await tx.order.update({
           where: { id: payload.orderId },
@@ -500,7 +500,7 @@ export class PaymentGatewayService {
           },
         });
 
-        // 🔄 RESTORE STOCK: Return products to inventory
+        // Restore Stock: Return products to inventory
         for (const item of order.items) {
           await tx.product.update({
             where: { id: item.productId },
@@ -510,20 +510,20 @@ export class PaymentGatewayService {
               },
             },
           });
-          this.logger.log(`↩️ Restored ${item.quantity} units of product ${item.productId}`);
+          this.logger.log(`Restored ${item.quantity} units of product ${item.productId}`);
         }
 
-        this.logger.log(`✅ Order ${payload.orderId} marked as CANCELLED due to failed payment`);
+        this.logger.log(`Order ${payload.orderId} marked as CANCELLED due to failed payment`);
       });
 
-      this.logger.log(`✅ Payment marked as failed for order: ${payload.orderId}`);
+      this.logger.log(`Payment marked as failed for order: ${payload.orderId}`);
 
       return {
         success: true,
         message: 'Payment marked as failed',
       };
     } catch (error) {
-      this.logger.error(`❌ Failed to update payment status for order: ${payload.orderId}`, error);
+      this.logger.error(`Failed to update payment status for order: ${payload.orderId}`, error);
       return {
         success: false,
         message: 'Failed to update payment status',

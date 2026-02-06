@@ -6,7 +6,7 @@ import { PrismaService } from '../prisma/prisma.service';
 export class OrderAutomationService {
   private readonly logger = new Logger(OrderAutomationService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(private readonly prisma: PrismaService) { }
 
   /**
    * Auto-approve orders every 30 seconds
@@ -47,7 +47,7 @@ export class OrderAutomationService {
         });
 
         this.logger.log(
-          `✅ Auto-confirmed ${updatedPending.count} PENDING orders: ${pendingOrders.map((o) => o.code).join(', ')}`,
+          `Auto-confirmed ${updatedPending.count} PENDING orders: ${pendingOrders.map((o) => o.code).join(', ')}`,
         );
       }
 
@@ -79,16 +79,16 @@ export class OrderAutomationService {
         });
 
         this.logger.log(
-          `✅ Auto-shipped ${updatedConfirmed.count} CONFIRMED orders: ${confirmedOrders.map((o) => o.code).join(', ')}`,
+          `Auto-shipped ${updatedConfirmed.count} CONFIRMED orders: ${confirmedOrders.map((o) => o.code).join(', ')}`,
         );
       }
 
       // Log summary
       if (pendingOrders.length === 0 && confirmedOrders.length === 0) {
-        this.logger.debug('⏳ No orders to auto-process');
+        this.logger.debug('No orders to auto-process');
       }
     } catch (error) {
-      this.logger.error('❌ Error in auto-approve orders:', error.message);
+      this.logger.error('Error in auto-approve orders:', error.message);
     }
   }
 
@@ -127,7 +127,7 @@ export class OrderAutomationService {
           data: { status: newStatus as any },
         });
 
-        this.logger.log(`✅ Manually processed order ${order.code}: ${order.status} → ${newStatus}`);
+        this.logger.log(`Manually processed order ${order.code}: ${order.status} → ${newStatus}`);
         return {
           success: true,
           message: `Order ${order.code} updated to ${newStatus}`,
@@ -140,7 +140,7 @@ export class OrderAutomationService {
         message: `Order ${order.code} is in ${order.status} status, cannot auto-process`,
       };
     } catch (error) {
-      this.logger.error('❌ Error processing order:', error.message);
+      this.logger.error('Error processing order:', error.message);
       return { success: false, message: error.message };
     }
   }

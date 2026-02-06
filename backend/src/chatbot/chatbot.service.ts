@@ -66,7 +66,7 @@ export class ChatbotService {
             messages: { 
               orderBy: { createdAt: 'desc' }, 
               take: 10,
-              // ✅ Include metadata để lấy products từ message trước
+              // Include metadata to fetch products from previous message
             } 
           },
         });
@@ -97,19 +97,19 @@ export class ChatbotService {
         },
       });
 
-      // 3. Get conversation history for context (⚡ Tối ưu token)
+      // 3. Get conversation history for context
       const history: ChatMessage[] = conversation.messages
-        .slice(0, 6) // ⚡ Giảm xuống 6 messages để tiết kiệm tokens
+        .slice(0, 6) // Limit to 6 messages to save tokens
         .reverse()
         .map((m) => ({
           role: m.role.toLowerCase() as 'user' | 'assistant',
-          content: m.content.length > 500 ? m.content.substring(0, 500) + '...' : m.content, // ⚡ Truncate long messages
+          content: m.content.length > 500 ? m.content.substring(0, 500) + '...' : m.content, // Truncate long messages
         }));
 
       // 4. Smart search for relevant products
       this.logger.log('Searching for relevant products...');
       
-      // ✅ FIX: Nếu message chỉ là "thêm", lấy products từ message trước đó
+      // Fix: If message is just "add", get products from previous message
       let relevantProducts = [];
       const isAddToCartMessage = message.toLowerCase().includes('thêm') || 
                                   message.toLowerCase().includes('cho vào giỏ') ||
@@ -123,7 +123,7 @@ export class ChatbotService {
         
         if (recentMessagesWithProducts.length > 0) {
           const productsMetadata = (recentMessagesWithProducts[0].metadata as any).products;
-          this.logger.log(`🔄 Reusing ${productsMetadata.length} products from previous message`);
+          this.logger.log(`Reusing ${productsMetadata.length} products from previous message`);
           
           // Fetch full product data with category
           relevantProducts = await Promise.all(
@@ -134,30 +134,30 @@ export class ChatbotService {
               });
               
               if (product) {
-                this.logger.log(`   ✅ Loaded: ${product.name} - Category: ${product.category?.name || 'NULL'}`);
+                this.logger.log(`   Loaded: ${product.name} - Category: ${product.category?.name || 'NULL'}`);
                 return { ...product, score: p.score || 10 };
               } else {
-                this.logger.warn(`   ⚠️ Product not found: ${p.id}`);
+                this.logger.warn(`   Product not found: ${p.id}`);
                 return null;
               }
             })
           );
           relevantProducts = relevantProducts.filter(p => p !== null);
-          this.logger.log(`📦 Total valid products: ${relevantProducts.length}`);
+          this.logger.log(`Total valid products: ${relevantProducts.length}`);
         }
       }
       
-      // Nếu không tìm thấy products từ history, search mới
+      // If no products found in history, search new
       if (relevantProducts.length === 0) {
         relevantProducts = await this.vectorService.searchRelevantProducts(
           message,
-          8, // 🚀 Tăng lên 8 để có nhiều lựa chọn đa dạng hơn từ nhiều category
+          8, // Increase to 8 to have more diverse options
         );
       }
 
       this.logger.log(`Found ${relevantProducts.length} relevant products`);
       
-      // ✅ Debug: Log categories
+      // Debug: Log categories
       if (relevantProducts.length > 0) {
         relevantProducts.forEach((p, idx) => {
           this.logger.log(`   ${idx + 1}. ${p.name} - Category: ${p.category?.name || 'NULL'} (categoryId: ${(p as any).categoryId})`);
@@ -170,12 +170,12 @@ export class ChatbotService {
       // 6. Get available tools
       const tools = this.toolsService.getAvailableTools();
 
-      // 7. Call LLM with function calling support (⚡ Smart context management)
+      // 7. Call LLM with function calling support
       this.logger.log('Calling LLM service with tools...');
       const aiResponseData = await this.llmService.generateResponseWithTools(
         message,
         context,
-        history.slice(-4), // ⚡ Chỉ gửi 4 messages gần nhất để giảm tokens
+        history.slice(-4), // Only send last 4 messages
         tools,
         userId,
       );
@@ -191,19 +191,19 @@ export class ChatbotService {
         for (const toolCall of aiResponseData.toolCalls) {
           this.logger.log(`Executing tool: ${toolCall.name} with args:`, JSON.stringify(toolCall.arguments));
           
-          // ✅ FIX: Map product names/numbers to actual IDs
+          // Fix: Map product names/numbers to actual IDs
           if (toolCall.name === 'add_to_cart' && toolCall.arguments.productId) {
             const originalId = toolCall.arguments.productId;
             toolCall.arguments.productId = this.mapProductToId(
               toolCall.arguments.productId,
               relevantProducts,
             );
-            this.logger.log(`🔍 Mapped productId: "${originalId}" → "${toolCall.arguments.productId}"`);
+            this.logger.log(`Mapped productId: "${originalId}" → "${toolCall.arguments.productId}"`);
           }
 
-          // ✅ FIX: Map multiple products for batch add
+          // Fix: Map multiple products for batch add
           if (toolCall.name === 'add_multiple_to_cart' && toolCall.arguments.products) {
-            this.logger.log(`🔍 Mapping ${toolCall.arguments.products.length} products...`);
+            this.logger.log(`Mapping ${toolCall.arguments.products.length} products...`);
             toolCall.arguments.products = toolCall.arguments.products.map((p: any) => {
               const originalId = p.productId;
               const mappedId = this.mapProductToId(p.productId, relevantProducts);
@@ -225,14 +225,14 @@ export class ChatbotService {
 
           // Build response message with tool results
           if (toolResult.success) {
-            // 🔥 SPECIAL: search_products → Format chi tiết sản phẩm + CẬP NHẬT relevantProducts
+            // Special: search_products - Format product details + Update relevantProducts
             if (toolCall.name === 'search_products' && toolResult.data && Array.isArray(toolResult.data)) {
               const products = toolResult.data;
-              this.logger.log(`📋 Formatting ${products.length} products for display`);
+              this.logger.log(`Formatting ${products.length} products for display`);
               
-              // ✅ CẬP NHẬT relevantProducts để có thể map productId đúng sau này
+              // Update relevantProducts to map productId correctly later
               relevantProducts = products;
-              this.logger.log(`🔄 Updated relevantProducts with ${products.length} new products from search`);
+              this.logger.log(`Updated relevantProducts with ${products.length} new products from search`);
               
               let formattedMessage = `Dạ, tôi tìm thấy ${products.length} sản phẩm:\n\n`;
               
@@ -242,19 +242,19 @@ export class ChatbotService {
                 const category = p.category || 'Chưa phân loại';
                 
                 formattedMessage += `${idx + 1}. **${p.name}**\n`;
-                formattedMessage += `   💰 Giá: ${price}đ`;
-                formattedMessage += ` | 📦 Tồn: ${stock}`;
-                formattedMessage += ` | 🏷️ ${category}\n\n`;
+                formattedMessage += `   Giá: ${price}đ`;
+                formattedMessage += ` | Tồn: ${stock}`;
+                formattedMessage += ` | ${category}\n\n`;
               });
               
               formattedMessage += `Bạn quan tâm sản phẩm nào ạ? Tôi có thể tư vấn chi tiết hoặc thêm vào giỏ hàng cho bạn! 🛒`;
               
               finalMessage = formattedMessage;
             } 
-            // 🧾 SPECIAL: get_user_orders → Hiển thị chi tiết đơn hàng
+            // Special: get_user_orders - Display order details
             else if (toolCall.name === 'get_user_orders' && toolResult.data && Array.isArray(toolResult.data)) {
               const orders = toolResult.data;
-              this.logger.log(`📋 Formatting ${orders.length} orders for display`);
+              this.logger.log(`Formatting ${orders.length} orders for display`);
 
               let formattedMessage = orders.length === 0
                 ? 'Bạn chưa có đơn hàng nào.'
@@ -275,10 +275,10 @@ export class ChatbotService {
                 const statusText = statusMap[o.status] || o.status || 'Không rõ';
 
                 formattedMessage += `${idx + 1}. Mã: ${o.code || '—'}\n`;
-                formattedMessage += `   📦 Số SP: ${o.itemCount || 0}`;
-                formattedMessage += ` | 💰 Tổng: ${total}đ`;
-                formattedMessage += ` | 🏷️ Trạng thái: ${statusText}`;
-                formattedMessage += dateStr ? ` | 📅 ${dateStr}` : '';
+                formattedMessage += `   Số SP: ${o.itemCount || 0}`;
+                formattedMessage += ` | Tổng: ${total}đ`;
+                formattedMessage += ` | Trạng thái: ${statusText}`;
+                formattedMessage += dateStr ? ` | ${dateStr}` : '';
                 formattedMessage += `\n\n`;
               });
 
@@ -287,38 +287,38 @@ export class ChatbotService {
               // Gửi action để frontend hiển thị nút xem đơn hàng
               actions.push({ type: 'view_orders', data: { count: orders.length } });
             }
-            // ✅ Các tool khác dùng message từ tool result
+            // Other tools use message from tool result
             else if (toolResult.message) {
               finalMessage = toolResult.message;
             }
             
             // Add action for frontend
             if (toolCall.name === 'add_to_cart' || toolCall.name === 'add_multiple_to_cart') {
-              this.logger.log(`🛒 Creating add_to_cart action with data:`, JSON.stringify(toolResult.data));
+              this.logger.log(`Creating add_to_cart action with data:`, JSON.stringify(toolResult.data));
               actions.push({
                 type: 'add_to_cart',
                 data: toolResult.data,
               });
             } else if (toolCall.name === 'update_user_profile') {
-              this.logger.log(`👤 Creating profile_updated action`);
+              this.logger.log(`Creating profile_updated action`);
               actions.push({
                 type: 'profile_updated',
                 data: toolResult.data,
               });
             } else if (toolCall.name === 'send_contact_email') {
-              this.logger.log(`📧 Creating email_sent action`);
+              this.logger.log(`Creating email_sent action`);
               actions.push({
                 type: 'email_sent',
                 data: { success: true },
               });
             }
           } else {
-            finalMessage = `❌ ${toolResult.error || 'Xin lỗi, tôi không thể thực hiện yêu cầu này.'}`;
+            finalMessage = `Error: ${toolResult.error || 'Sorry, I cannot fulfill this request.'}`;
           }
         }
       }
 
-      // 9. ✅ FINAL CLEANUP - Loại bỏ MỌI JSON còn sót lại
+      // 9. FINAL CLEANUP - Remove all JSON
       finalMessage = this.cleanJsonFromMessage(finalMessage);
       
       // If no clear response, use default
@@ -356,7 +356,7 @@ export class ChatbotService {
       
       // Log actions being sent to frontend
       if (actions.length > 0) {
-        this.logger.log(`📤 Sending ${actions.length} action(s) to frontend:`, actions.map(a => a.type));
+        this.logger.log(`Sending ${actions.length} action(s) to frontend:`, actions.map(a => a.type));
       }
 
       return {
@@ -395,33 +395,33 @@ HƯỚNG DẪN:
 VÍ DỤ: "Xin lỗi, hiện chúng tôi chưa có sản phẩm [tên] trong kho. Bạn có thể cho tôi biết rõ hơn về mục đích sử dụng để tôi gợi ý sản phẩm tương tự không?"`;
     }
 
-    // ✅ Phân loại sản phẩm còn hàng và hết hàng
+    // Filter in-stock and out-of-stock products
     const inStock = products.filter(p => p.stock > 0);
     const outOfStock = products.filter(p => p.stock === 0);
 
-    // ✅ Build context với thông tin chi tiết hơn
+    // Build context with more details
     let context = `TÌM THẤY ${products.length} SẢN PHẨM LIÊN QUAN:\n\n`;
 
     // Sản phẩm còn hàng (ưu tiên)
     if (inStock.length > 0) {
-      context += `✅ CÒN HÀNG (${inStock.length}):\n`;
+      context += `IN STOCK (${inStock.length}):\n`;
       inStock.forEach((p, idx) => {
         const category = p.category?.name || 'Chưa phân loại';
         const description = p.description ? ` - ${p.description.substring(0, 80)}` : '';
         context += `${idx + 1}. ${p.name}\n`;
-        context += `   💰 Giá: ${p.price.toLocaleString()}đ | 📦 Tồn: ${p.stock} | 🏷️ ${category}${description}\n`;
+        context += `   Giá: ${p.price.toLocaleString()}đ | Tồn: ${p.stock} | ${category}${description}\n`;
       });
     }
 
     // Sản phẩm hết hàng (thông tin thêm)
     if (outOfStock.length > 0) {
-      context += `\n⚠️ HẾT HÀNG HIỆN TẠI (${outOfStock.length}):\n`;
+      context += `\nOUT OF STOCK (${outOfStock.length}):\n`;
       outOfStock.forEach((p, idx) => {
         context += `${inStock.length + idx + 1}. ${p.name} - ${p.price.toLocaleString()}đ (Tạm hết)\n`;
       });
     }
 
-    // ✅ Hướng dẫn AI trả lời
+    // Instructions for AI response
     context += `\nHƯỚNG DẪN TRẢ LỜI:
 - ƯU TIÊN giới thiệu sản phẩm CÒN HÀNG
 - NÊU RÕ giá, tồn kho, danh mục
@@ -439,7 +439,7 @@ VÍ DỤ: "Xin lỗi, hiện chúng tôi chưa có sản phẩm [tên] trong kho
   }
 
   /**
-   * ✅ TRIỆT ĐỂ loại bỏ JSON khỏi message
+   * Completely remove JSON from message
    */
   /**
    * Map product reference (name, number, or partial ID) to actual product ID
@@ -453,12 +453,12 @@ VÍ DỤ: "Xin lỗi, hiện chúng tôi chưa có sản phẩm [tên] trong kho
     // Convert to string if it's a number
     const refString = String(productRef).toLowerCase().trim();
 
-    this.logger.log(`🔍 Mapping productRef: "${productRef}" (type: ${typeof productRef})`);
-    this.logger.log(`📦 Available products: ${availableProducts.length} items`);
+    this.logger.log(`Mapping productRef: "${productRef}" (type: ${typeof productRef})`);
+    this.logger.log(`Available products: ${availableProducts.length} items`);
 
     // Already a valid CUID (starts with 'c' and long enough)
     if (refString.startsWith('c') && refString.length >= 20) {
-      this.logger.log(`✅ Already valid CUID: ${productRef}`);
+      this.logger.log(`Already valid CUID: ${productRef}`);
       return productRef;
     }
 
@@ -469,15 +469,15 @@ VÍ DỤ: "Xin lỗi, hiện chúng tôi chưa có sản phẩm [tên] trong kho
       
       if (index >= 0 && index < availableProducts.length) {
         const product = availableProducts[index];
-        this.logger.log(`✅ Mapped number ${refString} (index ${index}) → ${product.name} (${product.id})`);
+        this.logger.log(`Mapped number ${refString} (index ${index}) → ${product.name} (${product.id})`);
         return product.id;
       } else {
-        this.logger.warn(`⚠️ Number ${refString} is out of range (0-${availableProducts.length - 1})`);
+        this.logger.warn(`Number ${refString} is out of range (0-${availableProducts.length - 1})`);
         
         // Fallback: if user says "5" but we only have 3, use the last one
         if (availableProducts.length > 0) {
           const lastProduct = availableProducts[availableProducts.length - 1];
-          this.logger.log(`📍 Using last product as fallback: ${lastProduct.name}`);
+          this.logger.log(`Using last product as fallback: ${lastProduct.name}`);
           return lastProduct.id;
         }
       }
@@ -491,19 +491,19 @@ VÍ DỤ: "Xin lỗi, hiện chúng tôi chưa có sản phẩm [tên] trong kho
     });
 
     if (foundProduct) {
-      this.logger.log(`✅ Mapped by name "${productRef}" → ${foundProduct.name} (${foundProduct.id})`);
+      this.logger.log(`Mapped by name "${productRef}" → ${foundProduct.name} (${foundProduct.id})`);
       return foundProduct.id;
     }
 
     // Fallback: return first available product
     if (availableProducts.length > 0) {
       const firstProduct = availableProducts[0];
-      this.logger.warn(`⚠️ Could not map "${productRef}", using first product: ${firstProduct.name}`);
+      this.logger.warn(`Could not map "${productRef}", using first product: ${firstProduct.name}`);
       return firstProduct.id;
     }
 
     // Last resort: return original (will likely fail in addToCart)
-    this.logger.error(`❌ Could not map product reference "${productRef}" - no products available!`);
+    this.logger.error(`Could not map product reference "${productRef}" - no products available!`);
     return productRef;
   }
 

@@ -18,7 +18,7 @@ export class ContactService {
 
     // Validate required fields
     if (!name || !email || !subject || !message) {
-      throw new Error('⚠️ Thiếu thông tin bắt buộc.');
+      throw new Error('Thiếu thông tin bắt buộc.');
     }
 
     try {
@@ -43,7 +43,7 @@ export class ContactService {
         to: this.configService.get('CONTACT_TO') || this.configService.get('SMTP_USER'),
         replyTo: `${name} <${email}>`,
         subject: `[Form liên hệ] ${subject}`,
-        text: `📩 Tin nhắn mới từ form liên hệ:
+        text: `Tin nhắn mới từ form liên hệ:
 
 Tên: ${name}
 Email: ${email}
@@ -57,7 +57,7 @@ ${message}
       await transporter.sendMail({
         from: this.configService.get('SMTP_FROM') || this.configService.get('SMTP_USER'),
         to: email,
-        subject: '📩 Cảm ơn bạn đã liên hệ với MatFlow',
+        subject: 'Cảm ơn bạn đã liên hệ với MatFlow',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
             <div style="background: linear-gradient(135deg, #20b2aa, #0e8f87); color: white; padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 20px;">

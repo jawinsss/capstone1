@@ -42,9 +42,9 @@ export class VectorService {
         return this.getTopProducts(limit);
       }
 
-      this.logger.log(`🔍 Searching for keywords: ${keywords.join(', ')}`);
+      this.logger.log(`Searching for keywords: ${keywords.join(', ')}`);
 
-      // 🚀 Tìm kiếm RỘNG hơn để có kết quả đa dạng (lấy 3x limit)
+      // Search broadly to get diverse results (3x limit)
       const products = await this.prisma.product.findMany({
         where: {
           isActive: true,
@@ -85,17 +85,17 @@ export class VectorService {
         include: {
           category: true,
         },
-        take: limit * 3, // 🚀 Lấy nhiều hơn để đa dạng hóa (3x thay vì 2x)
+        take: limit * 3, // Get more for diversity
       });
 
-      //  SEMANTIC SCORING - Tính relevance score thông minh
+      // Semantic Scoring - Smart relevance calculation
       const scoredProducts = products.map((product) => {
         let score = 0;
         const productName = product.name.toLowerCase();
         const productDesc = product.description?.toLowerCase() || '';
         const categoryName = product.category?.name.toLowerCase() || '';
 
-        // 1. 🔥 Exact match (quan trọng nhất) - Nhiều cấp độ
+        // 1. Exact match (most important)
         if (productName === normalizedQuery) {
           score += 150; // Perfect exact match
         } else if (productName.includes(normalizedQuery)) {
@@ -153,7 +153,7 @@ export class VectorService {
         };
       });
 
-      // 🎯 ĐA DẠNG HÓA CATEGORY - Đảm bảo có sản phẩm từ nhiều danh mục
+      // Category Diversity - Ensure products from different categories
       const sortedProducts = scoredProducts.sort((a, b) => b.score - a.score);
       
       const diversifiedResults: typeof scoredProducts = [];
@@ -190,10 +190,10 @@ export class VectorService {
       const categoryNames = [...new Set(topResults.map(p => p.category?.name))];
       
       this.logger.log(
-        `✅ Found ${topResults.length} products from ${categoryNames.length} categories: ${categoryNames.join(', ')}`,
+        `Found ${topResults.length} products from ${categoryNames.length} categories: ${categoryNames.join(', ')}`,
       );
       this.logger.log(
-        `📊 Scores: ${topResults.map((p) => p.score).join(', ')}`,
+        `Scores: ${topResults.map((p) => p.score).join(', ')}`,
       );
 
       return topResults;
