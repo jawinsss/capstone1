@@ -80,8 +80,7 @@ function checkAuth() {
   }
 
   if (!token) {
-    // Clear all authentication data and refresh
-    // Use AuthContextManager if available
+
     if (typeof window !== "undefined" && window.authContextManager) {
       window.authContextManager.clearAllContexts();
     } else {

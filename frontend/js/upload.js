@@ -15,7 +15,7 @@ class ImageUploader {
     init(containerId) {
         this.uploadZone = document.getElementById(containerId);
         if (!this.uploadZone) {
-            console.error(`Upload zone with id "${containerId}" not found`);
+            console.error(`Dang tai anh voi id "${containerId}" not found`);
             return;
         }
 

@@ -43,11 +43,7 @@ class VietMapService {
     }
   }
 
-  /**
-   * Get provinces from VietMap Autocomplete v4 API
-   * Fetches all 63 provinces by searching with multiple queries
-   * 100% from VietMap API - NO HARDCODED DATA
-   */
+ 
   async getProvinces(search = "", page = 1, limit = 5) {
     try {
       await this.loadApiKey();
