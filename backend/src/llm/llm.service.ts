@@ -97,7 +97,6 @@ export class LlmService {
         max_tokens: this.maxTokens,
       };
 
-      // Add tools if available (Native Function Calling)
       if (tools.length > 0) {
         requestParams.tools = tools.map((t) => ({
           type: 'function' as const,
@@ -109,8 +108,6 @@ export class LlmService {
         }));
         requestParams.tool_choice = 'auto'; // Let AI decide when to call tools
       }
-
-      // Call OpenAI API
       this.logger.log(`Calling OpenAI API (${this.model})...`);
       const response = await this.openai.chat.completions.create(requestParams);
 
@@ -119,6 +116,8 @@ export class LlmService {
       this.logger.log(
         `OpenAI response received in ${duration}ms | Tokens: ${usage?.total_tokens} (in: ${usage?.prompt_tokens}, out: ${usage?.completion_tokens})`,
       );
+
+
 
       const message = response.choices[0].message;
 

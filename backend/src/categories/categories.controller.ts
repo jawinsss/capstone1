@@ -53,13 +53,13 @@ export class CategoriesController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiBearerAuth()
-  @ApiOperation({ summary: 'Update category (ADMIN)' })
-  @ApiParam({ name: 'id', description: 'Category ID' })
+  @ApiOperation({ summary: `Update category (ADMIN)` })
+  @ApiParam({ name: 'id', description: `Category ID` })
   update(@Param('id') id: string, @Body() dto: UpdateCategoryDto) {
     return this.categoriesService.update(id, dto);
   }
 
-  @Delete(':id')
+  @Delete(`:id`)
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles('ADMIN')
   @ApiBearerAuth()
@@ -74,5 +74,8 @@ export class CategoriesController {
     }
   }
 }
+
+
+
 
 

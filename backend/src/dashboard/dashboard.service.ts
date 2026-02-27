@@ -10,9 +10,7 @@ export class DashboardService {
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     const startOfYesterday = new Date(startOfToday);
     startOfYesterday.setDate(startOfYesterday.getDate() - 1);
-
-    // Get all metrics in parallel
-    const [
+      const [
       totalRevenue,
       todayRevenue,
       yesterdayRevenue,
@@ -30,11 +28,11 @@ export class DashboardService {
     ] = await Promise.all([
       // Revenue metrics
       this.prisma.payment.aggregate({
-        where: { status: 'CONFIRMED' },
+        where: { status: `CONFIRMED` },
         _sum: { amount: true },
       }),
       this.prisma.payment.aggregate({
-        where: { status: 'CONFIRMED', createdAt: { gte: startOfToday } },
+        where: { status: `CONFIRMED`, createdAt: { gte: startOfToday } },
         _sum: { amount: true },
       }),
       this.prisma.payment.aggregate({
@@ -44,6 +42,8 @@ export class DashboardService {
         },
         _sum: { amount: true },
       }),
+    // Get all metrics in parallel
+
       
       // Order metrics
       this.prisma.order.count(),
