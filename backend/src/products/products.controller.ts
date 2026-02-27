@@ -29,7 +29,7 @@ export class ProductsController {
       };
     }
     
-    return result;
+    return result ;
   }
 
   @Post()
