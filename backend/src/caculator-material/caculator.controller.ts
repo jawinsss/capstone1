@@ -25,7 +25,6 @@ import { MaterialCalcFormDto } from './dto/material-calc-form.dto';
 export class CalculatorController {
   constructor(private readonly calculatorService: CalculatorService) {}
 
-  // ====== 1. AI đọc câu tiếng Việt, tự tính toán + gợi ý vật tư ============
   @Post('materials')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
@@ -46,7 +45,7 @@ export class CalculatorController {
   @Post('ask')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Hỏi nhanh về vật tư',
+    summary: 'Hỏi nhanh',
     description: 'AI trả lời câu hỏi ngắn, không cần tính toán chi tiết.',
   })
   @ApiResponse({

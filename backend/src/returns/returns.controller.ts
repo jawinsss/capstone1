@@ -13,10 +13,6 @@ import { Roles } from '../auth/roles.decorator';
 export class ReturnsController {
   constructor(private readonly returnsService: ReturnsService) {}
 
-  /**
-   * List all return requests with optional status filter
-   * GET /returns?status=PENDING
-   */
   @Get()
   list(@Query('status') status?: string) {
     return this.returnsService.list(status);

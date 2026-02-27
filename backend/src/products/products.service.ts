@@ -268,7 +268,7 @@ export class ProductsService {
           stock: dto.stock !== undefined ? Math.max(0, Math.trunc(dto.stock)) : undefined,
           categoryId: dto.categoryId,
           isActive: dto.isActive,
-          // For simplicity, replace images if provided
+          
           images: dto.images
             ? {
                 deleteMany: { productId: id },
@@ -279,7 +279,7 @@ export class ProductsService {
         include: { images: true, category: true },
       });
 
-      // Create audit log for product update if userId is provided
+      
       if (userId) {
         try {
           await this.auditService.createAuditLog({

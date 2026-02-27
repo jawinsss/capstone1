@@ -215,9 +215,6 @@ export class ReturnsService {
     };
   }
 
-  /**
-   * Get statistics
-   */
   async getStats() {
     const [pending, approved, rejected, total] = await Promise.all([
       this.prisma.returnRequest.count({ where: { status: 'PENDING' } }),
