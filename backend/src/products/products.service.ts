@@ -9,7 +9,7 @@ export interface CreateProductDto {
   price: number;
   stock?: number;
   categoryId: string;
-  images?: { url: string; alt?: string; order?: number }[];
+  images?: { url: string; alt?: string; order?: number }[] ;
 }
 
 export interface UpdateProductDto {
