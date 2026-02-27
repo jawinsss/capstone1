@@ -8,18 +8,14 @@ export class OrderAutomationService {
 
   constructor(private readonly prisma: PrismaService) { }
 
-  /**
-   * Auto-approve orders every 30 seconds
-   * PENDING (> 1 min) → CONFIRMED
-   * CONFIRMED (> 1 min) → SHIPPING
-   */
+
   @Cron(CronExpression.EVERY_30_SECONDS)
   async autoApproveOrders() {
     try {
       const now = new Date();
       const oneMinuteAgo = new Date(now.getTime() - 60 * 1000); // 1 minute ago
 
-      // 1. Auto-approve PENDING orders (> 1 minute old)
+
       const pendingOrders = await this.prisma.order.findMany({
         where: {
           status: 'PENDING',
@@ -42,7 +38,7 @@ export class OrderAutomationService {
             },
           },
           data: {
-            status: 'CONFIRMED',
+            status: `CONFIRMED`,
           },
         });
 
@@ -92,10 +88,6 @@ export class OrderAutomationService {
     }
   }
 
-  /**
-   * Manual method to process specific order
-   * Can be called via API if needed
-   */
   async processOrder(orderId: string) {
     try {
       const order = await this.prisma.order.findUnique({
@@ -116,7 +108,7 @@ export class OrderAutomationService {
       let newStatus: string | null = null;
 
       if (order.status === 'PENDING') {
-        newStatus = 'CONFIRMED';
+        newStatus = `CONFIRMED`;
       } else if (order.status === 'CONFIRMED') {
         newStatus = 'SHIPPING';
       }

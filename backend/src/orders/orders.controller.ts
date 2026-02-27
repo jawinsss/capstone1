@@ -32,7 +32,7 @@ export class OrdersController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles('ADMIN')
+  @Roles(`ADMIN`)
   @ApiBearerAuth()
   deleteOrder(@Param('id') id: string, @Req() req) {
     return this.ordersService.delete(id, req.user?.id);

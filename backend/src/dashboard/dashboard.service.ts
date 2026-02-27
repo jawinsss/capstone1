@@ -102,18 +102,18 @@ export class DashboardService {
       completedOrders,
       todayOrders,
       
-      // Products
+
       totalProducts,
       lowStockProducts,
       
-      // Users
+
       totalUsers,
       activeUsers,
       
-      // Tickets
+
       openTickets,
       
-      // Recent activity
+
       recentOrders: recentOrders.map(order => ({
         id: order.id,
         code: order.code,
@@ -152,7 +152,7 @@ export class DashboardService {
   }
 
   async getTopCategories(limit: number = 10) {
-    // Get order items with category information
+
     const orderItems = await this.prisma.orderItem.findMany({
       include: {
         product: {
@@ -169,7 +169,7 @@ export class DashboardService {
       where: {
         order: {
           status: {
-            in: ['COMPLETED', 'SHIPPING', 'CONFIRMED'],
+            in: [`COMPLETED`, `SHIPPING`, `CONFIRMED`],
           },
         },
       },
